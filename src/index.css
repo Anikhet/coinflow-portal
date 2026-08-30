@@ -1,0 +1,287 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   LEDGER THEME
+   ----------------------------------------------------------------------------
+   Every color in this app resolves through a token defined here. Components
+   must never use a raw Tailwind palette utility (bg-green-500, text-red-600).
+   This is what keeps color meaningful at density.
+
+   The token layer has exactly two groups:
+
+   1. SURFACE/STRUCTURE — canvas, surface, border, ink, muted, brand.
+      Brand violet is reserved for interactive + identity affordances ONLY.
+
+   2. TONE — the closed set of five semantic states. A tone is the only thing
+      permitted to color a pill:
+        positive  settled, verified, enabled, completed
+        caution   initiated, pending, in-flight, review
+        critical  failed, blocked, disputed
+        info      informational, neutral-notable (3DS, protection)
+        neutral   default / no signal
+
+   Because brand violet is excluded from the tone set, a violet element in the
+   UI can only ever mean "you can interact with this" — it can never be
+   confused for a status. That separation is the reason a 14-column row stays
+   scannable.
+   ========================================================================= */
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-pill: 6px;
+  --radius-control: 8px;
+  --radius-surface: 12px;
+
+  /* Row heights drive the density toggle. Fixed values, never content-derived,
+     so switching density cannot cause layout shift within a row. */
+  --row-compact: 36px;
+  --row-cozy: 44px;
+}
+
+:root {
+  /* -- structure ---------------------------------------------------------- */
+  --canvas:        oklch(0.985 0.002 285);
+  --surface:       oklch(1 0 0);
+  --surface-sunk:  oklch(0.968 0.003 285);
+  --surface-hover: oklch(0.972 0.004 285);
+
+  --border:        oklch(0.916 0.004 285);
+  --border-strong: oklch(0.861 0.006 285);
+
+  --ink:           oklch(0.19 0.014 285);
+  --ink-muted:     oklch(0.53 0.012 285);
+  --ink-faint:     oklch(0.68 0.010 285);
+
+  /* -- brand (interactive + identity ONLY, never a status) ---------------- */
+  --brand:          oklch(0.55 0.19 285);
+  --brand-hover:    oklch(0.49 0.19 285);
+  --brand-soft:     oklch(0.955 0.028 285);
+  --brand-ring:     oklch(0.55 0.19 285 / 0.35);
+  --brand-contrast: oklch(0.99 0.005 285);
+
+  /* -- tones -------------------------------------------------------------- */
+  --tone-positive-fg:   oklch(0.47 0.115 158);
+  --tone-positive-bg:   oklch(0.965 0.032 158);
+  --tone-positive-ring: oklch(0.47 0.115 158 / 0.18);
+  --tone-positive-dot:  oklch(0.60 0.145 158);
+
+  --tone-caution-fg:    oklch(0.50 0.115 72);
+  --tone-caution-bg:    oklch(0.968 0.040 82);
+  --tone-caution-ring:  oklch(0.50 0.115 72 / 0.18);
+  --tone-caution-dot:   oklch(0.68 0.155 72);
+
+  --tone-critical-fg:   oklch(0.51 0.175 21);
+  --tone-critical-bg:   oklch(0.965 0.028 21);
+  --tone-critical-ring: oklch(0.51 0.175 21 / 0.18);
+  --tone-critical-dot:  oklch(0.60 0.205 21);
+
+  --tone-info-fg:       oklch(0.49 0.115 245);
+  --tone-info-bg:       oklch(0.963 0.028 245);
+  --tone-info-ring:     oklch(0.49 0.115 245 / 0.18);
+  --tone-info-dot:      oklch(0.60 0.145 245);
+
+  --tone-neutral-fg:    oklch(0.45 0.010 285);
+  --tone-neutral-bg:    oklch(0.960 0.004 285);
+  --tone-neutral-ring:  oklch(0.45 0.010 285 / 0.16);
+  --tone-neutral-dot:   oklch(0.64 0.010 285);
+
+  /* -- chart series -------------------------------------------------------
+     Ordered by perceptual distinctness, not by hue rotation. Series 1 is the
+     brand violet because the dominant series (Card) should read as primary.
+     Deliberately excludes the exact tone hues so a chart line is never
+     mistaken for a status color. */
+  --chart-1: oklch(0.55 0.19 285);
+  --chart-2: oklch(0.62 0.15 195);
+  --chart-3: oklch(0.66 0.16 135);
+  --chart-4: oklch(0.72 0.15 60);
+  --chart-5: oklch(0.60 0.19 350);
+  --chart-6: oklch(0.58 0.13 235);
+  --chart-7: oklch(0.68 0.13 105);
+  --chart-8: oklch(0.55 0.12 320);
+  --chart-grid: oklch(0.92 0.004 285);
+}
+
+:root[data-theme="dark"],
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    --canvas:        oklch(0.155 0.010 285);
+    --surface:       oklch(0.192 0.011 285);
+    --surface-sunk:  oklch(0.170 0.010 285);
+    --surface-hover: oklch(0.228 0.013 285);
+
+    --border:        oklch(0.278 0.011 285);
+    --border-strong: oklch(0.348 0.013 285);
+
+    --ink:           oklch(0.965 0.004 285);
+    --ink-muted:     oklch(0.715 0.012 285);
+    --ink-faint:     oklch(0.565 0.012 285);
+
+    --brand:          oklch(0.70 0.16 285);
+    --brand-hover:    oklch(0.77 0.15 285);
+    --brand-soft:     oklch(0.30 0.075 285);
+    --brand-ring:     oklch(0.70 0.16 285 / 0.40);
+    --brand-contrast: oklch(0.16 0.020 285);
+
+    --tone-positive-fg:   oklch(0.80 0.145 158);
+    --tone-positive-bg:   oklch(0.285 0.058 158);
+    --tone-positive-ring: oklch(0.80 0.145 158 / 0.24);
+    --tone-positive-dot:  oklch(0.74 0.155 158);
+
+    --tone-caution-fg:    oklch(0.84 0.135 82);
+    --tone-caution-bg:    oklch(0.295 0.058 72);
+    --tone-caution-ring:  oklch(0.84 0.135 82 / 0.24);
+    --tone-caution-dot:   oklch(0.79 0.150 82);
+
+    --tone-critical-fg:   oklch(0.79 0.135 21);
+    --tone-critical-bg:   oklch(0.300 0.070 21);
+    --tone-critical-ring: oklch(0.79 0.135 21 / 0.24);
+    --tone-critical-dot:  oklch(0.70 0.180 21);
+
+    --tone-info-fg:       oklch(0.80 0.115 245);
+    --tone-info-bg:       oklch(0.288 0.058 245);
+    --tone-info-ring:     oklch(0.80 0.115 245 / 0.24);
+    --tone-info-dot:      oklch(0.72 0.135 245);
+
+    --tone-neutral-fg:    oklch(0.755 0.010 285);
+    --tone-neutral-bg:    oklch(0.268 0.010 285);
+    --tone-neutral-ring:  oklch(0.755 0.010 285 / 0.20);
+    --tone-neutral-dot:   oklch(0.62 0.010 285);
+
+    --chart-1: oklch(0.70 0.16 285);
+    --chart-2: oklch(0.74 0.13 195);
+    --chart-3: oklch(0.78 0.14 135);
+    --chart-4: oklch(0.81 0.13 60);
+    --chart-5: oklch(0.72 0.16 350);
+    --chart-6: oklch(0.70 0.12 235);
+    --chart-7: oklch(0.79 0.12 105);
+    --chart-8: oklch(0.68 0.11 320);
+    --chart-grid: oklch(0.278 0.011 285);
+  }
+}
+
+:root[data-theme="dark"] {
+  --canvas:        oklch(0.155 0.010 285);
+  --surface:       oklch(0.192 0.011 285);
+  --surface-sunk:  oklch(0.170 0.010 285);
+  --surface-hover: oklch(0.228 0.013 285);
+
+  --border:        oklch(0.278 0.011 285);
+  --border-strong: oklch(0.348 0.013 285);
+
+  --ink:           oklch(0.965 0.004 285);
+  --ink-muted:     oklch(0.715 0.012 285);
+  --ink-faint:     oklch(0.565 0.012 285);
+
+  --brand:          oklch(0.70 0.16 285);
+  --brand-hover:    oklch(0.77 0.15 285);
+  --brand-soft:     oklch(0.30 0.075 285);
+  --brand-ring:     oklch(0.70 0.16 285 / 0.40);
+  --brand-contrast: oklch(0.16 0.020 285);
+
+  --tone-positive-fg:   oklch(0.80 0.145 158);
+  --tone-positive-bg:   oklch(0.285 0.058 158);
+  --tone-positive-ring: oklch(0.80 0.145 158 / 0.24);
+  --tone-positive-dot:  oklch(0.74 0.155 158);
+
+  --tone-caution-fg:    oklch(0.84 0.135 82);
+  --tone-caution-bg:    oklch(0.295 0.058 72);
+  --tone-caution-ring:  oklch(0.84 0.135 82 / 0.24);
+  --tone-caution-dot:   oklch(0.79 0.150 82);
+
+  --tone-critical-fg:   oklch(0.79 0.135 21);
+  --tone-critical-bg:   oklch(0.300 0.070 21);
+  --tone-critical-ring: oklch(0.79 0.135 21 / 0.24);
+  --tone-critical-dot:  oklch(0.70 0.180 21);
+
+  --tone-info-fg:       oklch(0.80 0.115 245);
+  --tone-info-bg:       oklch(0.288 0.058 245);
+  --tone-info-ring:     oklch(0.80 0.115 245 / 0.24);
+  --tone-info-dot:      oklch(0.72 0.135 245);
+
+  --tone-neutral-fg:    oklch(0.755 0.010 285);
+  --tone-neutral-bg:    oklch(0.268 0.010 285);
+  --tone-neutral-ring:  oklch(0.755 0.010 285 / 0.20);
+  --tone-neutral-dot:   oklch(0.62 0.010 285);
+
+  --chart-1: oklch(0.70 0.16 285);
+  --chart-2: oklch(0.74 0.13 195);
+  --chart-3: oklch(0.78 0.14 135);
+  --chart-4: oklch(0.81 0.13 60);
+  --chart-5: oklch(0.72 0.16 350);
+  --chart-6: oklch(0.70 0.12 235);
+  --chart-7: oklch(0.79 0.12 105);
+  --chart-8: oklch(0.68 0.11 320);
+  --chart-grid: oklch(0.278 0.011 285);
+}
+
+/* Expose tokens as Tailwind utilities (bg-surface, text-ink, border-border…) */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-sunk: var(--surface-sunk);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-contrast: var(--brand-contrast);
+}
+
+@layer base {
+  * { border-color: var(--border); }
+
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    /* cv11 = single-storey g, ss01 = disambiguated I/l. Both improve legibility
+       of dense alphanumeric IDs at 12-13px. tnum keeps currency columns from
+       jittering as values change. */
+    font-feature-settings: "cv11", "ss01", "tnum";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Currency and IDs must never reflow when digits change width. */
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 99px;
+    border: 3px solid var(--canvas);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
+}
+
+@layer utilities {
+  /* Animation is transform/opacity only — never layout properties. */
+  @keyframes ledger-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .animate-in-up { animation: ledger-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  @keyframes ledger-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+  }
+  .animate-pulse-dot { animation: ledger-pulse 1.6s ease-in-out infinite; }
+}
+
+@keyframes sheet-slide {
+  from { transform: translateX(16px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
