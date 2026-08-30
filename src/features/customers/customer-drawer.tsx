@@ -204,7 +204,7 @@ function ActivityTab({ activity }: { activity: CustomerActivity[] }) {
         <EmptyState
           icon={History}
           title="No activity yet"
-          description="Authorizations, captures and refunds for this customer will be listed here as they happen."
+          description="Authorizations and refunds appear here."
         />
       </div>
     )
@@ -278,7 +278,7 @@ function MethodsTab({ customer }: { customer: Customer }) {
         <EmptyState
           icon={CreditCard}
           title="No saved payment methods"
-          description="This customer has not stored a card. Cards are saved on the first successful payment that opts in."
+          description="Cards are saved on the first opted-in payment."
         />
       </div>
     )

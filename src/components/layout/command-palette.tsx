@@ -1,9 +1,10 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, CornerDownLeft } from 'lucide-react'
+import { Search, SearchX, CornerDownLeft } from 'lucide-react'
 import { NAV_GROUPS, type NavItem } from '@/lib/nav'
 import { useUiStore } from '@/stores/ui-store'
+import { EmptyState } from '@/components/table/empty-state'
 import { cn } from '@/lib/cn'
 
 /**
@@ -127,7 +128,16 @@ function PaletteBody({ onDismiss }: { onDismiss: () => void }) {
           as results filter, so it does not jitter while typing. */}
       <ul className="max-h-[320px] overflow-y-auto p-1.5">
         {results.length === 0 ? (
-          <li className="px-3 py-6 text-center text-[13px] text-ink-muted">No matches</li>
+          <li className="p-2">
+            {/* Same empty-state component as the tables and drawers: an icon, a
+                named cause and a padded container. A bare line of grey text
+                here read as a broken list rather than a deliberate result. */}
+            <EmptyState
+              icon={SearchX}
+              title="No matches"
+              description="Try a shorter term."
+            />
+          </li>
         ) : (
           results.map((item, index) => {
             const Icon = item.icon

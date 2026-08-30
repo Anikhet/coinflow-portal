@@ -54,7 +54,7 @@ export function TableEmpty({ entity, icon, totalCount, error, onRetry }: TableEm
         icon={TriangleAlert}
         tone="critical"
         title={`Could not load ${entity}`}
-        description="The request failed before any rows came back. This is not an empty result — your filters are untouched."
+        description="The request failed. Your filters are untouched."
         action={
           onRetry && (
             <Button variant="primary" size="md" onClick={onRetry}>
@@ -72,7 +72,7 @@ export function TableEmpty({ entity, icon, totalCount, error, onRetry }: TableEm
       <EmptyState
         icon={SearchX}
         title={`No ${entity} match these filters`}
-        description={`All ${totalCount.toLocaleString()} ${entity} in this scope were excluded. Remove a condition to widen the search.`}
+        description={`All ${totalCount.toLocaleString()} ${entity} were excluded.`}
         detail={<CriteriaList criteria={criteria} />}
         action={
           <Button variant="primary" size="md" onClick={clearFilters}>
@@ -88,7 +88,7 @@ export function TableEmpty({ entity, icon, totalCount, error, onRetry }: TableEm
     <EmptyState
       icon={icon}
       title={`No ${entity} yet`}
-      description={`Nothing has been recorded in this scope. New ${entity} appear here as soon as they are processed.`}
+      description={`New ${entity} appear here as they are processed.`}
     />
   )
 }

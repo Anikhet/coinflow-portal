@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { FileQuestion } from 'lucide-react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { CommandPalette } from '@/components/layout/command-palette'
 import { HomePage } from '@/features/home/home-page'
@@ -24,9 +25,17 @@ export default function App() {
           <Route path="/purchases" element={<PurchasesPage />} />
           <Route path="/customers" element={<CustomersPage />} />
           {PLACEHOLDER_ROUTES.map((item) => (
-            <Route key={item.to} path={item.to} element={<PlaceholderPage title={item.label} />} />
+            <Route
+              key={item.to}
+              path={item.to}
+              /* The nav already assigns every route a distinct, semantically
+                 loaded icon. Reusing it here means the placeholder shows the
+                 same mark the user just clicked, instead of a generic
+                 roadworks sign that makes all eleven routes look identical. */
+              element={<PlaceholderPage title={item.label} icon={item.icon} />}
+            />
           ))}
-          <Route path="*" element={<PlaceholderPage title="Not found" />} />
+          <Route path="*" element={<PlaceholderPage title="Page not found" icon={FileQuestion} />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

@@ -130,7 +130,7 @@ export function HomePage() {
                     icon={TriangleAlert}
                     tone="critical"
                     title="Could not load failures"
-                    description="This panel could not reach the payments service. The numbers above are unaffected."
+                    description="The numbers above are unaffected."
                     action={
                       <Button variant="secondary" size="md" onClick={recent.reload}>
                         <RotateCw />
@@ -146,7 +146,7 @@ export function HomePage() {
                   <EmptyState
                     icon={CheckCircle2}
                     title="Nothing needs attention"
-                    description="No payments have failed in this period. New failures surface here within a minute of occurring."
+                    description="No payments failed in this period."
                   />
                 </div>
               ) : (

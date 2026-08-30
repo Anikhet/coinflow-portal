@@ -37,7 +37,7 @@ export function RecordUnavailable({ entity, error, onRetry }: {
           icon={TriangleAlert}
           tone="critical"
           title={`Could not load this ${entity}`}
-          description="The request failed. The record still exists — this is a problem fetching it."
+          description="The request failed, not the record."
           action={
             <Button variant="primary" size="md" onClick={onRetry}>
               <RotateCw />
@@ -50,7 +50,7 @@ export function RecordUnavailable({ entity, error, onRetry }: {
         <EmptyState
           icon={FileQuestion}
           title={`${capitalize(entity)} not found`}
-          description={`This ${entity} no longer exists, or it belongs to a merchant outside your current scope.`}
+          description={`It no longer exists, or is outside your scope.`}
           action={close}
         />
       )}
