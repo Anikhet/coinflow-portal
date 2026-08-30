@@ -2,6 +2,7 @@ import { Ban, CreditCard, Fingerprint, History, MapPin, ShieldCheck, Trash2, Use
 import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabCount } from '@/components/ui/tabs'
 import { Pill } from '@/components/ui/pill'
+import { StatusCell } from '@/components/table/cells'
 import { Button } from '@/components/ui/button'
 import { Tooltip } from '@/components/ui/tooltip'
 import { CopyButton } from '@/components/ui/copy-button'
@@ -92,8 +93,12 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
             <SheetTitle className="truncate text-[17px] font-semibold leading-tight tracking-tight text-ink">
               {customer.name}
             </SheetTitle>
-            <Pill tone={kyc.tone} variant="solid" dot>{kyc.label}</Pill>
-            {customer.blocked && <Pill tone="critical" variant="solid" dot>Blocked</Pill>}
+            <StatusCell descriptor={kyc} />
+            {customer.blocked && (
+              <Pill tone="critical" variant="solid" icon={<Ban className="size-3 shrink-0" aria-hidden />}>
+                Blocked
+              </Pill>
+            )}
           </div>
           <div className="group/row mt-1 flex items-center gap-1.5">
             <span className="truncate text-[12px] text-ink-muted">{customer.email}</span>
@@ -168,9 +173,7 @@ function OverviewTab({ customer, exceptions }: {
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {exceptions.map((exception) => (
-              <Pill key={exception.label} tone={exception.tone} variant="solid" dot>
-                {exception.label}
-              </Pill>
+              <StatusCell key={exception.label} descriptor={exception} />
             ))}
           </div>
         )}

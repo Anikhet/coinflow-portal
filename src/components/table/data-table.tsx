@@ -2,6 +2,7 @@ import {
   flexRender, getCoreRowModel, useReactTable, type ColumnDef,
 } from '@tanstack/react-table'
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
+import { useState } from 'react'
 import { useUiStore, ROW_HEIGHT } from '@/stores/ui-store'
 import { useTableView } from '@/stores/table-view-context'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -35,6 +36,15 @@ import type { ReactNode } from 'react'
  *   Rows are buttons, not links with a chevron column. Clicking anywhere opens
  *   the record; Enter and Space do the same from the keyboard.
  */
+
+/**
+ * Right-hand edge for the pinned column while scrolled. A hairline plus a short
+ * soft shadow — enough to separate the layers without drawing a hard rule that
+ * would compete with the row borders.
+ */
+const PINNED_EDGE =
+  'after:absolute after:inset-y-0 after:-right-px after:w-px after:bg-border ' +
+  'after:shadow-[6px_0_8px_-6px_rgba(0,0,0,0.18)]'
 
 export interface DataTableProps<T> {
   data: T[]
@@ -80,12 +90,33 @@ export function DataTable<T>({
     manualPagination: true,
   })
 
+  // A frozen column with no edge reads as text overlapping text. The divider
+  // appears only once the table is actually scrolled, so an unscrolled table
+  // carries no gratuitous seam. Tracked in state (not CSS) because there is no
+  // scroll-position selector.
+  const [isScrolled, setIsScrolled] = useState(false)
+
   const visibleColumns = table.getVisibleLeafColumns()
   const showEmpty = !loading && data.length === 0
 
+  // Sum of the declared column widths. Used as the table's min-width so columns
+  // hold their intended size and the container scrolls, rather than every
+  // column shrinking until its content is clipped.
+  const minTableWidth = visibleColumns.reduce((total, column) => total + column.getSize(), 0)
+
   return (
-    <div className="relative flex-1 overflow-auto">
-      <table className="w-full border-separate border-spacing-0 text-[13px]">
+    <div
+      className="relative flex-1 overflow-auto"
+      onScroll={(event) => {
+        const scrolled = event.currentTarget.scrollLeft > 0
+        // Guard the write so a vertical scroll does not re-render every row.
+        if (scrolled !== isScrolled) setIsScrolled(scrolled)
+      }}
+    >
+      <table
+        style={{ minWidth: minTableWidth }}
+        className="w-full border-separate border-spacing-0 text-[13px]"
+      >
         <thead className="sticky top-0 z-10">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -105,6 +136,7 @@ export function DataTable<T>({
                       meta?.align === 'right' && 'text-right',
                       // Pin the first column across both axes.
                       index === 0 && 'sticky left-0 z-20',
+                      index === 0 && isScrolled && PINNED_EDGE,
                     )}
                   >
                     {canSort ? (
@@ -148,6 +180,7 @@ export function DataTable<T>({
                     className={cn(
                       'border-b border-border bg-surface px-3',
                       columnIndex === 0 && 'sticky left-0 z-10',
+                      columnIndex === 0 && isScrolled && PINNED_EDGE,
                     )}
                   >
                     <Skeleton
@@ -197,6 +230,7 @@ export function DataTable<T>({
                           meta?.align === 'right' && 'text-right',
                           meta?.mono && 'font-mono text-[12px]',
                           cellIndex === 0 && 'sticky left-0 z-10',
+                          cellIndex === 0 && isScrolled && PINNED_EDGE,
                         )}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
