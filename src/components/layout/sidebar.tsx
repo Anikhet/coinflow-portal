@@ -124,8 +124,10 @@ export function Sidebar() {
       </div>
 
       <nav className={cn('flex-1 space-y-4 overflow-y-auto px-3 pb-4', collapsed && 'px-2')}>
-        {NAV_GROUPS.map((group, index) => (
-          <div key={group.label ?? `group-${index}`} className="space-y-0.5">
+        {NAV_GROUPS.map((group) => (
+          // The first destination in a group is a stable identity even when the
+          // group itself is unlabelled, unlike its array position.
+          <div key={group.label ?? group.items[0].to} className="space-y-0.5">
             {group.label && !collapsed && (
               <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-ink-faint">
                 {group.label}
