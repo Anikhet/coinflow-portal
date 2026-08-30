@@ -51,5 +51,4 @@ export function Sheet({ open, onOpenChange, children, size = 'md', label }: Shee
 }
 
 export const SheetTitle = Dialog.Title
-export const SheetDescription = Dialog.Description
 export const SheetClose = Dialog.Close

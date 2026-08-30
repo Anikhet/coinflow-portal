@@ -24,7 +24,7 @@ import type { Tone } from '@/types'
  *      the original UI.
  *
  *   5. Defaults render nothing. A `standard` / `N/A` / `false` attribute
- *      returns an em-dash via <EmptyCell>, never a pill. This inverts the
+ *      renders a muted em-dash, never a pill. This inverts the
  *      signal-to-noise ratio: because normal rows are quiet, the presence of a
  *      pill always means "look here". It is what turns six columns of identical
  *      green badges into a handful of genuine exceptions.
@@ -94,19 +94,6 @@ export function Pill({
       )}
       {icon}
       {children}
-    </span>
-  )
-}
-
-/**
- * The default state. Rule 5 of the taxonomy: an attribute at its default value
- * renders as a muted dash, never a pill. Fixed width so columns of mixed
- * dashes and pills keep a stable rhythm.
- */
-export function EmptyCell({ label = 'Not applicable' }: { label?: string }) {
-  return (
-    <span className="text-ink-faint select-none" title={label} aria-label={label}>
-      —
     </span>
   )
 }

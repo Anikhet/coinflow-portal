@@ -60,7 +60,3 @@ export function DropdownLabel({ className, ...props }: ComponentProps<typeof Dro
     />
   )
 }
-
-export function DropdownSeparator() {
-  return <DropdownPrimitive.Separator className="my-1 h-px bg-border" />
-}
