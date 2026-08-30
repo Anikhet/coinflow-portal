@@ -1,3 +1,12 @@
+import {
+  CircleDashed, Clock, Gavel, Hand, LoaderCircle, RotateCcw,
+  TrendingUp, UserSearch,
+} from 'lucide-react'
+import type { ComponentType } from 'react'
+import {
+  BanFilled, CircleCheckFilled, CircleXFilled, LockFilled, LockOpenFilled,
+  ShieldCheckFilled, ShieldOffFilled, ShieldXFilled, UnlockFilled,
+} from '@/components/icons/filled-glyphs'
 import type { Tone } from '@/types'
 import type {
   PaymentStatus,
@@ -27,15 +36,29 @@ export interface ToneDescriptor {
   isDefault?: boolean
   /** In-flight states pulse their dot. */
   pulse?: boolean
+  /**
+   * Glyph rendered inside the pill. Lives in the registry beside the tone and
+   * the label for the same reason they do: a shield-with-a-tick next to the
+   * word "Declined" is exactly the contradiction this module exists to make
+   * impossible. Only the attribute columns set one — status pills carry a dot
+   * instead, and adding a glyph there would put two marks in one pill.
+   *
+   * Typed structurally rather than as `LucideIcon` so the hand-drawn filled
+   * glyphs sit in the registry alongside the lucide ones. Every call site
+   * passes exactly these two props.
+   */
+  icon?: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>
 }
 
 export function paymentStatusTone(status: PaymentStatus): ToneDescriptor {
   switch (status) {
-    case 'settled':   return { tone: 'positive', label: 'Settled' }
-    case 'initiated': return { tone: 'caution', label: 'Initiated', pulse: true }
-    case 'failed':    return { tone: 'critical', label: 'Failed' }
-    case 'refunded':  return { tone: 'neutral', label: 'Refunded' }
-    case 'disputed':  return { tone: 'critical', label: 'Disputed' }
+    case 'settled':   return { tone: 'positive', label: 'Settled', icon: CircleCheckFilled }
+    case 'initiated': return { tone: 'caution', label: 'Initiated', pulse: true, icon: LoaderCircle }
+    case 'failed':    return { tone: 'critical', label: 'Failed', icon: CircleXFilled }
+    case 'refunded':  return { tone: 'neutral', label: 'Refunded', icon: RotateCcw }
+    // Same gavel as the Chargebacks nav item: one concept, one glyph, across
+    // navigation and data.
+    case 'disputed':  return { tone: 'critical', label: 'Disputed', icon: Gavel }
   }
 }
 
@@ -48,9 +71,12 @@ export function paymentStatusTone(status: PaymentStatus): ToneDescriptor {
  */
 export function protectionTone(state: ProtectionState): ToneDescriptor {
   switch (state) {
-    case 'approved': return { tone: 'neutral', label: 'Protected', isDefault: true }
-    case 'declined': return { tone: 'critical', label: 'Declined' }
-    case 'standard': return { tone: 'neutral', label: 'Unprotected' }
+    // Shield family throughout: chargeback protection IS a shield product, and
+    // keeping one column to one family means the glyph identifies the COLUMN
+    // as fast as the state.
+    case 'approved': return { tone: 'neutral', label: 'Protected', isDefault: true, icon: ShieldCheckFilled }
+    case 'declined': return { tone: 'critical', label: 'Declined', icon: ShieldXFilled }
+    case 'standard': return { tone: 'neutral', label: 'None', icon: ShieldOffFilled }
   }
 }
 
@@ -65,29 +91,41 @@ export function protectionTone(state: ProtectionState): ToneDescriptor {
  */
 export function threeDSTone(state: ThreeDSState): ToneDescriptor {
   switch (state) {
-    case 'authenticated': return { tone: 'info', label: '3DS Auth' }
-    case 'attempted':     return { tone: 'caution', label: '3DS Attempt' }
-    case 'failed':        return { tone: 'critical', label: '3DS Failed' }
-    case 'standard':      return { tone: 'neutral', label: 'Not enrolled', isDefault: true }
+    // Padlock family, per the checkout convention: a closed padlock is the
+    // near-universal mark for a completed 3DS/SCA challenge. `Ban` for a
+    // failure rather than a second ShieldX, because the Protection column
+    // sitting immediately to the left already owns that silhouette — the same
+    // glyph in adjacent columns meaning two different things is worse than no
+    // glyph at all.
+    case 'authenticated': return { tone: 'info', label: 'Authenticated', icon: LockFilled }
+    case 'attempted':     return { tone: 'caution', label: 'Attempted', icon: LockOpenFilled }
+    case 'failed':        return { tone: 'critical', label: 'Failed', icon: BanFilled }
+    case 'standard':      return { tone: 'neutral', label: 'Not enrolled', isDefault: true, icon: LockOpenFilled }
   }
 }
 
 export function kycTone(status: KycStatus): ToneDescriptor {
   switch (status) {
-    case 'verified':    return { tone: 'positive', label: 'KYC Verified' }
-    case 'pending':     return { tone: 'caution', label: 'KYC Pending' }
-    case 'not-started': return { tone: 'neutral', label: 'No KYC', isDefault: true }
-    case 'rejected':    return { tone: 'critical', label: 'KYC Rejected' }
+    // The same four glyphs a payment outcome uses. KYC used to carry a
+    // person-shaped set of its own, on the theory that identity verification
+    // is a different kind of thing from a payment outcome. But the SHAPE of
+    // the question is identical — did it pass, is it in flight, did it fail —
+    // and two vocabularies for one question shape means the reader learns the
+    // icon set twice. One vocabulary; the label says which subject it is about.
+    case 'verified':    return { tone: 'positive', label: 'KYC Verified', icon: CircleCheckFilled }
+    case 'pending':     return { tone: 'caution', label: 'KYC Pending', pulse: true, icon: LoaderCircle }
+    case 'not-started': return { tone: 'neutral', label: 'No KYC', isDefault: true, icon: CircleDashed }
+    case 'rejected':    return { tone: 'critical', label: 'KYC Rejected', icon: CircleXFilled }
   }
 }
 
 export function activityTone(status: CustomerActivity['status']): ToneDescriptor {
   switch (status) {
-    case 'settled':   return { tone: 'positive', label: 'Settled' }
-    case 'completed': return { tone: 'positive', label: 'Completed' }
-    case 'pending':   return { tone: 'caution', label: 'Pending', pulse: true }
-    case 'failed':    return { tone: 'critical', label: 'Failed' }
-    case 'opened':    return { tone: 'critical', label: 'Dispute opened' }
+    case 'settled':   return { tone: 'positive', label: 'Settled', icon: CircleCheckFilled }
+    case 'completed': return { tone: 'positive', label: 'Completed', icon: CircleCheckFilled }
+    case 'pending':   return { tone: 'caution', label: 'Pending', pulse: true, icon: Clock }
+    case 'failed':    return { tone: 'critical', label: 'Failed', icon: CircleXFilled }
+    case 'opened':    return { tone: 'critical', label: 'Dispute opened', icon: Gavel }
   }
 }
 
@@ -103,17 +141,23 @@ export function activityTone(status: CustomerActivity['status']): ToneDescriptor
 export function customerExceptions(customer: Customer): ToneDescriptor[] {
   const out: ToneDescriptor[] = []
 
-  if (customer.blocked) out.push({ tone: 'critical', label: 'Blocked' })
-  if (!customer.protectionEnabled) out.push({ tone: 'caution', label: 'Unprotected' })
-  if (customer.threeDSProcessing === 'degraded') out.push({ tone: 'caution', label: '3DS degraded' })
-  if (customer.threeDSProcessing === 'off') out.push({ tone: 'critical', label: '3DS off' })
-  if (customer.attemptLimit === 'restricted') out.push({ tone: 'caution', label: 'Attempts restricted' })
-  if (customer.attemptLimit === 'elevated') out.push({ tone: 'info', label: 'Attempts elevated' })
-  if (customer.verification === 'not-found') out.push({ tone: 'caution', label: 'Unverified' })
-  if (customer.fraudOverride === 'allow') out.push({ tone: 'info', label: 'Fraud allow' })
-  if (customer.fraudOverride === 'deny') out.push({ tone: 'critical', label: 'Fraud deny' })
+  // Glyphs reuse the same vocabulary as the columns they summarise: shields for
+  // protection, padlocks for 3DS, the gavel for disputes.
+  if (customer.blocked) out.push({ tone: 'critical', label: 'Blocked', icon: BanFilled })
+  if (!customer.protectionEnabled) out.push({ tone: 'caution', label: 'Unprotected', icon: ShieldOffFilled })
+  if (customer.threeDSProcessing === 'degraded') out.push({ tone: 'caution', label: '3DS degraded', icon: LockOpenFilled })
+  if (customer.threeDSProcessing === 'off') out.push({ tone: 'critical', label: '3DS off', icon: UnlockFilled })
+  if (customer.attemptLimit === 'restricted') out.push({ tone: 'caution', label: 'Attempts restricted', icon: Hand })
+  if (customer.attemptLimit === 'elevated') out.push({ tone: 'info', label: 'Attempts elevated', icon: TrendingUp })
+  if (customer.verification === 'not-found') out.push({ tone: 'caution', label: 'Unverified', icon: UserSearch })
+  if (customer.fraudOverride === 'allow') out.push({ tone: 'info', label: 'Fraud allow', icon: ShieldCheckFilled })
+  if (customer.fraudOverride === 'deny') out.push({ tone: 'critical', label: 'Fraud deny', icon: ShieldXFilled })
   if (customer.disputeCount > 0) {
-    out.push({ tone: 'critical', label: `${customer.disputeCount} dispute${customer.disputeCount > 1 ? 's' : ''}` })
+    out.push({
+      tone: 'critical',
+      icon: Gavel,
+      label: `${customer.disputeCount} dispute${customer.disputeCount > 1 ? 's' : ''}`,
+    })
   }
 
   return out
