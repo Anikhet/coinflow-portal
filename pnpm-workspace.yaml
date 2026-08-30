@@ -1,0 +1,10 @@
+# Supply-chain hardening.
+#
+# minimumReleaseAge quarantines freshly published versions for 24h, which is the
+# window in which most compromised-package incidents are caught and yanked.
+# Blocking lifecycle scripts by default stops an install from executing
+# arbitrary code from a transitive dependency.
+minimumReleaseAge: 1440
+dangerouslyAllowAllBuilds: false
+onlyBuiltDependencies:
+  - esbuild
