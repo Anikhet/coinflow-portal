@@ -8,9 +8,9 @@ import { PlaceholderPage } from '@/features/placeholder-page'
 import { NAV_GROUPS } from '@/lib/nav'
 import { useThemeEffect } from '@/hooks/use-theme-effect'
 
-const PLACEHOLDER_ROUTES = NAV_GROUPS
-  .flatMap((group) => group.items)
-  .filter((item) => item.placeholder)
+const PLACEHOLDER_ROUTES = NAV_GROUPS.flatMap((group) =>
+  group.items.filter((item) => item.placeholder),
+)
 
 export default function App() {
   useThemeEffect()

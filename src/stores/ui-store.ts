@@ -46,7 +46,20 @@ export const useUiStore = create<UiState>()(
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       setCommandOpen: (commandOpen) => set({ commandOpen }),
     }),
-    { name: 'coinflow-ui' },
+    {
+      name: 'coinflow-ui',
+      /**
+       * Persist only durable preferences. `commandOpen` is transient UI state —
+       * persisting it means a reload while the palette is open reopens it over
+       * the page, which reads as a bug.
+       */
+      partialize: (state) => ({
+        theme: state.theme,
+        density: state.density,
+        timezone: state.timezone,
+        sidebarCollapsed: state.sidebarCollapsed,
+      }),
+    },
   ),
 )
 
