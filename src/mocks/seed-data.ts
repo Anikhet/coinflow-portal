@@ -284,7 +284,12 @@ export const CUSTOMERS: Customer[] = Array.from({ length: 260 }, () => buildCust
 
 const CUSTOMER_POOL = CUSTOMERS.map((c) => ({ id: c.id, name: c.name, email: c.email }))
 
-export const PAYMENTS: Payment[] = Array.from({ length: 1400 }, () => buildPayment(random, NOW, CUSTOMER_POOL))
+/**
+ * ~460 payments/day across the 7-day window. Enough that a single large
+ * transaction cannot swing a daily bucket, which is what made the volume chart
+ * read as noise rather than as a trend at lower counts.
+ */
+export const PAYMENTS: Payment[] = Array.from({ length: 3200 }, () => buildPayment(random, NOW, CUSTOMER_POOL))
   .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
 
 export { NOW as DATASET_NOW }
