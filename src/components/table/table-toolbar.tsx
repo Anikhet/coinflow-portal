@@ -153,7 +153,13 @@ export function TableToolbar({
                     <DropdownItemIndicator className="absolute left-2">
                       <Check className="size-3.5 text-brand" />
                     </DropdownItemIndicator>
-                    {option.icon}
+                    {/* Fixed 20px slot: status filters supply 14px lucide
+                        glyphs while method/processor filters supply 20px brand
+                        marks, so without it the labels start at a different x
+                        in each menu. */}
+                    {option.icon && (
+                      <span className="grid size-5 shrink-0 place-items-center">{option.icon}</span>
+                    )}
                     <span className="truncate">{option.label}</span>
                   </DropdownCheckboxItem>
                 )

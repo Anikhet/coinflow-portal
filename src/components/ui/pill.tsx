@@ -15,8 +15,11 @@ import type { Tone } from '@/types'
  *   2. ONE tinted pill per row — the status. `variant="solid"` is reserved for
  *      status columns exclusively. It is the anchor your eye lands on first.
  *
- *   3. Attributes use `variant="ghost"` — no fill, hairline ring, muted text.
- *      They sit visually beneath status so they never compete with it.
+ *   3. Attributes use `variant="ghost"` — the SURFACE colour as fill, a tone
+ *      ring and tone text. It is not tinted, so it stays quieter than the
+ *      status pill, but it is a real chip: an opaque fill means the pill keeps
+ *      its shape over a hovered or selected row instead of dissolving into the
+ *      row tint, and the ring reads as a boundary rather than a smudge.
  *
  *   4. Identity is NOT a pill. Method, processor, merchant and card brand are
  *      rendered as glyph + plain text. They describe what a payment *is*, not
@@ -41,11 +44,11 @@ const TONE_SOLID: Record<Tone, string> = {
 }
 
 const TONE_GHOST: Record<Tone, string> = {
-  positive: 'text-[var(--tone-positive-fg)] ring-[var(--tone-positive-ring)]',
-  caution:  'text-[var(--tone-caution-fg)] ring-[var(--tone-caution-ring)]',
-  critical: 'text-[var(--tone-critical-fg)] ring-[var(--tone-critical-ring)]',
-  info:     'text-[var(--tone-info-fg)] ring-[var(--tone-info-ring)]',
-  neutral:  'text-ink-muted ring-[var(--tone-neutral-ring)]',
+  positive: 'bg-surface text-[var(--tone-positive-fg)] ring-[var(--tone-positive-ring)]',
+  caution:  'bg-surface text-[var(--tone-caution-fg)] ring-[var(--tone-caution-ring)]',
+  critical: 'bg-surface text-[var(--tone-critical-fg)] ring-[var(--tone-critical-ring)]',
+  info:     'bg-surface text-[var(--tone-info-fg)] ring-[var(--tone-info-ring)]',
+  neutral:  'bg-surface text-ink-muted ring-[var(--tone-neutral-ring)]',
 }
 
 const TONE_DOT: Record<Tone, string> = {
@@ -80,8 +83,11 @@ export function Pill({
   return (
     <span
       className={cn(
-        'inline-flex h-5 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-pill)]',
-        'px-1.5 text-[11px] font-medium leading-none ring-1 ring-inset',
+        'inline-flex h-5 min-w-0 max-w-full shrink-0 items-center gap-1 rounded-[var(--radius-pill)]',
+        'text-[11px] font-medium leading-none ring-1 ring-inset',
+        // A leading glyph optically fills the left inset, so the padding is
+        // asymmetric — equal padding makes an icon pill look left-heavy.
+        icon || dot ? 'pl-1.5 pr-2' : 'px-2',
         variant === 'solid' ? TONE_SOLID[tone] : TONE_GHOST[tone],
         className,
       )}
@@ -93,7 +99,11 @@ export function Pill({
         />
       )}
       {icon}
-      {children}
+      {/* Truncate INSIDE the chip. Without this the pill overflows a narrow
+          column and the cell clips it, so the rounded right edge disappears and
+          the label trails off into the next column's whitespace — the pill
+          stops looking like a pill. */}
+      <span className="min-w-0 truncate">{children}</span>
     </span>
   )
 }

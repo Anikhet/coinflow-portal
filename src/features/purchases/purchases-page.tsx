@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { CreditCard, Globe } from 'lucide-react'
+import { CreditCard } from 'lucide-react'
 import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { DataTable } from '@/components/table/data-table'
 import { TableToolbar, type FilterGroup } from '@/components/table/table-toolbar'
@@ -12,21 +12,20 @@ import { useDebounced } from '@/hooks/use-debounced'
 import { useUiStore } from '@/stores/ui-store'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { TableViewProvider, useTableView } from '@/stores/table-view-context'
-import { buildPaymentColumns, DEFAULT_HIDDEN_PAYMENT_COLUMNS } from './columns'
+import { buildPaymentColumns } from './columns'
 import { PaymentDrawer } from './payment-drawer'
-import { MethodGlyph } from '@/components/icons/method-icon'
+import { MethodGlyph, ProcessorGlyph } from '@/components/icons/method-icon'
 import { methodLabel, processorLabel } from '@/lib/method-labels'
 import { paymentStatusTone } from '@/lib/tone-map'
 import type { PaymentMethod, Processor, PaymentStatus } from '@/types/payment'
+import { TONE_TEXT } from '@/lib/tone-classes'
 import { cn } from '@/lib/cn'
 
 const PAGE_SIZE = 25
 
 export function PurchasesPage() {
   return (
-    <TableViewProvider
-      init={{ sortBy: 'createdAt', sortDir: 'desc', columnVisibility: DEFAULT_HIDDEN_PAYMENT_COLUMNS }}
-    >
+    <TableViewProvider init={{ sortBy: 'createdAt', sortDir: 'desc' }}>
       <PurchasesView />
     </TableViewProvider>
   )
@@ -79,10 +78,17 @@ function PurchasesView() {
       {
         id: 'status',
         label: 'Status',
-        options: options.statuses.map((status) => ({
-          value: status,
-          label: paymentStatusTone(status as PaymentStatus).label,
-        })),
+        // The menu and the table read from the same registry, so a status
+        // carries the identical glyph and wording in the filter that picks it
+        // and in the rows it returns.
+        options: options.statuses.map((status) => {
+          const { label, icon: Icon, tone } = paymentStatusTone(status as PaymentStatus)
+          return {
+            value: status,
+            label,
+            icon: Icon ? <Icon className={cn('size-3.5 shrink-0', TONE_TEXT[tone])} aria-hidden /> : undefined,
+          }
+        }),
       },
       {
         id: 'method',
@@ -99,6 +105,7 @@ function PurchasesView() {
         options: options.processors.map((processor) => ({
           value: processor,
           label: processorLabel(processor as Processor),
+          icon: <ProcessorGlyph processor={processor as Processor} />,
         })),
       },
     ],
@@ -157,15 +164,26 @@ function TimezoneToggle({ value, onChange }: {
   onChange: (value: 'local' | 'utc') => void
 }) {
   return (
-    <div className="flex h-8 items-center gap-0.5 rounded-[var(--radius-control)] bg-surface-sunk p-0.5 ring-1 ring-inset ring-border">
-      <Globe className="ml-1.5 size-3.5 shrink-0 text-ink-faint" />
+    /* Spacing: 4px track padding all round, so the selected chip sits evenly
+       inside the well, and 10px inside each segment so "UTC" is not pinched
+       against its own chip edge. The group's aria-label carries what the
+       dropped globe was gesturing at. */
+    <div
+      className={cn(
+        'flex h-8 items-center gap-1 rounded-[var(--radius-control)] bg-surface-sunk',
+        'p-1 ring-1 ring-inset ring-border',
+      )}
+      role="group"
+      aria-label="Timestamp timezone"
+    >
       {(['local', 'utc'] as const).map((option) => (
         <button
           key={option}
           type="button"
           onClick={() => onChange(option)}
+          aria-pressed={value === option}
           className={cn(
-            'h-7 rounded-[6px] px-2 text-[12px] font-medium transition-colors',
+            'h-6 rounded-[6px] px-2.5 text-[12px] font-medium leading-none transition-colors',
             value === option ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink',
           )}
         >

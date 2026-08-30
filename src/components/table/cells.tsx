@@ -40,27 +40,59 @@ export function AmountCell({ value, muted = false }: { value: number; muted?: bo
   )
 }
 
-/** Glyph + plain text. Identity is never a pill (taxonomy rule 4). */
+/**
+ * Identity rendered as glyph + name — method and processor.
+ *
+ * Taxonomy rule 4 says identity is not a pill, and this now follows it
+ * literally: no border, no fill. The chip outline it used to carry was meant to
+ * stop the brand mark floating loose against the row, but with one mark per
+ * row at a fixed 20px the marks already form their own column, and the outlines
+ * added a second rectangle around every logo — a box inside a box, repeated
+ * down the whole table. Removing them leaves the status pill as the only
+ * enclosed shape in the row, which is what makes it findable.
+ */
 export function IdentityCell({ glyph, label, sublabel }: {
   glyph: ReactNode
   label: string
+  /** Secondary detail — e.g. a card's last four. Muted so it reads as a qualifier. */
   sublabel?: string | null
 }) {
   return (
-    <span className="flex min-w-0 items-center gap-2">
+    // h-6 holds the row baseline steady: the 20px mark and the 12px label have
+    // different natural heights, and without a fixed box the method column
+    // would sit a pixel off the processor column beside it.
+    <span className="flex h-6 min-w-0 items-center gap-1.5">
       {glyph}
-      <span className="min-w-0 truncate">
-        <span className="truncate text-ink">{label}</span>
-        {sublabel && <span className="ml-1.5 font-mono text-[11px] text-ink-faint">{sublabel}</span>}
-      </span>
+      <span className="truncate text-[12px] text-ink">{label}</span>
+      {sublabel && <span className="shrink-0 font-mono text-[11px] text-ink-faint">{sublabel}</span>}
     </span>
   )
 }
 
-/** The single solid pill per row. */
+/**
+ * The single solid pill per row.
+ *
+ * Carries a glyph rather than a dot when the descriptor supplies one: a dot
+ * encodes severity in colour ALONE, which is the accessibility failure the
+ * icon set exists to fix. The dot survives only as the fallback.
+ */
 export function StatusCell({ descriptor }: { descriptor: ToneDescriptor }) {
+  const Icon = descriptor.icon
   return (
-    <Pill tone={descriptor.tone} variant="solid" dot pulse={descriptor.pulse}>
+    <Pill
+      tone={descriptor.tone}
+      variant="solid"
+      dot={!Icon}
+      pulse={descriptor.pulse}
+      icon={
+        Icon && (
+          <Icon
+            className={cn('size-3 shrink-0', descriptor.pulse && 'animate-spin [animation-duration:2s]')}
+            aria-hidden
+          />
+        )
+      }
+    >
       {descriptor.label}
     </Pill>
   )
@@ -72,9 +104,29 @@ export function StatusCell({ descriptor }: { descriptor: ToneDescriptor }) {
  */
 export function AttributeCell({ descriptor }: { descriptor: ToneDescriptor }) {
   if (descriptor.isDefault) {
-    return <span className="select-none text-ink-faint" title={descriptor.label}>—</span>
+    // The dash is decorative; the accessible name carries the real state, so a
+    // screen reader hears "Protected" or "Not enrolled" rather than "dash".
+    return (
+      <span className="select-none text-ink-faint" title={descriptor.label} aria-label={descriptor.label}>
+        <span aria-hidden>—</span>
+      </span>
+    )
   }
-  return <Pill tone={descriptor.tone} variant="ghost">{descriptor.label}</Pill>
+  // Colour alone is not an accessible signal — roughly 1 in 12 men cannot
+  // separate the red "Declined" pill from the amber "3DS Attempt" one. The
+  // glyph is the redundant encoding that makes the state readable without it.
+  const Icon = descriptor.icon
+  return (
+    <Pill
+      tone={descriptor.tone}
+      variant="ghost"
+      // Sized to the 11px cap height beside it, so the glyph reads as part of
+      // the word rather than as a second element competing with it.
+      icon={Icon ? <Icon className="size-3 shrink-0" aria-hidden /> : undefined}
+    >
+      {descriptor.label}
+    </Pill>
+  )
 }
 
 /** Most severe first, so the one surfaced pill is always the worst one. */
@@ -90,7 +142,11 @@ const SEVERITY_RANK = { critical: 0, caution: 1, info: 2, positive: 3, neutral: 
  */
 export function ExceptionsCell({ items }: { items: ToneDescriptor[] }) {
   if (items.length === 0) {
-    return <span className="select-none text-ink-faint" title="No exceptions">—</span>
+    return (
+      <span className="select-none text-ink-faint" title="No exceptions" aria-label="No exceptions">
+        <span aria-hidden>—</span>
+      </span>
+    )
   }
 
   // toSorted leaves the caller's array untouched; the ranking is module scope
@@ -100,7 +156,13 @@ export function ExceptionsCell({ items }: { items: ToneDescriptor[] }) {
 
   return (
     <span className="flex items-center gap-1">
-      <Pill tone={first.tone} variant="ghost">{first.label}</Pill>
+      <Pill
+        tone={first.tone}
+        variant="ghost"
+        icon={first.icon ? <first.icon className="size-3 shrink-0" aria-hidden /> : undefined}
+      >
+        {first.label}
+      </Pill>
       {rest.length > 0 && (
         <Tooltip content={rest.map((item) => item.label).join(' · ')}>
           <span className="shrink-0 cursor-default rounded-[var(--radius-pill)] px-1 text-[11px] font-medium text-ink-faint ring-1 ring-inset ring-border">

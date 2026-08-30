@@ -139,3 +139,65 @@ export function PixMark() {
     </span>
   )
 }
+
+/**
+ * PROCESSOR MARKS
+ * -----------------------------------------------------------------------------
+ * Each acquiring processor gets its own mark in its own brand colour, so the
+ * Processor column is scanned by shape and hue rather than read letter by
+ * letter. Two of these carry a real glyph (Stripe's S, Checkout's tick); the
+ * bank processors have no widely-recognised symbol, so they use their brand
+ * colour with a letterform — which is still identity, not a generic grey chip.
+ *
+ * They share CARD_BOX, so every processor occupies the same 20px square and the
+ * column stays flush no matter which brand a row carries.
+ *
+ * These are simplified representations for a design prototype, not official
+ * brand assets.
+ */
+
+/** Letterform mark for processors without a distinctive symbol. */
+function LetterMark({ label, text, className, size = 'text-[9px]' }: {
+  label: string
+  text: string
+  className: string
+  size?: string
+}) {
+  return (
+    <span className={`${CARD_BOX} ${className}`} aria-label={label}>
+      <span className={`${size} font-bold leading-none tracking-tight`}>{text}</span>
+    </span>
+  )
+}
+
+export function StripeMark() {
+  return (
+    <span className={`${CARD_BOX} bg-[#635BFF]`} aria-label="Stripe">
+      <svg viewBox="0 0 16 16" className="w-[9px]" fill="#fff">
+        <path d="M7.6 6.3c0-.6.5-.8 1.3-.8 1.1 0 2.6.4 3.7 1V3.1A9.6 9.6 0 0 0 8.9 2.5C6.1 2.5 4.2 4 4.2 6.4c0 3.8 5.2 3.2 5.2 4.8 0 .7-.6.9-1.5.9-1.2 0-2.8-.5-4-1.2v3.5c1.3.6 2.7.8 4 .8 2.9 0 4.9-1.4 4.9-3.9 0-4.1-5.2-3.4-5.2-5Z"/>
+      </svg>
+    </span>
+  )
+}
+
+export function CheckoutMark() {
+  return (
+    <span className={`${CARD_BOX} bg-[#0B1F3F]`} aria-label="Checkout.com">
+      <svg viewBox="0 0 16 16" className="w-[10px]" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 8.6 6.3 12 13 4.5" />
+      </svg>
+    </span>
+  )
+}
+
+export function HighnoteMark() {
+  return <LetterMark label="Highnote" text="h" className="bg-[#101014] text-[#C6F24E]" size="text-[11px]" />
+}
+
+export function FifthThirdMark() {
+  return <LetterMark label="Fifth Third" text="53" className="bg-[#0033A0] text-white" />
+}
+
+export function MvbMark() {
+  return <LetterMark label="MVB" text="MVB" className="bg-[#00447C] text-white" size="text-[7px]" />
+}

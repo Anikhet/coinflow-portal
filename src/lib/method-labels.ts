@@ -31,12 +31,3 @@ const PROCESSOR_LABEL: Record<Processor, string> = {
 export const methodLabel = (method: PaymentMethod) => METHOD_LABEL[method]
 export const processorLabel = (processor: Processor) => PROCESSOR_LABEL[processor]
 
-/** Two-letter monogram used by the processor chip. */
-export function processorInitials(processor: Processor) {
-  return PROCESSOR_LABEL[processor]
-    .split(' ')
-    .map((word) => word[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-}

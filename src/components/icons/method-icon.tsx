@@ -1,8 +1,9 @@
+import type { ReactElement } from 'react'
 import type { PaymentMethod, Processor } from '@/types/payment'
-import { processorInitials } from '@/lib/method-labels'
 import {
   VisaMark, MastercardMark, AmexMark, ApplePayMark, GooglePayMark,
   VenmoMark, PayPalMark, CashAppMark, BankMark, PixMark, SolanaMark,
+  StripeMark, CheckoutMark, HighnoteMark, FifthThirdMark, MvbMark,
 } from './brand-marks'
 
 /**
@@ -38,17 +39,24 @@ export function CardBrandGlyph({ brand }: { brand: 'visa' | 'mastercard' | 'amex
 }
 
 /**
- * Processors are infrastructure, not brands the operator needs to recognise by
- * logo. A two-letter monogram in a neutral chip identifies them at a glance
- * without introducing eleven more color-bearing logos into the table.
+ * Every processor carries its own brand mark in its own colour.
+ *
+ * The previous grey monogram made the column uniform: five identical chips
+ * whose only difference was two small letters, so the eye had to READ every
+ * row to answer "which processor?". Distinct marks let that question be
+ * answered by shape and hue at a glance — the same reason the card brands get
+ * real logos. All five occupy the identical 20px box, so the column stays
+ * flush and no row grows taller than its neighbours.
  */
+const PROCESSOR_MARK: Record<Processor, () => ReactElement> = {
+  stripe: StripeMark,
+  checkout: CheckoutMark,
+  highnote: HighnoteMark,
+  fifththird: FifthThirdMark,
+  mvb: MvbMark,
+}
+
 export function ProcessorGlyph({ processor }: { processor: Processor }) {
-  return (
-    <span
-      aria-hidden
-      className="inline-flex size-[20px] shrink-0 items-center justify-center rounded-[3px] bg-surface-sunk text-[9px] font-semibold tracking-tight text-ink-muted ring-1 ring-inset ring-border"
-    >
-      {processorInitials(processor)}
-    </span>
-  )
+  const Mark = PROCESSOR_MARK[processor]
+  return <Mark />
 }

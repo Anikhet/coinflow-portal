@@ -1,29 +1,38 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import type { Payment } from '@/types'
-import {
-  AmountCell, AttributeCell, IdCell, IdentityCell, StatusCell,
-} from '@/components/table/cells'
+import { AmountCell, AttributeCell, IdCell, IdentityCell, StatusCell } from '@/components/table/cells'
 import { MethodGlyph, ProcessorGlyph } from '@/components/icons/method-icon'
 import { methodLabel, processorLabel } from '@/lib/method-labels'
 import { SolanaMark } from '@/components/icons/brand-marks'
 import { paymentStatusTone, protectionTone, threeDSTone } from '@/lib/tone-map'
-import { formatTableTime, formatDateTime } from '@/lib/format'
+import { formatTableTime, formatDateTime, truncateId } from '@/lib/format'
 import { Tooltip } from '@/components/ui/tooltip'
+import { CopyButton } from '@/components/ui/copy-button'
 import { Pill } from '@/components/ui/pill'
 import type { Timezone } from '@/stores/ui-store'
 
 /**
  * PAYMENTS COLUMNS
  * =============================================================================
- * Column order encodes a reading priority: WHEN it happened, WHO it belongs to,
- * WHAT it was worth, HOW it did. The original led with date then merchant then
- * a raw payment ID — putting an opaque UUID, the least scannable value on the
- * row, in prime third position. Here the ID is available but demoted.
+ * Column set, order and labels match the existing production table exactly —
+ * all thirteen, same sequence, all visible by default. An operator moving
+ * between the two should not have to re-learn where anything lives, and a
+ * redesign that quietly drops or reorders columns is changing the product, not
+ * restyling it.
  *
- * Exactly one column (Status) renders a solid pill. Method, processor and
- * merchant are glyph + text. Protection and 3DS are ghost pills that collapse
- * to an em-dash at their default value, so a routine payment shows a single
- * colored element and an unusual one shows two or three.
+ * What changes is the ENCODING inside those columns, not the columns:
+ *
+ *   - Status is the only solid pill in the row (the anchor for the eye).
+ *   - Method and Processor become glyph + plain text rather than pills.
+ *     They state what a payment IS, not how it is DOING; pilling them is what
+ *     made every cell compete for attention.
+ *   - Protection and 3D Secure render an em-dash at their default value instead
+ *     of an "N/A" or "Approved" pill on nearly every row, so the column reads
+ *     as quiet-with-exceptions rather than a wall of identical badges.
+ *   - Code shows nothing for '00'. Every settled payment carries the same
+ *     approval code, so printing it costs a column of width and conveys zero.
+ *
+ * Same data, same place, far less ink.
  */
 
 export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unknown>[] {
@@ -31,8 +40,10 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
     {
       id: 'createdAt',
       accessorKey: 'createdAt',
-      header: 'Date',
-      size: 100,
+      // The original header states which timezone is in force; it must track
+      // the toggle rather than always claiming "local".
+      header: timezone === 'utc' ? 'Date (UTC)' : 'Date (local)',
+      size: 110,
       meta: { label: 'Date' },
       cell: ({ row }) => (
         <Tooltip content={formatDateTime(row.original.createdAt, timezone)}>
@@ -43,39 +54,32 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       ),
     },
     {
-      id: 'customerName',
-      accessorKey: 'customerName',
-      header: 'Customer',
-      size: 250,
-      meta: { label: 'Customer' },
+      id: 'merchant',
+      accessorKey: 'merchant',
+      header: 'Merchant',
+      size: 150,
+      meta: { label: 'Merchant' },
       cell: ({ row }) => (
-        <span className="min-w-0 truncate">
-          <span className="truncate font-medium text-ink">{row.original.customerName}</span>
-          <span className="ml-1.5 truncate text-[12px] text-ink-faint">{row.original.customerEmail}</span>
+        <span className="flex items-center gap-1">
+          <span className="truncate text-ink">{row.original.merchant}</span>
+          <CopyButton value={row.original.merchant} label="Copy merchant" />
         </span>
       ),
     },
     {
-      id: 'merchant',
-      accessorKey: 'merchant',
-      header: 'Merchant',
-      size: 130,
-      meta: { label: 'Merchant' },
-      cell: ({ row }) => <span className="truncate text-ink-muted">{row.original.merchant}</span>,
-    },
-    {
-      id: 'subtotal',
-      accessorKey: 'subtotal',
-      header: 'Amount',
-      size: 110,
-      meta: { align: 'right', label: 'Amount' },
-      cell: ({ row }) => <AmountCell value={row.original.subtotal} />,
+      id: 'id',
+      accessorKey: 'id',
+      header: 'Payment ID',
+      size: 140,
+      enableSorting: false,
+      meta: { label: 'Payment ID' },
+      cell: ({ row }) => <IdCell value={row.original.id} display={truncateId(row.original.id, 4, 4)} />,
     },
     {
       id: 'method',
       accessorKey: 'method',
       header: 'Method',
-      size: 150,
+      size: 165,
       enableSorting: false,
       meta: { label: 'Method' },
       cell: ({ row }) => (
@@ -101,6 +105,27 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       ),
     },
     {
+      id: 'subtotal',
+      accessorKey: 'subtotal',
+      header: 'Subtotal',
+      size: 110,
+      meta: { align: 'right', label: 'Subtotal' },
+      cell: ({ row }) => <AmountCell value={row.original.subtotal} />,
+    },
+    {
+      id: 'customerName',
+      accessorKey: 'customerName',
+      header: 'Customer',
+      size: 220,
+      meta: { label: 'Customer' },
+      cell: ({ row }) => (
+        <span className="min-w-0 truncate">
+          <span className="truncate font-medium text-ink">{row.original.customerName}</span>
+          <span className="ml-1.5 truncate text-[12px] text-ink-faint">{row.original.customerEmail}</span>
+        </span>
+      ),
+    },
+    {
       id: 'status',
       accessorKey: 'status',
       header: 'Status',
@@ -112,14 +137,14 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       id: 'responseCode',
       accessorKey: 'responseCode',
       header: 'Code',
-      size: 100,
+      size: 90,
       enableSorting: false,
       meta: { label: 'Response code' },
       cell: ({ row }) => {
         // An approval code carries no information — every settled payment has
         // the same one. Only surface a code when it explains a failure.
         if (row.original.responseCode === '00') {
-          return <span className="select-none text-ink-faint">—</span>
+          return <span className="select-none text-ink-faint" aria-label="Approved">—</span>
         }
         return (
           <Tooltip content={row.original.responseLabel}>
@@ -131,10 +156,24 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       },
     },
     {
+      id: 'disbursed',
+      accessorKey: 'disbursed',
+      header: 'Disbursed',
+      size: 105,
+      enableSorting: false,
+      meta: { label: 'Disbursed' },
+      cell: ({ row }) =>
+        row.original.disbursed ? (
+          <Pill tone="neutral" variant="ghost">Sent</Pill>
+        ) : (
+          <span className="select-none text-ink-faint" aria-label="Not disbursed">—</span>
+        ),
+    },
+    {
       id: 'protection',
       accessorKey: 'protection',
       header: 'Protection',
-      size: 110,
+      size: 120,
       enableSorting: false,
       meta: { label: 'Protection' },
       cell: ({ row }) => <AttributeCell descriptor={protectionTone(row.original.protection)} />,
@@ -142,29 +181,17 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
     {
       id: 'threeDS',
       accessorKey: 'threeDS',
-      header: '3DS',
-      size: 120,
+      header: '3D Secure',
+      size: 135,
       enableSorting: false,
       meta: { label: '3D Secure' },
       cell: ({ row }) => <AttributeCell descriptor={threeDSTone(row.original.threeDS)} />,
     },
     {
-      id: 'disbursed',
-      accessorKey: 'disbursed',
-      header: 'Disbursed',
-      size: 100,
-      enableSorting: false,
-      meta: { label: 'Disbursed' },
-      cell: ({ row }) =>
-        row.original.disbursed
-          ? <Pill tone="neutral" variant="ghost">Sent</Pill>
-          : <span className="select-none text-ink-faint">—</span>,
-    },
-    {
       id: 'chainTx',
       accessorKey: 'chainTx',
       header: 'Chain',
-      size: 90,
+      size: 80,
       enableSorting: false,
       meta: { label: 'Chain' },
       cell: ({ row }) =>
@@ -173,27 +200,8 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
             <span className="inline-flex"><SolanaMark className="w-4" /></span>
           </Tooltip>
         ) : (
-          <span className="select-none text-ink-faint">—</span>
+          <span className="select-none text-ink-faint" aria-label="Not settled on chain">—</span>
         ),
     },
-    {
-      id: 'id',
-      accessorKey: 'id',
-      header: 'Payment ID',
-      size: 150,
-      enableSorting: false,
-      meta: { label: 'Payment ID' },
-      cell: ({ row }) => <IdCell value={row.original.id} />,
-    },
   ]
-}
-
-/**
- * Columns hidden by default. All thirteen are available, but a first-run view
- * showing every one of them is unreadable — the operator should opt in to
- * detail rather than opt out of noise.
- */
-export const DEFAULT_HIDDEN_PAYMENT_COLUMNS = {
-  disbursed: false,
-  id: false,
 }
