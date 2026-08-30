@@ -61,6 +61,19 @@
   --brand-ring:     oklch(0.55 0.19 285 / 0.35);
   --brand-contrast: oklch(0.99 0.005 285);
 
+  /* -- decorative gradients ------------------------------------------------
+     Defined ONCE, in terms of the ramps above. Custom properties substitute at
+     computed-value time on :root, so when the dark blocks below reassign
+     --brand these gradients re-derive themselves — no second definition to
+     keep in sync, and no burnt-in hex pair that only works on white.
+
+     These are identity/ornament only (the empty-state mark). Status meaning
+     still comes from the tone ramps. */
+  --gradient-brand:    linear-gradient(145deg, var(--brand), var(--brand-hover));
+  --gradient-critical: linear-gradient(145deg, var(--tone-critical-dot), var(--tone-critical-fg));
+  /* Inset highlight on a gradient chip — a light source, not a colour. */
+  --gradient-sheen:    oklch(1 0 0 / 0.20);
+
   /* -- tones -------------------------------------------------------------- */
   --tone-positive-fg:   oklch(0.47 0.115 158);
   --tone-positive-bg:   oklch(0.965 0.032 158);
@@ -76,6 +89,7 @@
   --tone-critical-bg:   oklch(0.965 0.028 21);
   --tone-critical-ring: oklch(0.51 0.175 21 / 0.18);
   --tone-critical-dot:  oklch(0.60 0.205 21);
+  --tone-critical-contrast: oklch(0.99 0.008 21);
 
   --tone-info-fg:       oklch(0.49 0.115 245);
   --tone-info-bg:       oklch(0.963 0.028 245);
@@ -138,6 +152,7 @@
     --tone-critical-bg:   oklch(0.300 0.070 21);
     --tone-critical-ring: oklch(0.79 0.135 21 / 0.24);
     --tone-critical-dot:  oklch(0.70 0.180 21);
+    --tone-critical-contrast: oklch(0.17 0.020 21);
 
     --tone-info-fg:       oklch(0.80 0.115 245);
     --tone-info-bg:       oklch(0.288 0.058 245);
@@ -194,6 +209,7 @@
   --tone-critical-bg:   oklch(0.300 0.070 21);
   --tone-critical-ring: oklch(0.79 0.135 21 / 0.24);
   --tone-critical-dot:  oklch(0.70 0.180 21);
+  --tone-critical-contrast: oklch(0.17 0.020 21);
 
   --tone-info-fg:       oklch(0.80 0.115 245);
   --tone-info-bg:       oklch(0.288 0.058 245);
@@ -231,6 +247,7 @@
   --color-brand-hover: var(--brand-hover);
   --color-brand-soft: var(--brand-soft);
   --color-brand-contrast: var(--brand-contrast);
+  --color-tone-critical-contrast: var(--tone-critical-contrast);
 }
 
 @layer base {
