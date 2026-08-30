@@ -1,7 +1,7 @@
 import { PAYMENTS, CUSTOMERS, DATASET_NOW } from './seed-data'
 import type { Payment, Customer } from '@/types'
 import type { OverviewMetrics, SeriesPoint, MethodSeries } from '@/types/analytics'
-import { methodLabel } from '@/components/icons/method-icon'
+import { methodLabel } from '@/lib/method-labels'
 import type { PaymentMethod } from '@/types/payment'
 
 /**
@@ -244,10 +244,32 @@ export async function fetchOverview(): Promise<OverviewMetrics> {
     authRate: {
       pct: authRate,
       deltaPct: 0.6,
-      spark: sparkline(amounts.map((_, i) => (i % 7 === 0 ? 0.86 : 0.94))),
+      spark: authRateByDay(),
     },
   }
 }
+
+/** Per-day authorisation rate, so the sparkline reflects real outcomes. */
+function authRateByDay(): number[] {
+  const byDay = new Map<string, { authorised: number; attempted: number }>()
+
+  for (const payment of PAYMENTS) {
+    if (payment.status === 'initiated') continue
+    const key = dayKey(+new Date(payment.createdAt))
+    const bucket = byDay.get(key) ?? { authorised: 0, attempted: 0 }
+    bucket.attempted += 1
+    if (payment.status !== 'failed') bucket.authorised += 1
+    byDay.set(key, bucket)
+  }
+
+  return [...byDay.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, { authorised, attempted }]) => (attempted === 0 ? 0 : (authorised / attempted) * 100))
+}
+
+/** Corpus sizes, so pages do not hardcode a total that drifts from the data. */
+export const PAYMENT_TOTAL = PAYMENTS.length
+export const CUSTOMER_TOTAL = CUSTOMERS.length
 
 export function listFilterOptions() {
   return {

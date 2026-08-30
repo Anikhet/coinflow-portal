@@ -50,7 +50,8 @@ const PROCESSOR_WEIGHTS: ReadonlyArray<readonly [Processor, number]> = [
 ]
 
 const AMOUNT_TIERS: ReadonlyArray<readonly [[number, number], number]> = [
-  [[5, 25], 42], [[25, 100], 31], [[100, 400], 18], [[400, 2500], 7], [[2500, 14000], 2],
+  [[5, 25], 34], [[25, 100], 28], [[100, 400], 20],
+  [[400, 2500], 12], [[2500, 12000], 5], [[12000, 40000], 1],
 ]
 
 function fullName(random: Random) {
@@ -134,7 +135,7 @@ function buildPayment(random: Random, now: number, customerPool: Array<{ id: str
   const settlesOnChain = status === 'settled' && random.bool(0.82)
 
   // Spread across the last 7 days, front-loaded so the top of the table is fresh.
-  const minutesAgo = Math.round(random.float(0, 1) ** 1.7 * 7 * 24 * 60)
+  const minutesAgo = Math.round(random.float(0, 1) ** 1.15 * 7 * 24 * 60)
   const createdAt = new Date(now - minutesAgo * 60_000).toISOString()
 
   const id = `${random.hex(8)}-${random.hex(4)}-${random.hex(4)}-${random.hex(4)}-${random.hex(12)}`
@@ -278,12 +279,12 @@ const SEED = 20260830
 const NOW = new Date('2026-08-30T15:50:00Z').getTime()
 const random = createRandom(SEED)
 
-export const CUSTOMERS: Customer[] = Array.from({ length: 84 }, () => buildCustomer(random, NOW))
+export const CUSTOMERS: Customer[] = Array.from({ length: 260 }, () => buildCustomer(random, NOW))
   .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
 
 const CUSTOMER_POOL = CUSTOMERS.map((c) => ({ id: c.id, name: c.name, email: c.email }))
 
-export const PAYMENTS: Payment[] = Array.from({ length: 240 }, () => buildPayment(random, NOW, CUSTOMER_POOL))
+export const PAYMENTS: Payment[] = Array.from({ length: 1400 }, () => buildPayment(random, NOW, CUSTOMER_POOL))
   .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
 
 export { NOW as DATASET_NOW }
