@@ -1,4 +1,4 @@
-import { Ban, CreditCard, Fingerprint, MapPin, ShieldCheck, Trash2, User, X } from 'lucide-react'
+import { Ban, CreditCard, Fingerprint, History, MapPin, ShieldCheck, Trash2, User, X } from 'lucide-react'
 import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabCount } from '@/components/ui/tabs'
 import { Pill } from '@/components/ui/pill'
@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Tooltip } from '@/components/ui/tooltip'
 import { CopyButton } from '@/components/ui/copy-button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/table/empty-state'
 import { Fact, FactGrid, Section } from '@/components/ui/detail'
 import { CardBrandGlyph } from '@/components/icons/method-icon'
+import { RecordUnavailable } from '@/components/ui/record-unavailable'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { useAsync } from '@/hooks/use-async'
 import { fetchCustomer } from '@/mocks/api'
-import { activityTone, customerExceptions, kycTone, signalCountTone } from '@/lib/tone-map'
+import { activityTone, customerExceptions, kycTone, signalCountTone, CONTROL_LABELS } from '@/lib/tone-map'
 import { formatCurrency, formatCount, formatDateOnly, formatDateTime, truncateId } from '@/lib/format'
 import type { Customer, CustomerActivity, SignalRow } from '@/types'
 import { cn } from '@/lib/cn'
@@ -33,7 +35,7 @@ export function CustomerDrawer() {
   const customerId = useDrawerStore((state) => state.customerId)
   const closeAll = useDrawerStore((state) => state.closeAll)
 
-  const { data: customer, loading } = useAsync(
+  const { data: customer, loading, error, reload } = useAsync(
     () => (customerId ? fetchCustomer(customerId) : Promise.resolve(null)),
     [customerId],
   )
@@ -45,7 +47,13 @@ export function CustomerDrawer() {
       size="lg"
       label="Customer detail"
     >
-      {loading || !customer ? <CustomerDrawerSkeleton /> : <CustomerDrawerContent customer={customer} />}
+      {loading ? (
+        <CustomerDrawerSkeleton />
+      ) : !customer ? (
+        <RecordUnavailable entity="customer" error={error} onRetry={reload} />
+      ) : (
+        <CustomerDrawerContent customer={customer} />
+      )}
     </Sheet>
   )
 }
@@ -171,10 +179,10 @@ function OverviewTab({ customer, exceptions }: {
       <Section title="Controls">
         <FactGrid>
           <Fact label="Chargeback protection" value={customer.protectionEnabled ? 'Enabled' : 'Disabled'} />
-          <Fact label="3DS processing" value={customer.threeDSProcessing} />
-          <Fact label="Attempt limit" value={customer.attemptLimit} />
-          <Fact label="Verification" value={customer.verification} />
-          <Fact label="Fraud override" value={customer.fraudOverride} />
+          <Fact label="3DS processing" value={CONTROL_LABELS.threeDSProcessing[customer.threeDSProcessing]} />
+          <Fact label="Attempt limit" value={CONTROL_LABELS.attemptLimit[customer.attemptLimit]} />
+          <Fact label="Verification" value={CONTROL_LABELS.verification[customer.verification]} />
+          <Fact label="Fraud override" value={CONTROL_LABELS.fraudOverride[customer.fraudOverride]} />
           <Fact label="Member since" value={formatDateOnly(customer.createdAt)} hint={customer.merchant} />
         </FactGrid>
       </Section>
@@ -188,6 +196,20 @@ function OverviewTab({ customer, exceptions }: {
  * a static date header that scrolled away, leaving events undated mid-list.
  */
 function ActivityTab({ activity }: { activity: CustomerActivity[] }) {
+  // A brand-new customer has no history yet. Rendering nothing leaves the tab
+  // blank below a populated tab bar, which reads as a failed render.
+  if (activity.length === 0) {
+    return (
+      <div className="flex min-h-[240px] items-center justify-center p-5">
+        <EmptyState
+          icon={History}
+          title="No activity yet"
+          description="Authorizations, captures and refunds for this customer will be listed here as they happen."
+        />
+      </div>
+    )
+  }
+
   const groups = activity.reduce<Record<string, CustomerActivity[]>>((accumulator, event) => {
     const key = formatDateOnly(event.at)
     ;(accumulator[key] ??= []).push(event)
@@ -250,6 +272,18 @@ function ActivityTab({ activity }: { activity: CustomerActivity[] }) {
 }
 
 function MethodsTab({ customer }: { customer: Customer }) {
+  if (customer.cards.length === 0) {
+    return (
+      <div className="flex min-h-[240px] items-center justify-center p-5">
+        <EmptyState
+          icon={CreditCard}
+          title="No saved payment methods"
+          description="This customer has not stored a card. Cards are saved on the first successful payment that opts in."
+        />
+      </div>
+    )
+  }
+
   return (
     <Section title={`Cards (${customer.cards.length})`}>
       <ul className="space-y-1.5">

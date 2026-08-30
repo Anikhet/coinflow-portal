@@ -1,16 +1,19 @@
 import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { KpiCard } from './kpi-card'
-import { MethodChart } from '@/components/charts/method-chart'
+import { LazyMethodChart, MethodChartFallback } from '@/components/charts/method-chart-lazy'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Pill } from '@/components/ui/pill'
+import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/table/empty-state'
 import { useAsync } from '@/hooks/use-async'
 import { fetchOverview, fetchMethodSeries, fetchPayments } from '@/mocks/api'
 import { formatCompactCurrency, formatCount, formatCurrency, formatRelative } from '@/lib/format'
 import { paymentStatusTone } from '@/lib/tone-map'
-import { MethodGlyph, methodLabel } from '@/components/icons/method-icon'
+import { MethodGlyph } from '@/components/icons/method-icon'
+import { methodLabel } from '@/lib/method-labels'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { PaymentDrawer } from '@/features/purchases/payment-drawer'
-import { Calendar } from 'lucide-react'
+import { Calendar, CheckCircle2, RotateCw, TriangleAlert } from 'lucide-react'
 
 /**
  * HOME
@@ -68,7 +71,7 @@ export function HomePage() {
             loading={overview.loading}
             label="Customers"
             value={metrics ? formatCount(metrics.customers.count) : ''}
-            secondary="active this period"
+            secondary="with completed purchases"
             deltaPct={metrics?.customers.deltaPct}
             spark={metrics?.customers.spark}
             href="/customers"
@@ -99,12 +102,9 @@ export function HomePage() {
 
             {chart.loading || !chart.data ? (
               /* Same 220px + 24px legend box as the real chart, so mounting it shifts nothing. */
-              <div className="flex flex-1 flex-col">
-                <Skeleton className="min-h-[220px] flex-1 w-full" />
-                <Skeleton className="mt-3 h-4 w-2/3" />
-              </div>
+              <MethodChartFallback />
             ) : (
-              <MethodChart points={chart.data.points} series={chart.data.series} />
+              <LazyMethodChart points={chart.data.points} series={chart.data.series} />
             )}
           </section>
 
@@ -114,44 +114,74 @@ export function HomePage() {
               <p className="text-[12px] text-ink-muted">Most recent failed payments</p>
             </div>
 
-            {recent.loading ? (
-              <div className="space-y-1.5">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <Skeleton key={index} className="h-[52px] w-full" />
-                ))}
-              </div>
-            ) : (
-              <ul className="space-y-1.5">
-                {recent.data?.rows.map((payment) => {
-                  const status = paymentStatusTone(payment.status)
-                  return (
-                    <li key={payment.id}>
-                      <button
-                        type="button"
-                        onClick={() => openPayment(payment.id)}
-                        className="flex w-full items-center gap-2.5 rounded-[var(--radius-control)] border border-border p-2.5 text-left transition-colors hover:bg-surface-hover"
-                      >
-                        <MethodGlyph method={payment.method} cardBrand={payment.cardBrand} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13px] font-medium leading-tight text-ink">
-                            {payment.customerName}
+            {/* All three states — loading, empty, populated — occupy the same
+                box, so the card never grows or collapses as the request
+                resolves and the grid row beside the chart stays put. */}
+            <div className="min-h-[342px]">
+              {recent.loading ? (
+                <div className="space-y-1.5">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <Skeleton key={index} className="h-[52px] w-full" />
+                  ))}
+                </div>
+              ) : recent.error ? (
+                <div className="flex h-full items-center justify-center">
+                  <EmptyState
+                    icon={TriangleAlert}
+                    tone="critical"
+                    title="Could not load failures"
+                    description="This panel could not reach the payments service. The numbers above are unaffected."
+                    action={
+                      <Button variant="secondary" size="md" onClick={recent.reload}>
+                        <RotateCw />
+                        Try again
+                      </Button>
+                    }
+                  />
+                </div>
+              ) : recent.data && recent.data.rows.length === 0 ? (
+                /* An empty queue here is the good outcome, so it is stated as
+                   success rather than as an absence of data. */
+                <div className="flex h-full items-center justify-center">
+                  <EmptyState
+                    icon={CheckCircle2}
+                    title="Nothing needs attention"
+                    description="No payments have failed in this period. New failures surface here within a minute of occurring."
+                  />
+                </div>
+              ) : (
+                <ul className="space-y-1.5">
+                  {recent.data?.rows.map((payment) => {
+                    const status = paymentStatusTone(payment.status)
+                    return (
+                      <li key={payment.id}>
+                        <button
+                          type="button"
+                          onClick={() => openPayment(payment.id)}
+                          className="flex w-full items-center gap-2.5 rounded-[var(--radius-control)] border border-border p-2.5 text-left transition-colors hover:bg-surface-hover"
+                        >
+                          <MethodGlyph method={payment.method} cardBrand={payment.cardBrand} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[13px] font-medium leading-tight text-ink">
+                              {payment.customerName}
+                            </span>
+                            <span className="block truncate text-[11px] leading-tight text-ink-faint">
+                              {methodLabel(payment.method)} · {formatRelative(payment.createdAt)} · code {payment.responseCode}
+                            </span>
                           </span>
-                          <span className="block truncate text-[11px] leading-tight text-ink-faint">
-                            {methodLabel(payment.method)} · {formatRelative(payment.createdAt)} · code {payment.responseCode}
+                          <span className="flex shrink-0 flex-col items-end gap-1">
+                            <span className="text-[13px] font-medium tabular-nums text-ink">
+                              {formatCurrency(payment.subtotal)}
+                            </span>
+                            <Pill tone={status.tone} variant="ghost" dot>{status.label}</Pill>
                           </span>
-                        </span>
-                        <span className="flex shrink-0 flex-col items-end gap-1">
-                          <span className="text-[13px] font-medium tabular-nums text-ink">
-                            {formatCurrency(payment.subtotal)}
-                          </span>
-                          <Pill tone={status.tone} variant="ghost" dot>{status.label}</Pill>
-                        </span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
           </section>
         </div>
       </div>

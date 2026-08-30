@@ -10,13 +10,15 @@ import { CopyButton } from '@/components/ui/copy-button'
 import { CardVisual } from '@/components/ui/card-visual'
 import { Callout, Fact, FactGrid, Row, Section } from '@/components/ui/detail'
 import { Skeleton } from '@/components/ui/skeleton'
+import { RecordUnavailable } from '@/components/ui/record-unavailable'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { useUiStore } from '@/stores/ui-store'
 import { useAsync } from '@/hooks/use-async'
 import { fetchPayment } from '@/mocks/api'
 import { paymentStatusTone } from '@/lib/tone-map'
 import { formatCurrency, formatDateTime, truncateId } from '@/lib/format'
-import { processorLabel, methodLabel, ProcessorGlyph } from '@/components/icons/method-icon'
+import { ProcessorGlyph } from '@/components/icons/method-icon'
+import { processorLabel, methodLabel } from '@/lib/method-labels'
 import { SolanaMark } from '@/components/icons/brand-marks'
 import type { Payment } from '@/types'
 import { cn } from '@/lib/cn'
@@ -46,15 +48,17 @@ export function PaymentDrawer() {
   const closeAll = useDrawerStore((state) => state.closeAll)
   const openCustomer = useDrawerStore((state) => state.openCustomer)
 
-  const { data: payment, loading } = useAsync(
+  const { data: payment, loading, error, reload } = useAsync(
     () => (paymentId ? fetchPayment(paymentId) : Promise.resolve(null)),
     [paymentId],
   )
 
   return (
     <Sheet open={paymentId != null} onOpenChange={(open) => !open && closeAll()} label="Payment detail">
-      {loading || !payment ? (
+      {loading ? (
         <PaymentDrawerSkeleton />
+      ) : !payment ? (
+        <RecordUnavailable entity="payment" error={error} onRetry={reload} />
       ) : (
         <PaymentDrawerContent payment={payment} onViewCustomer={() => openCustomer(payment.customerId)} />
       )}
@@ -212,14 +216,16 @@ function SummaryTab({ payment }: { payment: Payment }) {
       {payment.chainTx && payment.chainWallet && (
         <Section
           title="Solana ledgering"
+          // A button, not an anchor: this prototype has no real explorer URL to
+          // navigate to, and an anchor that cancels its own default is a link
+          // that lies about being a link.
           action={
-            <a
-              href="#"
-              onClick={(event) => event.preventDefault()}
+            <button
+              type="button"
               className="inline-flex items-center gap-1 text-[12px] font-medium text-brand hover:underline"
             >
               Explorer <ArrowUpRight className="size-3" />
-            </a>
+            </button>
           }
         >
           <div className="rounded-[var(--radius-control)] border border-border p-2.5">
@@ -282,7 +288,10 @@ function RoutingTab({ payment }: { payment: Payment }) {
             const succeeded = attempt.outcome === 'succeeded'
             return (
               <li
-                key={`${attempt.processor}-${index}`}
+                // A routing chain is an ordered sequence and may legitimately hit
+                // the same processor twice, so position is part of the identity
+                // here — combined with the outcome it is stable and unique.
+                key={`${attempt.processor}-${attempt.outcome}-${index}`}
                 className="flex items-center gap-3 rounded-[var(--radius-control)] border border-border p-2.5"
               >
                 <span className="w-4 shrink-0 text-center font-mono text-[11px] text-ink-faint">{index + 1}</span>
