@@ -39,17 +39,33 @@ export function paymentStatusTone(status: PaymentStatus): ToneDescriptor {
   }
 }
 
+/**
+ * Protection inverts the usual polarity: ~three quarters of payments ARE
+ * protected, so "approved" is the boring majority and rendering it as a pill
+ * refills the column with noise — exactly the failure this taxonomy exists to
+ * prevent. The DEFAULT here is therefore the *good* state, and only the
+ * absence or refusal of protection earns ink.
+ */
 export function protectionTone(state: ProtectionState): ToneDescriptor {
   switch (state) {
-    case 'approved': return { tone: 'info', label: 'Protected' }
+    case 'approved': return { tone: 'neutral', label: 'Protected', isDefault: true }
     case 'declined': return { tone: 'critical', label: 'Declined' }
-    case 'standard': return { tone: 'neutral', label: 'Standard', isDefault: true }
+    case 'standard': return { tone: 'neutral', label: 'Unprotected' }
   }
 }
 
+/**
+ * Uses `info`, not `positive`, for a successful authentication.
+ *
+ * Green is reserved for the Status column. Keeping every other column off the
+ * positive tone means a green pill anywhere in a row can only mean "this
+ * payment settled" — one glance, one meaning. Letting 3DS also render green
+ * would put two unrelated greens in the same row and force the reader to
+ * check which column they are in.
+ */
 export function threeDSTone(state: ThreeDSState): ToneDescriptor {
   switch (state) {
-    case 'authenticated': return { tone: 'positive', label: '3DS Auth' }
+    case 'authenticated': return { tone: 'info', label: '3DS Auth' }
     case 'attempted':     return { tone: 'caution', label: '3DS Attempt' }
     case 'failed':        return { tone: 'critical', label: '3DS Failed' }
     case 'standard':      return { tone: 'neutral', label: 'Not enrolled', isDefault: true }
@@ -114,3 +130,33 @@ export function signalCountTone(count: number, threshold: number): Tone {
   if (count > threshold) return 'caution'
   return 'neutral'
 }
+
+/**
+ * Human labels for the customer control enums.
+ *
+ * The raw union values ('not-found', 'degraded') are storage identifiers, not
+ * copy. Rendering them directly leaks the data model into the interface and
+ * produces lowercase, hyphenated text next to properly written labels.
+ */
+export const CONTROL_LABELS = {
+  threeDSProcessing: {
+    functional: 'Functional',
+    degraded: 'Degraded',
+    off: 'Off',
+  },
+  attemptLimit: {
+    standard: 'Standard',
+    restricted: 'Restricted',
+    elevated: 'Elevated',
+  },
+  verification: {
+    enforced: 'Enforced',
+    'not-found': 'Not found',
+    standard: 'Standard',
+  },
+  fraudOverride: {
+    standard: 'Standard',
+    allow: 'Always allow',
+    deny: 'Always deny',
+  },
+} as const

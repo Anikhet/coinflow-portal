@@ -3,10 +3,11 @@ import type { Payment } from '@/types'
 import {
   AmountCell, AttributeCell, IdCell, IdentityCell, StatusCell,
 } from '@/components/table/cells'
-import { MethodGlyph, ProcessorGlyph, methodLabel, processorLabel } from '@/components/icons/method-icon'
+import { MethodGlyph, ProcessorGlyph } from '@/components/icons/method-icon'
+import { methodLabel, processorLabel } from '@/lib/method-labels'
 import { SolanaMark } from '@/components/icons/brand-marks'
 import { paymentStatusTone, protectionTone, threeDSTone } from '@/lib/tone-map'
-import { formatRelative, formatDateTime } from '@/lib/format'
+import { formatTableTime, formatDateTime } from '@/lib/format'
 import { Tooltip } from '@/components/ui/tooltip'
 import { Pill } from '@/components/ui/pill'
 import type { Timezone } from '@/stores/ui-store'
@@ -31,11 +32,13 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       id: 'createdAt',
       accessorKey: 'createdAt',
       header: 'Date',
-      size: 140,
+      size: 100,
       meta: { label: 'Date' },
       cell: ({ row }) => (
         <Tooltip content={formatDateTime(row.original.createdAt, timezone)}>
-          <span className="truncate text-ink-muted">{formatRelative(row.original.createdAt)}</span>
+          <span className="truncate tabular-nums text-ink-muted">
+            {formatTableTime(row.original.createdAt, timezone)}
+          </span>
         </Tooltip>
       ),
     },
@@ -43,7 +46,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       id: 'customerName',
       accessorKey: 'customerName',
       header: 'Customer',
-      size: 200,
+      size: 250,
       meta: { label: 'Customer' },
       cell: ({ row }) => (
         <span className="min-w-0 truncate">

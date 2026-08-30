@@ -56,8 +56,15 @@ export function CardVisual({ brand, last4, expiry, holder }: {
         </div>
 
         <div>
-          <p className="font-mono text-[15px] tracking-[0.14em] text-white/90">
-            ••••  ••••  ••••  {last4}
+          {/* Grouped with explicit spans rather than a single tracked string:
+              letter-spacing pushes the bullets apart individually, which made
+              the groups read as twelve separate dots instead of three blocks. */}
+          <p className="flex items-center gap-3 font-mono text-[15px] text-white/90">
+            <span aria-hidden>••••</span>
+            <span aria-hidden>••••</span>
+            <span aria-hidden>••••</span>
+            <span className="tracking-[0.08em]">{last4}</span>
+            <span className="sr-only">Card ending in {last4}</span>
           </p>
           <div className="mt-2.5 flex items-end justify-between">
             <p className="truncate text-[11px] uppercase tracking-wide text-white/60">{holder}</p>

@@ -77,6 +77,9 @@ export function AttributeCell({ descriptor }: { descriptor: ToneDescriptor }) {
   return <Pill tone={descriptor.tone} variant="ghost">{descriptor.label}</Pill>
 }
 
+/** Most severe first, so the one surfaced pill is always the worst one. */
+const SEVERITY_RANK = { critical: 0, caution: 1, info: 2, positive: 3, neutral: 4 } as const
+
 /**
  * Collapses many exception pills into a bounded display.
  *
@@ -90,8 +93,9 @@ export function ExceptionsCell({ items }: { items: ToneDescriptor[] }) {
     return <span className="select-none text-ink-faint" title="No exceptions">—</span>
   }
 
-  const severityRank = { critical: 0, caution: 1, info: 2, positive: 3, neutral: 4 } as const
-  const sorted = [...items].sort((a, b) => severityRank[a.tone] - severityRank[b.tone])
+  // toSorted leaves the caller's array untouched; the ranking is module scope
+  // (SEVERITY_RANK) so it is not rebuilt for every rendered row.
+  const sorted = items.toSorted((a, b) => SEVERITY_RANK[a.tone] - SEVERITY_RANK[b.tone])
   const [first, ...rest] = sorted
 
   return (

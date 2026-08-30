@@ -56,6 +56,29 @@ export function formatDateOnly(iso: string, timezone: 'local' | 'utc' = 'local')
   })
 }
 
+/**
+ * Compact timestamp for dense table columns.
+ *
+ * A relative string ("7 hours ago") repeated down twenty rows is visually
+ * identical on every line and tells the reader nothing about ordering within
+ * the page. Showing clock time for today's records and an absolute date for
+ * older ones makes every cell distinct and directly comparable.
+ */
+export function formatTableTime(iso: string, timezone: 'local' | 'utc' = 'local') {
+  const date = new Date(iso)
+  const zone = timezone === 'utc' ? 'UTC' : undefined
+  const today = new Date().toLocaleDateString('en-US', { timeZone: zone })
+  const isToday = date.toLocaleDateString('en-US', { timeZone: zone }) === today
+
+  if (isToday) {
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric', minute: '2-digit', hour12: true, timeZone: zone,
+    })
+  }
+
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: zone })
+}
+
 const RELATIVE = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
 const UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ['year', 31536000], ['month', 2592000], ['day', 86400],
