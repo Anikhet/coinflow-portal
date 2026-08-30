@@ -1,9 +1,9 @@
 import {
-  flexRender, getCoreRowModel, useReactTable,
-  type ColumnDef, type VisibilityState,
+  flexRender, getCoreRowModel, useReactTable, type ColumnDef,
 } from '@tanstack/react-table'
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
 import { useUiStore, ROW_HEIGHT } from '@/stores/ui-store'
+import { useTableView } from '@/stores/table-view-context'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
 import type { ReactNode } from 'react'
@@ -45,33 +45,35 @@ export interface DataTableProps<T> {
   onRowClick?: (row: T) => void
   activeRowId?: string | null
   getRowId: (row: T) => string
-  columnVisibility?: VisibilityState
-  onColumnVisibilityChange?: (visibility: VisibilityState) => void
-  sortBy?: string
-  sortDir?: 'asc' | 'desc'
-  onSortChange?: (columnId: string) => void
   empty?: ReactNode
 }
 
+/**
+ * Sort and column-visibility state are read from the table view store, not
+ * passed down. They are shared with the toolbar, and threading them through the
+ * page would make the page a message bus for state it does not itself use.
+ */
 export function DataTable<T>({
   data, columns, loading = false, skeletonRows = 12,
-  onRowClick, activeRowId, getRowId,
-  columnVisibility, onColumnVisibilityChange,
-  sortBy, sortDir, onSortChange, empty,
+  onRowClick, activeRowId, getRowId, empty,
 }: DataTableProps<T>) {
   const density = useUiStore((state) => state.density)
   const rowHeight = ROW_HEIGHT[density]
+
+  const sortBy = useTableView((state) => state.sortBy)
+  const sortDir = useTableView((state) => state.sortDir)
+  const toggleSort = useTableView((state) => state.toggleSort)
+  const columnVisibility = useTableView((state) => state.columnVisibility)
+  const setColumnVisibility = useTableView((state) => state.setColumnVisibility)
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId,
-    state: { columnVisibility: columnVisibility ?? {} },
+    state: { columnVisibility },
     onColumnVisibilityChange: (updater) => {
-      if (!onColumnVisibilityChange) return
-      const next = typeof updater === 'function' ? updater(columnVisibility ?? {}) : updater
-      onColumnVisibilityChange(next)
+      setColumnVisibility(typeof updater === 'function' ? updater(columnVisibility) : updater)
     },
     manualSorting: true,
     manualFiltering: true,
@@ -88,7 +90,7 @@ export function DataTable<T>({
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header, index) => {
-                const canSort = header.column.columnDef.enableSorting !== false && onSortChange
+                const canSort = header.column.columnDef.enableSorting !== false
                 const isSorted = sortBy === header.column.id
                 const meta = header.column.columnDef.meta
 
@@ -108,9 +110,13 @@ export function DataTable<T>({
                     {canSort ? (
                       <button
                         type="button"
-                        onClick={() => onSortChange(header.column.id)}
+                        onClick={() => toggleSort(header.column.id)}
                         className={cn(
-                          'group/sort inline-flex items-center gap-1 rounded transition-colors hover:text-ink',
+                          // `uppercase` is repeated here deliberately: a <button>
+                          // does not reliably inherit text-transform from its
+                          // <th>, which left sortable headers title-cased and
+                          // non-sortable ones uppercased in the same row.
+                          'group/sort inline-flex items-center gap-1 rounded uppercase transition-colors hover:text-ink',
                           isSorted && 'text-brand',
                           meta?.align === 'right' && 'flex-row-reverse',
                         )}
@@ -203,7 +209,18 @@ export function DataTable<T>({
         </tbody>
       </table>
 
-      {showEmpty && <div className="flex min-h-[320px] items-center justify-center p-6">{empty}</div>}
+      {showEmpty && (
+        /* Reserve roughly the height a full page of rows would occupy (capped so
+           a tall page size does not strand the message off-screen). The message
+           lands where the rows were, and nothing below the table moves when the
+           result set flips between empty and populated. */
+        <div
+          className="flex items-center justify-center p-6"
+          style={{ minHeight: Math.min(skeletonRows * rowHeight, 420) }}
+        >
+          {empty}
+        </div>
+      )}
     </div>
   )
 }

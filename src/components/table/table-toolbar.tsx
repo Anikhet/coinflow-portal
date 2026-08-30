@@ -1,6 +1,5 @@
 import { Check, Columns3, Download, Filter, Rows3, Search, X } from 'lucide-react'
 import type { ReactNode } from 'react'
-import type { VisibilityState, Column } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Pill } from '@/components/ui/pill'
@@ -10,6 +9,7 @@ import {
   DropdownLabel, DropdownTrigger,
 } from '@/components/ui/dropdown'
 import { useUiStore } from '@/stores/ui-store'
+import { useTableView } from '@/stores/table-view-context'
 import { cn } from '@/lib/cn'
 
 /**
@@ -25,62 +25,77 @@ import { cn } from '@/lib/cn'
  * support tickets on tables like this.
  */
 
+/**
+ * One entry in the column-visibility menu. A plain {id,label} pair rather than a
+ * TanStack `Column` instance: the toolbar has no business reaching into table
+ * internals, and the previous `as never` cast at the call site was hiding a
+ * genuine type error (ColumnDef has no `.columnDef` property).
+ */
+export interface ColumnOption {
+  id: string
+  label: string
+}
+
 export interface FilterOption {
   value: string
   label: string
   icon?: ReactNode
 }
 
+/**
+ * A filter group declares only its identity and its options. The SELECTED
+ * values live in the table view store, so the page never has to hold or forward
+ * them.
+ */
 export interface FilterGroup {
   id: string
   label: string
   options: FilterOption[]
-  selected: string[]
-  onChange: (selected: string[]) => void
 }
 
 interface TableToolbarProps {
-  search: string
-  onSearchChange: (value: string) => void
   searchPlaceholder?: string
   filters?: FilterGroup[]
-  columns?: Column<never, unknown>[]
-  columnVisibility?: VisibilityState
-  onColumnVisibilityChange?: (visibility: VisibilityState) => void
+  columns?: ColumnOption[]
   resultCount?: number
   totalCount?: number
   extra?: ReactNode
 }
 
 export function TableToolbar({
-  search, onSearchChange, searchPlaceholder = 'Search…',
-  filters = [], columns = [], columnVisibility = {}, onColumnVisibilityChange,
+  searchPlaceholder = 'Search…',
+  filters = [], columns = [],
   resultCount, totalCount, extra,
 }: TableToolbarProps) {
   const density = useUiStore((state) => state.density)
   const setDensity = useUiStore((state) => state.setDensity)
 
-  const activeFilters = filters.flatMap((group) =>
-    group.selected.map((value) => ({
-      group,
-      value,
-      label: group.options.find((option) => option.value === value)?.label ?? value,
-    })),
-  )
+  const search = useTableView((state) => state.search)
+  const setSearch = useTableView((state) => state.setSearch)
+  const selectedFilters = useTableView((state) => state.filters)
+  const setFilter = useTableView((state) => state.setFilter)
+  const clearFilters = useTableView((state) => state.clearFilters)
+  const columnVisibility = useTableView((state) => state.columnVisibility)
+  const setColumnVisibility = useTableView((state) => state.setColumnVisibility)
+
+  // Resolve labels through a Map rather than a .find() per selected value:
+  // with several groups of many options the nested scan is quadratic, and it
+  // runs on every keystroke because the toolbar re-renders with the search box.
+  const activeFilters = filters.flatMap((group) => {
+    const selected = selectedFilters[group.id] ?? []
+    if (selected.length === 0) return []
+    const labels = new Map(group.options.map((option) => [option.value, option.label]))
+    return selected.map((value) => ({ group, value, label: labels.get(value) ?? value }))
+  })
 
   const hasActiveFilters = activeFilters.length > 0 || search.length > 0
-
-  const clearAll = () => {
-    onSearchChange('')
-    filters.forEach((group) => group.onChange([]))
-  }
 
   return (
     <div className="shrink-0 border-b border-border bg-canvas px-6 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
+          onChange={(event) => setSearch(event.target.value)}
           placeholder={searchPlaceholder}
           icon={<Search />}
           className="w-[260px]"
@@ -88,7 +103,7 @@ export function TableToolbar({
             search ? (
               <button
                 type="button"
-                onClick={() => onSearchChange('')}
+                onClick={() => setSearch('')}
                 aria-label="Clear search"
                 className="grid size-4 place-items-center rounded text-ink-faint hover:text-ink"
               >
@@ -98,15 +113,21 @@ export function TableToolbar({
           }
         />
 
-        {filters.map((group) => (
+        {filters.map((group) => {
+          const selected = selectedFilters[group.id] ?? []
+          // Set membership rather than Array.includes inside the options map:
+          // the dropdown re-renders on every toggle, and a long filter list
+          // would otherwise scan the selection once per option.
+          const selectedSet = new Set(selected)
+          return (
           <Dropdown key={group.id}>
             <DropdownTrigger asChild>
               <Button variant="secondary" size="md">
                 <Filter />
                 {group.label}
-                {group.selected.length > 0 && (
+                {selected.length > 0 && (
                   <span className="ml-0.5 rounded-full bg-brand-soft px-1.5 text-[10px] font-semibold tabular-nums text-brand">
-                    {group.selected.length}
+                    {selected.length}
                   </span>
                 )}
               </Button>
@@ -114,16 +135,17 @@ export function TableToolbar({
             <DropdownContent align="start" className="max-h-[320px] overflow-y-auto">
               <DropdownLabel>{group.label}</DropdownLabel>
               {group.options.map((option) => {
-                const checked = group.selected.includes(option.value)
+                const checked = selectedSet.has(option.value)
                 return (
                   <DropdownCheckboxItem
                     key={option.value}
                     checked={checked}
                     onCheckedChange={(next) =>
-                      group.onChange(
+                      setFilter(
+                        group.id,
                         next
-                          ? [...group.selected, option.value]
-                          : group.selected.filter((value) => value !== option.value),
+                          ? [...selected, option.value]
+                          : selected.filter((value) => value !== option.value),
                       )
                     }
                     onSelect={(event) => event.preventDefault()}
@@ -138,7 +160,8 @@ export function TableToolbar({
               })}
             </DropdownContent>
           </Dropdown>
-        ))}
+          )
+        })}
 
         {extra}
 
@@ -162,7 +185,7 @@ export function TableToolbar({
             </Button>
           </Tooltip>
 
-          {columns.length > 0 && onColumnVisibilityChange && (
+          {columns.length > 0 && (
             <Dropdown>
               <DropdownTrigger asChild>
                 <Tooltip content="Columns">
@@ -174,21 +197,20 @@ export function TableToolbar({
               <DropdownContent className="max-h-[360px] overflow-y-auto">
                 <DropdownLabel>Visible columns</DropdownLabel>
                 {columns.map((column) => {
-                  const label = column.columnDef.meta?.label ?? column.id
                   const visible = columnVisibility[column.id] !== false
                   return (
                     <DropdownCheckboxItem
                       key={column.id}
                       checked={visible}
                       onCheckedChange={(next) =>
-                        onColumnVisibilityChange({ ...columnVisibility, [column.id]: Boolean(next) })
+                        setColumnVisibility({ ...columnVisibility, [column.id]: Boolean(next) })
                       }
                       onSelect={(event) => event.preventDefault()}
                     >
                       <DropdownItemIndicator className="absolute left-2">
                         <Check className="size-3.5 text-brand" />
                       </DropdownItemIndicator>
-                      <span className="truncate capitalize">{label}</span>
+                      <span className="truncate">{column.label}</span>
                     </DropdownCheckboxItem>
                   )
                 })}
@@ -212,7 +234,7 @@ export function TableToolbar({
             <Pill tone="neutral" variant="ghost">
               <span className="text-ink-faint">search</span>
               <span className="text-ink">{search}</span>
-              <button type="button" onClick={() => onSearchChange('')} aria-label="Clear search filter">
+              <button type="button" onClick={() => setSearch('')} aria-label="Clear search filter">
                 <X className="size-3 text-ink-faint hover:text-ink" />
               </button>
             </Pill>
@@ -224,7 +246,9 @@ export function TableToolbar({
               <button
                 type="button"
                 aria-label={`Remove ${label} filter`}
-                onClick={() => group.onChange(group.selected.filter((item) => item !== value))}
+                onClick={() =>
+                  setFilter(group.id, (selectedFilters[group.id] ?? []).filter((item) => item !== value))
+                }
               >
                 <X className="size-3 text-ink-faint hover:text-ink" />
               </button>
@@ -232,7 +256,7 @@ export function TableToolbar({
           ))}
           <button
             type="button"
-            onClick={clearAll}
+            onClick={clearFilters}
             className={cn('ml-1 text-[12px] font-medium text-brand hover:underline')}
           >
             Clear all

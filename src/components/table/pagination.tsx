@@ -1,12 +1,17 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useTableView } from '@/stores/table-view-context'
 
-export function Pagination({ page, pageSize, total, onPageChange }: {
-  page: number
-  pageSize: number
-  total: number
-  onPageChange: (page: number) => void
-}) {
+/**
+ * Reads `page` from the table view store rather than receiving it as a prop —
+ * it is the only consumer of that value, so routing it through the page would
+ * be pure drilling. `total` and `pageSize` remain props because they describe
+ * the fetched result, not the user's view state.
+ */
+export function Pagination({ pageSize, total }: { pageSize: number; total: number }) {
+  const page = useTableView((state) => state.page)
+  const setPage = useTableView((state) => state.setPage)
+
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1
   const to = Math.min(page * pageSize, total)
@@ -19,7 +24,7 @@ export function Pagination({ page, pageSize, total, onPageChange }: {
       <div className="flex items-center gap-1">
         <Button
           variant="ghost" size="icon-sm" aria-label="Previous page"
-          disabled={page <= 1} onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1} onClick={() => setPage(page - 1)}
         >
           <ChevronLeft />
         </Button>
@@ -28,7 +33,7 @@ export function Pagination({ page, pageSize, total, onPageChange }: {
         </span>
         <Button
           variant="ghost" size="icon-sm" aria-label="Next page"
-          disabled={page >= pageCount} onClick={() => onPageChange(page + 1)}
+          disabled={page >= pageCount} onClick={() => setPage(page + 1)}
         >
           <ChevronRight />
         </Button>

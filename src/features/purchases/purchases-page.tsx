@@ -1,20 +1,21 @@
-import { useMemo, useState } from 'react'
-import type { VisibilityState } from '@tanstack/react-table'
+import { useMemo } from 'react'
 import { CreditCard, Globe } from 'lucide-react'
 import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { DataTable } from '@/components/table/data-table'
 import { TableToolbar, type FilterGroup } from '@/components/table/table-toolbar'
+import { toColumnOptions } from '@/components/table/column-options'
 import { Pagination } from '@/components/table/pagination'
-import { EmptyState } from '@/components/table/empty-state'
-import { Button } from '@/components/ui/button'
-import { fetchPayments, listFilterOptions } from '@/mocks/api'
+import { TableEmpty } from '@/components/table/table-empty'
+import { fetchPayments, listFilterOptions, PAYMENT_TOTAL } from '@/mocks/api'
 import { useAsync } from '@/hooks/use-async'
 import { useDebounced } from '@/hooks/use-debounced'
 import { useUiStore } from '@/stores/ui-store'
 import { useDrawerStore } from '@/stores/drawer-store'
+import { TableViewProvider, useTableView } from '@/stores/table-view-context'
 import { buildPaymentColumns, DEFAULT_HIDDEN_PAYMENT_COLUMNS } from './columns'
 import { PaymentDrawer } from './payment-drawer'
-import { methodLabel, processorLabel, MethodGlyph } from '@/components/icons/method-icon'
+import { MethodGlyph } from '@/components/icons/method-icon'
+import { methodLabel, processorLabel } from '@/lib/method-labels'
 import { paymentStatusTone } from '@/lib/tone-map'
 import type { PaymentMethod, Processor, PaymentStatus } from '@/types/payment'
 import { cn } from '@/lib/cn'
@@ -22,29 +23,44 @@ import { cn } from '@/lib/cn'
 const PAGE_SIZE = 25
 
 export function PurchasesPage() {
+  return (
+    <TableViewProvider
+      init={{ sortBy: 'createdAt', sortDir: 'desc', columnVisibility: DEFAULT_HIDDEN_PAYMENT_COLUMNS }}
+    >
+      <PurchasesView />
+    </TableViewProvider>
+  )
+}
+
+/**
+ * Split from PurchasesPage so it sits INSIDE the provider and can subscribe to
+ * the view store. The page component's only job is to establish scope.
+ */
+function PurchasesView() {
   const timezone = useUiStore((state) => state.timezone)
   const setTimezone = useUiStore((state) => state.setTimezone)
   const openPayment = useDrawerStore((state) => state.openPayment)
   const activePaymentId = useDrawerStore((state) => state.paymentId)
 
-  const [search, setSearch] = useState('')
-  const [statuses, setStatuses] = useState<string[]>([])
-  const [methods, setMethods] = useState<string[]>([])
-  const [processors, setProcessors] = useState<string[]>([])
-  const [page, setPage] = useState(1)
-  const [sortBy, setSortBy] = useState('createdAt')
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(DEFAULT_HIDDEN_PAYMENT_COLUMNS)
+  const search = useTableView((state) => state.search)
+  const filters = useTableView((state) => state.filters)
+  const sortBy = useTableView((state) => state.sortBy)
+  const sortDir = useTableView((state) => state.sortDir)
+  const page = useTableView((state) => state.page)
 
   const debouncedSearch = useDebounced(search)
 
-  // Serialise the array filters so the effect dependency list compares by value
-  // rather than by array identity — otherwise every render refetches.
+  const statuses = filters.status ?? []
+  const methods = filters.method ?? []
+  const processors = filters.processor ?? []
+
+  // Effect dependencies must be primitives: comparing the arrays by identity
+  // would refetch on every render, since a fresh array is produced each time.
   const statusKey = statuses.join(',')
   const methodKey = methods.join(',')
   const processorKey = processors.join(',')
 
-  const { data, loading } = useAsync(
+  const { data, loading, error, reload } = useAsync(
     () => fetchPayments({
       search: debouncedSearch,
       statuses, methods, processors,
@@ -56,14 +72,13 @@ export function PurchasesPage() {
 
   const columns = useMemo(() => buildPaymentColumns(timezone), [timezone])
   const options = useMemo(() => listFilterOptions(), [])
+  const columnOptions = useMemo(() => toColumnOptions(columns), [columns])
 
-  const filters: FilterGroup[] = useMemo(
+  const filterGroups: FilterGroup[] = useMemo(
     () => [
       {
         id: 'status',
         label: 'Status',
-        selected: statuses,
-        onChange: (next) => { setStatuses(next); setPage(1) },
         options: options.statuses.map((status) => ({
           value: status,
           label: paymentStatusTone(status as PaymentStatus).label,
@@ -72,8 +87,6 @@ export function PurchasesPage() {
       {
         id: 'method',
         label: 'Method',
-        selected: methods,
-        onChange: (next) => { setMethods(next); setPage(1) },
         options: options.methods.map((method) => ({
           value: method,
           label: methodLabel(method as PaymentMethod),
@@ -83,30 +96,14 @@ export function PurchasesPage() {
       {
         id: 'processor',
         label: 'Processor',
-        selected: processors,
-        onChange: (next) => { setProcessors(next); setPage(1) },
         options: options.processors.map((processor) => ({
           value: processor,
           label: processorLabel(processor as Processor),
         })),
       },
     ],
-    [options, statuses, methods, processors],
+    [options],
   )
-
-  const handleSort = (columnId: string) => {
-    if (sortBy === columnId) {
-      setSortDir((direction) => (direction === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortBy(columnId)
-      setSortDir('desc')
-    }
-    setPage(1)
-  }
-
-  const clearFilters = () => {
-    setSearch(''); setStatuses([]); setMethods([]); setProcessors([]); setPage(1)
-  }
 
   return (
     <AppShell>
@@ -117,15 +114,11 @@ export function PurchasesPage() {
       />
 
       <TableToolbar
-        search={search}
-        onSearchChange={(value) => { setSearch(value); setPage(1) }}
         searchPlaceholder="Search customer, email, ID, last 4…"
-        filters={filters}
-        columns={columns as never}
-        columnVisibility={columnVisibility}
-        onColumnVisibilityChange={setColumnVisibility}
+        filters={filterGroups}
+        columns={columnOptions}
         resultCount={data?.total}
-        totalCount={240}
+        totalCount={PAYMENT_TOTAL}
       />
 
       <DataTable
@@ -136,27 +129,18 @@ export function PurchasesPage() {
         getRowId={(payment) => payment.id}
         onRowClick={(payment) => openPayment(payment.id)}
         activeRowId={activePaymentId}
-        columnVisibility={columnVisibility}
-        onColumnVisibilityChange={setColumnVisibility}
-        sortBy={sortBy}
-        sortDir={sortDir}
-        onSortChange={handleSort}
         empty={
-          <EmptyState
+          <TableEmpty
+            entity="payments"
             icon={CreditCard}
-            title="No payments match"
-            description="No records satisfy the current search and filters. Try widening the range."
-            action={<Button variant="secondary" size="md" onClick={clearFilters}>Clear filters</Button>}
+            totalCount={PAYMENT_TOTAL}
+            error={error}
+            onRetry={reload}
           />
         }
       />
 
-      <Pagination
-        page={page}
-        pageSize={PAGE_SIZE}
-        total={data?.total ?? 0}
-        onPageChange={setPage}
-      />
+      <Pagination pageSize={PAGE_SIZE} total={data?.total ?? 0} />
 
       <PaymentDrawer />
     </AppShell>
