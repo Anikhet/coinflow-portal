@@ -1,5 +1,6 @@
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { useState } from 'react'
+import { Avatar } from '@/components/ui/avatar'
 import { Dropdown, DropdownContent, DropdownItem, DropdownLabel, DropdownTrigger } from '@/components/ui/dropdown'
 import { cn } from '@/lib/cn'
 
@@ -28,9 +29,7 @@ export function MerchantSwitcher({ collapsed }: { collapsed: boolean }) {
           collapsed && 'justify-center',
         )}
       >
-        <span className="grid size-6 shrink-0 place-items-center rounded-[6px] bg-brand-soft text-[11px] font-semibold text-brand">
-          {active.name.slice(0, 2).toUpperCase()}
-        </span>
+        <Avatar name={active.name} size={24} />
         {!collapsed && (
           <>
             <span className="min-w-0 flex-1">
@@ -46,9 +45,7 @@ export function MerchantSwitcher({ collapsed }: { collapsed: boolean }) {
         <DropdownLabel>Switch scope</DropdownLabel>
         {MERCHANTS.map((merchant) => (
           <DropdownItem key={merchant.id} onSelect={() => setActiveId(merchant.id)}>
-            <span className="grid size-5 place-items-center rounded-[5px] bg-surface-sunk text-[10px] font-semibold text-ink-muted">
-              {merchant.name.slice(0, 2).toUpperCase()}
-            </span>
+            <Avatar name={merchant.name} />
             <span className="flex-1 truncate">{merchant.name}</span>
             {merchant.id === activeId && <Check className="text-brand" />}
           </DropdownItem>
