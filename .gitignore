@@ -26,3 +26,8 @@ dist-ssr
 # Test + tooling artifacts
 coverage
 .playwright-mcp
+
+# local verification artifacts
+.playwright-mcp/
+shots/
+coverage/
