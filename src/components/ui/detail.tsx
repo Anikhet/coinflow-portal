@@ -5,6 +5,8 @@ import { cn } from '@/lib/cn'
 import { Truncated } from '@/components/ui/truncated'
 import { InfoHint } from './info-hint'
 import type { GlossaryTerm } from '@/lib/glossary'
+import type { EmptyGlyphName } from '@/components/icons/empty-glyphs'
+import { GradientGlyph } from '@/components/icons/gradient-glyph'
 
 /**
  * Detail-view building blocks, shared by both drawers so a labelled value looks
@@ -187,3 +189,73 @@ export function Callout({ descriptor, title, description }: {
   )
 }
 
+
+/**
+ * A headline metric, ruled rather than boxed.
+ *
+ * WHY NO PANEL
+ *   The first pass gave each figure a rounded, grey-filled, fully-bordered
+ *   card. That is a container drawn to say "these two things are separate",
+ *   inside a section that already said it, inside a drawer that already framed
+ *   both — and the grey fill pushed the one element that should be loudest, the
+ *   number, onto a duller ground than the plain text beneath it. Swiss practice
+ *   is the inverse: no decorative container, a single heavy RULE to declare the
+ *   start of a field, and everything under it hung from one flush-left axis so
+ *   the two figures are compared by scanning down a column, not by hopping
+ *   between two boxes. `Fact` in this same file already argues this; a headline
+ *   number is not the exception to it.
+ *
+ * THE RULE IS THE STRUCTURE
+ *   2px of `border-strong`, full column width — thick enough to read as a
+ *   deliberate mark rather than as the hairlines used elsewhere for row
+ *   separation, which is exactly the distinction a rule weight is for.
+ *
+ * TYPE DOES THE HIERARCHY
+ *   Three sizes, one axis, no colour changes: 11px caps label, 30px figure,
+ *   12px hint. `tracking-tight` on the figure because currency at display size
+ *   sets loosely by default, and `tabular-nums` so the two amounts' digits line
+ *   up vertically between cards.
+ *
+ * The glyph LEADS the label on the same baseline — it is a modifier of the
+ * label ("volume, of the money kind"), so it belongs where an adjective
+ * belongs, not floated to an opposite corner where it becomes decoration.
+ *
+ * A fixed min-height keeps both cells the same size whether or not a hint is
+ * present, and `mt-auto` pins the hints to a shared baseline — a cell that
+ * grows when its count arrives is a layout shift.
+ */
+export function StatCard({ label, term, value, hint, glyph }: {
+  label: string
+  /** Glossary key — renders an info hint beside the label. */
+  term?: GlossaryTerm
+  value: ReactNode
+  hint?: string
+  /** Semantic mark for the metric, painted with the brand gradient. */
+  glyph?: EmptyGlyphName
+}) {
+  return (
+    <div className="flex min-h-[104px] flex-col border-t-2 border-border-strong pt-2.5">
+      <span className="flex items-center gap-1.5">
+        {/* The mark is optically centred on the cap height of the label, not on
+            its line box, so glyph and letterforms share one midline. */}
+        {glyph && <GradientGlyph name={glyph} size={15} className="shrink-0" />}
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">{label}</p>
+        {term && <InfoHint term={term} label={label} />}
+      </span>
+      <p className="mt-2 text-2xl font-semibold leading-none tracking-tight tabular-nums text-ink">{value}</p>
+      {hint && <p className="mt-auto pt-2 text-xs leading-snug text-ink-faint">{hint}</p>}
+    </div>
+  )
+}
+
+/**
+ * Two-up grid for `StatCard`.
+ *
+ * Wide gutter, no vertical gap: the columns are set apart by white space alone
+ * (the Swiss gutter), while each cell's own top rule supplies the horizontal
+ * structure. `gap-x-8` matches `FactGrid` so the drawer keeps one column
+ * rhythm from the Lifetime block down to the Controls grid.
+ */
+export function StatGrid({ children }: { children: ReactNode }) {
+  return <div className="grid grid-cols-2 gap-x-8">{children}</div>
+}

@@ -1,8 +1,7 @@
-import { StatusCell } from '@/components/table/cells'
-import { Callout, ControlValue, Fact, FactGrid, Section } from '@/components/ui/detail'
+import { ControlValue, Fact, FactGrid, Section, StatCard, StatGrid } from '@/components/ui/detail'
 import { AttributePill, StatusPill } from '@/components/ui/status-pill'
 import { formatCount, formatCurrency, formatDateOnly } from '@/lib/format'
-import { allClearTone, attemptLimitTone, customerExceptions, customerProtectionTone, fraudOverrideTone, kycTone, signalCountTone, threeDSProcessingTone, verificationTone } from '@/lib/tone-map'
+import { attemptLimitTone, customerProtectionTone, fraudOverrideTone, kycTone, signalCountTone, threeDSProcessingTone, verificationTone } from '@/lib/tone-map'
 import type { ToneDescriptor } from '@/lib/tone-map'
 import { useUiStore } from '@/stores/ui-store'
 import type { Customer, SignalRow } from '@/types'
@@ -16,45 +15,26 @@ import { Fingerprint, MapPin, User } from 'lucide-react'
 export function OverviewTab({ customer }: { customer: Customer }) {
   const timezone = useUiStore((state) => state.timezone)
 
-  // Derived here rather than handed down. The drawer that renders this tab
-  // computed the list only to forward it, and this is the sole consumer — a
-  // prop that passes through a component untouched is drilling, and a value
-  // derived from a prop already in hand needs no prop of its own.
-  const exceptions = customerExceptions(customer)
-
   return (
     <>
       <Section title="Lifetime">
-        <FactGrid>
-          <Fact
+        <StatGrid>
+          <StatCard
             label="Total volume"
-            value={<span className="text-xl tabular-nums">{formatCurrency(customer.totalVolume)}</span>}
+            glyph="liquidity"
+            value={formatCurrency(customer.totalVolume)}
             hint={`${formatCount(customer.paymentCount)} payments`}
           />
-          <Fact
+          <StatCard
             label="Overridden volume"
             term="overriddenVolume"
-            value={<span className="text-xl tabular-nums">{formatCurrency(customer.overriddenVolume)}</span>}
+            glyph="exposure"
+            value={formatCurrency(customer.overriddenVolume)}
             hint={`${formatCount(customer.overriddenCount)} payments`}
           />
-        </FactGrid>
+        </StatGrid>
       </Section>
 
-      <Section title="Exceptions">
-        {exceptions.length === 0 ? (
-          <Callout
-            descriptor={allClearTone()}
-            title="No exceptions"
-            description="All controls are at their default posture."
-          />
-        ) : (
-          <div className="flex flex-wrap gap-1.5">
-            {exceptions.map((exception) => (
-              <StatusCell key={exception.label} descriptor={exception} />
-            ))}
-          </div>
-        )}
-      </Section>
 
       {/* Production shows KYC as its own labelled card above the signal
           tables, not as a pill in the header alone — the status and the name it
@@ -74,6 +54,10 @@ export function OverviewTab({ customer }: { customer: Customer }) {
 
       <SignalsSections customer={customer} />
 
+      {/* Not in the production drawer, and deliberate: the table now renders
+          default values as an em-dash rather than a badge, so without this the
+          question "what IS this customer's attempt limit?" would have nowhere
+          to be answered. */}
       <Section title="Controls">
         <FactGrid>
           {/* Every control renders through the same tone registry the tables

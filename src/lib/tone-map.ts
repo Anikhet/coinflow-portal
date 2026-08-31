@@ -173,61 +173,7 @@ export function activityTone(status: CustomerActivity['status']): ToneDescriptor
  * array — the row stays quiet — and only genuine exceptions surface. This is
  * the table-level expression of pill taxonomy rule 5.
  */
-/**
- * Exception wording, per control.
- *
- * The exceptions list needs a label that stands alone in a row of chips — a
- * bare "Off" or "Not found" says nothing once it is lifted out of its column —
- * so only the WORDING is restated here. The tone and the glyph still come from
- * the control's own mapper below, which is what stops the two from drifting.
- * They already had: this list drew fraud-override exceptions with a shield
- * while the column beside it drew the same states with a tick and an octagon.
- */
-const EXCEPTION_LABELS = {
-  protection: 'Unprotected',
-  threeDSProcessing: { degraded: '3DS degraded', off: '3DS off' },
-  attemptLimit: { restricted: 'Attempts restricted', elevated: 'Attempts elevated' },
-  verification: { 'not-found': 'Unverified' },
-  fraudOverride: { allow: 'Fraud allow', deny: 'Fraud deny' },
-} as const
 
-/** Restates a descriptor's label while keeping its tone and glyph intact. */
-function relabel(descriptor: ToneDescriptor, label: string | undefined): ToneDescriptor {
-  return label ? { ...descriptor, label } : descriptor
-}
-
-export function customerExceptions(customer: Customer): ToneDescriptor[] {
-  const { threeDSProcessing, attemptLimit, verification, fraudOverride } = customer
-
-  // Every candidate is produced by the same mapper that renders that control's
-  // own column, so a chip here and the cell it summarises can never disagree
-  // about colour or glyph. `isDefault` — already the registry's word for "this
-  // value is the boring one" — is exactly the test for whether something is an
-  // exception, so the filter needs no second list of which states count.
-  const candidates: ToneDescriptor[] = [
-    blockedTone(customer.blocked),
-    relabel(customerProtectionTone(customer.protectionEnabled), EXCEPTION_LABELS.protection),
-    relabel(threeDSProcessingTone(threeDSProcessing), EXCEPTION_LABELS.threeDSProcessing[threeDSProcessing as 'degraded' | 'off']),
-    relabel(attemptLimitTone(attemptLimit), EXCEPTION_LABELS.attemptLimit[attemptLimit as 'restricted' | 'elevated']),
-    relabel(verificationTone(verification), EXCEPTION_LABELS.verification[verification as 'not-found']),
-    relabel(fraudOverrideTone(fraudOverride), EXCEPTION_LABELS.fraudOverride[fraudOverride as 'allow' | 'deny']),
-  ]
-
-  const out = candidates.filter((descriptor) => !descriptor.isDefault)
-
-  // Disputes are a count, not a control, so there is no column mapper to
-  // borrow from — but the gavel and the critical tone are the same ones
-  // disputeStatusTone and the Chargebacks nav item use.
-  if (customer.disputeCount > 0) {
-    out.push({
-      tone: 'critical',
-      icon: Gavel,
-      label: `${customer.disputeCount} dispute${customer.disputeCount > 1 ? 's' : ''}`,
-    })
-  }
-
-  return out
-}
 
 /**
  * Distinct-value counts are a fraud signal: one customer transacting from many
@@ -333,17 +279,6 @@ export function disbursedTone(disbursed: boolean): ToneDescriptor {
     : { tone: 'neutral', label: 'Not disbursed', isDefault: true, icon: ClockFilled }
 }
 
-/**
- * The all-clear: a record whose every control sits at its default.
- *
- * Lives in the registry rather than in the drawer that renders it, because it
- * is the same statement the tables make by rendering a row of em-dashes — and
- * because a hand-written all-clear elsewhere would be free to pick a different
- * shield and a different green.
- */
-export function allClearTone(): ToneDescriptor {
-  return { tone: 'positive', label: 'No exceptions', icon: ShieldCheckFilled }
-}
 
 /** Outcome of a chargeback dispute. */
 export function disputeStatusTone(status: CustomerDispute['status']): ToneDescriptor {
