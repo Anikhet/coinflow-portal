@@ -37,31 +37,28 @@ export function TabsList({ className, children, ...props }: ComponentProps<typeo
           // 3px, not the original hairline. A 2px bar moving is easy to miss
           // entirely — the motion is real, but there is not enough of it on
           // screen to register. Extra weight is what makes the glide legible.
-          'pointer-events-none absolute -bottom-px left-0 h-[3px] origin-left rounded-full bg-brand',
-          // Translate + scale rather than animating `left`/`width`: those are
-          // layout properties and would reflow the strip on every frame.
+          'pointer-events-none absolute -bottom-px h-[3px] rounded-full bg-brand',
+          // `left`/`width` are animated directly, matching the echos
+          // `animated-tabs` indicator (transition-all, 300ms, ease-in-out).
           //
-          // A symmetric ease-in-out, NOT the drawer's (0.16, 1, 0.3, 1). That
-          // curve covers ~83% of the travel in its first 70ms and then creeps,
-          // which the eye reads as a snap with a lazy tail rather than a glide.
-          // This one accelerates and decelerates evenly, so the bar is visibly
-          // mid-flight halfway through and actually looks like it is moving.
-          // 300ms ease-in-out matches the sliding indicator in the echos
-          // `animated-tabs` component, so tab motion feels the same in both.
-          'transition-[transform,opacity] duration-300 ease-in-out',
+          // The obvious optimisation — translateX + scaleX, which stays off the
+          // layout path — is wrong for this bar. scaleX distorts everything it
+          // scales, including border-radius: a 1px-wide pill blown up 48x ends
+          // up with a ~24px horizontal corner radius against a 1.5px vertical
+          // one, so `rounded-full` renders as a tapered lens rather than a
+          // capsule, and the shape visibly changes width mid-glide. Reflowing
+          // one absolutely-positioned element in a three-item strip is cheap;
+          // the correct shape is not negotiable.
+          'transition-all duration-300 ease-in-out',
           'motion-reduce:transition-none',
           // The very first placement jumps into position; only later moves slide.
           !indicator.ready && 'opacity-0 transition-none',
         )}
-        // Base width is 1px so scaleX() reads directly as the target width in
-        // pixels. The inset keeps the bar under the label, not the trigger's
+        // The inset keeps the bar under the label, not the trigger's
         // horizontal padding — matching the px-2.5 the trigger uses.
         style={{
-          width: 1,
-          transform: `translateX(${indicator.left + UNDERLINE_INSET}px) scaleX(${Math.max(
-            indicator.width - UNDERLINE_INSET * 2,
-            0,
-          )})`,
+          left: indicator.left + UNDERLINE_INSET,
+          width: Math.max(indicator.width - UNDERLINE_INSET * 2, 0),
         }}
       />
     </TabsPrimitive.List>
