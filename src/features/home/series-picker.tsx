@@ -52,7 +52,7 @@ export function SeriesPicker({ series, selected, onChange, formatTotal }: {
         </Button>
       </DropdownTrigger>
 
-      <DropdownContent align="end" className="min-w-[240px]">
+      <DropdownContent align="end">
         <DropdownLabel>Show on chart</DropdownLabel>
 
         {options.map((option, index) => (
