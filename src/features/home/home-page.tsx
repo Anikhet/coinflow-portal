@@ -10,10 +10,8 @@ import { StatusPill } from '@/components/ui/status-pill'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/table/empty-state'
 import { useAsync } from '@/hooks/use-async'
-import {
-  fetchOverview, fetchPaymentsChart, fetchPayoutsChart,
-  fetchCardBreakdown, fetchMerchantPayouts, fetchPayments,
-} from '@/mocks/api'
+import { fetchPayments } from '@/mocks/api'
+import { fetchOverview, fetchPaymentsChart, fetchPayoutsChart, fetchCardBreakdown, fetchMerchantPayouts } from '@/mocks/analytics'
 import { formatCount, formatCurrency, formatRelative } from '@/lib/format'
 import { paymentStatusTone } from '@/lib/tone-map'
 import { CardBrandGlyph, MethodGlyph } from '@/components/icons/method-icon'
@@ -127,7 +125,10 @@ export function HomePage() {
         {/* Two charts side by side, as in production: money in by method and
             money out by rail. They are different flows and answer different
             questions, so neither can stand in for the other. */}
-        <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2">
+        {/* lg, not 2xl. The 2xl breakpoint is 1536px, so on a 1440 or 1512 laptop —
+            which is what this is actually used on — the two charts stacked and
+            you saw half of one and nothing else. Side by side from 1024px up. */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <MethodChartCard
             title="Payments"
             term="settledVolume"

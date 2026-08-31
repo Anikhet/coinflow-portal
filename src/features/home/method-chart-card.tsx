@@ -7,7 +7,7 @@ import { TOTAL_KEY } from '@/components/charts/series'
 import { InfoHint } from '@/components/ui/info-hint'
 import type { GlossaryTerm } from '@/lib/glossary'
 import { formatCompactCurrency, formatCount } from '@/lib/format'
-import type { ChartData, Metric } from '@/mocks/api'
+import type { ChartData, Metric } from '@/mocks/analytics'
 
 const METRIC_OPTIONS = [
   { value: 'amount' as const, label: 'Amount' },

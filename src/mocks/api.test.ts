@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   fetchPayments, fetchPayment, fetchCustomers, fetchCustomer,
-  fetchOverview, fetchPaymentsChart, fetchPayoutsChart, listFilterOptions,
+  listFilterOptions,
   PAYMENT_TOTAL, CUSTOMER_TOTAL,
 } from './api'
+import { fetchOverview, fetchPaymentsChart, fetchPayoutsChart } from './analytics'
 
 /**
  * The mock API is the seam the real backend will replace, so its contract is
