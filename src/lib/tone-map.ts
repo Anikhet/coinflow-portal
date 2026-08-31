@@ -26,6 +26,15 @@ import type { Customer, CustomerActivity, KycStatus } from '@/types/customer'
  *
  * Each mapper returns both a tone and a display label so the two can never
  * disagree (e.g. a green pill reading "Failed").
+ *
+ * EVERY state carries an icon, including the boring ones. A grid of controls
+ * where three values have a glyph and three do not reads as a rendering bug —
+ * the reader cannot tell whether the missing mark means "normal" or "we failed
+ * to draw it". Where a field has its own glyph family the default uses it
+ * (protection Enabled is a shield, 3DS Functional is a padlock); where it does
+ * not, the default takes CircleCheckFilled, which is the app's one mark for
+ * "nothing unusual here". Defaults still render in ink-faint, so the glyph adds
+ * completeness without adding noise.
  */
 
 export interface ToneDescriptor {
@@ -197,7 +206,7 @@ export function customerProtectionTone(enabled: boolean): ToneDescriptor {
 export function blockedTone(blocked: boolean): ToneDescriptor {
   return blocked
     ? { tone: 'critical', label: 'Blocked', icon: BanFilled }
-    : { tone: 'neutral', label: 'Not blocked', isDefault: true }
+    : { tone: 'neutral', label: 'Not blocked', isDefault: true, icon: CircleCheckFilled }
 }
 
 export function threeDSProcessingTone(state: Customer['threeDSProcessing']): ToneDescriptor {
@@ -210,7 +219,7 @@ export function threeDSProcessingTone(state: Customer['threeDSProcessing']): Ton
 
 export function attemptLimitTone(limit: Customer['attemptLimit']): ToneDescriptor {
   switch (limit) {
-    case 'standard':   return { tone: 'neutral', label: 'Standard', isDefault: true }
+    case 'standard':   return { tone: 'neutral', label: 'Standard', isDefault: true, icon: CircleCheckFilled }
     case 'restricted': return { tone: 'caution', label: 'Restricted', icon: HandOffFilled }
     case 'elevated':   return { tone: 'info', label: 'Elevated', icon: TrendingUpFilled }
   }
@@ -220,13 +229,13 @@ export function verificationTone(state: Customer['verification']): ToneDescripto
   switch (state) {
     case 'enforced':  return { tone: 'neutral', label: 'Enforced', isDefault: true, icon: ShieldCheckFilled }
     case 'not-found': return { tone: 'caution', label: 'Not found', icon: UserOffFilled }
-    case 'standard':  return { tone: 'neutral', label: 'Standard', isDefault: true }
+    case 'standard':  return { tone: 'neutral', label: 'Standard', isDefault: true, icon: CircleCheckFilled }
   }
 }
 
 export function fraudOverrideTone(override: Customer['fraudOverride']): ToneDescriptor {
   switch (override) {
-    case 'standard': return { tone: 'neutral', label: 'Standard', isDefault: true }
+    case 'standard': return { tone: 'neutral', label: 'Standard', isDefault: true, icon: CircleCheckFilled }
     case 'allow':    return { tone: 'info', label: 'Always allow', icon: CircleCheckFilled }
     case 'deny':     return { tone: 'critical', label: 'Always deny', icon: OctagonXFilled }
   }
@@ -252,7 +261,7 @@ export function attemptOutcomeTone(
   switch (outcome) {
     case 'succeeded': return { tone: 'positive', label: 'Succeeded', icon: CircleCheckFilled }
     case 'failed':    return { tone: 'critical', label: hasFallback ? 'Failed over' : 'Failed', icon: CircleXFilled }
-    case 'skipped':   return { tone: 'neutral', label: 'Skipped', isDefault: true }
+    case 'skipped':   return { tone: 'neutral', label: 'Skipped', isDefault: true, icon: CircleDashed }
   }
 }
 
@@ -265,7 +274,19 @@ export function attemptOutcomeTone(
 export function disbursedTone(disbursed: boolean): ToneDescriptor {
   return disbursed
     ? { tone: 'neutral', label: 'Sent', icon: BanknoteArrowUp }
-    : { tone: 'neutral', label: 'Not disbursed', isDefault: true }
+    : { tone: 'neutral', label: 'Not disbursed', isDefault: true, icon: ClockFilled }
+}
+
+/**
+ * The all-clear: a record whose every control sits at its default.
+ *
+ * Lives in the registry rather than in the drawer that renders it, because it
+ * is the same statement the tables make by rendering a row of em-dashes — and
+ * because a hand-written all-clear elsewhere would be free to pick a different
+ * shield and a different green.
+ */
+export function allClearTone(): ToneDescriptor {
+  return { tone: 'positive', label: 'No exceptions', icon: ShieldCheckFilled }
 }
 
 export function signalCountTone(count: number, threshold: number): Tone {
