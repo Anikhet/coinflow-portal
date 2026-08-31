@@ -9,6 +9,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { CopyButton } from '@/components/ui/copy-button'
 import { CardVisual } from '@/components/ui/card-visual'
 import { Callout, Fact, FactGrid, Row, Section } from '@/components/ui/detail'
+import { DrawerSkeleton, DRAWER_HEADER_CLASS } from '@/components/ui/drawer-chrome'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RecordUnavailable } from '@/components/ui/record-unavailable'
 import { useDrawerStore } from '@/stores/drawer-store'
@@ -68,21 +69,13 @@ export function PaymentDrawer() {
 
 function PaymentDrawerSkeleton() {
   return (
-    <div className="flex h-full flex-col">
-      {/* Mirrors the loaded header's exact geometry so nothing shifts on swap. */}
-      <div className="flex h-[92px] shrink-0 items-start gap-3 border-b border-border px-5 py-4">
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-7 w-32" />
-          <Skeleton className="h-3 w-56" />
-        </div>
-        <Skeleton className="size-8 rounded-[8px]" />
-      </div>
-      <div className="space-y-3 p-5">
-        <Skeleton className="w-full rounded-[14px]" style={{ aspectRatio: '1.586' }} />
-        <Skeleton className="h-14 w-full" />
-        <Skeleton className="h-14 w-full" />
-      </div>
-    </div>
+    <DrawerSkeleton>
+      {/* Card art is pinned to the real ISO/IEC 7810 ratio, so it reserves the
+          exact box the rendered card will occupy. */}
+      <Skeleton className="w-full rounded-[14px]" style={{ aspectRatio: '1.586' }} />
+      <Skeleton className="h-14 w-full" />
+      <Skeleton className="h-14 w-full" />
+    </DrawerSkeleton>
   )
 }
 
@@ -106,10 +99,10 @@ function PaymentDrawerContent({ payment, onViewCustomer }: {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex shrink-0 items-start gap-3 border-b border-border px-5 py-4">
+      <header className={DRAWER_HEADER_CLASS}>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <SheetTitle className="text-[26px] font-semibold leading-none tracking-tight tabular-nums text-ink">
+            <SheetTitle className="text-[24px] font-semibold leading-none tracking-tight tabular-nums text-ink">
               {formatCurrency(payment.subtotal)}
             </SheetTitle>
             <Pill tone={status.tone} variant="solid" dot pulse={status.pulse}>{status.label}</Pill>
@@ -233,7 +226,7 @@ function SummaryTab({ payment }: { payment: Payment }) {
               <SolanaMark className="w-4" />
               <span className="text-[12px] font-medium text-ink">Settled on Solana</span>
             </div>
-            <div className="group/row space-y-1">
+            <div className="space-y-1">
               <ChainRow label="Wallet" value={payment.chainWallet} />
               <ChainRow label="Transaction" value={payment.chainTx} />
             </div>
@@ -246,10 +239,13 @@ function SummaryTab({ payment }: { payment: Payment }) {
 
 function ChainRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="shrink-0 text-[12px] text-ink-muted">{label}</span>
+    // `group/row` sits on the ROW, not the block: with it on the container,
+    // hovering either row revealed both copy buttons at once, which points the
+    // user at a control that is not the one under their cursor.
+    <div className="group/row flex items-center justify-between gap-3">
+      <span className="shrink-0 text-[13px] text-ink-muted">{label}</span>
       <span className="flex min-w-0 items-center gap-1">
-        <span className="truncate font-mono text-[11px] text-ink">{truncateId(value, 10, 8)}</span>
+        <span className="truncate font-mono text-[12px] text-ink">{truncateId(value, 10, 8)}</span>
         <CopyButton value={value} label={`Copy ${label}`} />
       </span>
     </div>
@@ -263,6 +259,8 @@ function ChainRow({ label, value }: { label: string; value: string }) {
  * "fifththird → mvb" text so the outcome of each hop is legible.
  */
 function RoutingTab({ payment }: { payment: Payment }) {
+  const finalSucceeded = payment.attempts.at(-1)?.outcome === 'succeeded'
+
   return (
     <>
       <Section title="Orchestration">
@@ -271,12 +269,8 @@ function RoutingTab({ payment }: { payment: Payment }) {
         <Row
           label="Final result"
           value={
-            <Pill
-              tone={payment.attempts.at(-1)?.outcome === 'succeeded' ? 'positive' : 'critical'}
-              variant="solid"
-              dot
-            >
-              {payment.attempts.at(-1)?.outcome === 'succeeded' ? 'Succeeded' : 'Failed'}
+            <Pill tone={finalSucceeded ? 'positive' : 'critical'} variant="solid" dot>
+              {finalSucceeded ? 'Succeeded' : 'Failed'}
             </Pill>
           }
         />

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  formatCurrency, formatCount, formatPercent, truncateId, formatRelative,
+  formatCurrency, formatCount, formatPercent, truncateId, formatRelative, formatTimeOnly,
 } from './format'
 
 describe('formatCurrency', () => {
@@ -44,6 +44,24 @@ describe('truncateId', () => {
 
   it('honours custom lead and tail lengths', () => {
     expect(truncateId('0123456789abcdef', 4, 2)).toBe('0123…ef')
+  })
+})
+
+describe('formatTimeOnly', () => {
+  const iso = '2026-08-29T22:00:00Z'
+
+  it('renders clock time without a date, so it can sit under a date heading', () => {
+    expect(formatTimeOnly(iso, 'utc')).toBe('10:00 PM')
+  })
+
+  it('honours the timezone argument rather than always using local', () => {
+    // The drawer and the table must agree on when something happened; a
+    // formatter that ignores the toggle is how they drift apart.
+    expect(formatTimeOnly(iso, 'utc')).not.toBe(formatTimeOnly('2026-08-29T09:00:00Z', 'utc'))
+  })
+
+  it('pads minutes so times form an even column', () => {
+    expect(formatTimeOnly('2026-08-29T14:05:00Z', 'utc')).toBe('2:05 PM')
   })
 })
 

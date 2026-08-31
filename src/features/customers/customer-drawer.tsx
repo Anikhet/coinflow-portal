@@ -7,16 +7,21 @@ import { StatusCell } from '@/components/table/cells'
 import { Button } from '@/components/ui/button'
 import { Tooltip } from '@/components/ui/tooltip'
 import { CopyButton } from '@/components/ui/copy-button'
+import { DrawerSkeleton, DRAWER_HEADER_CLASS } from '@/components/ui/drawer-chrome'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/table/empty-state'
-import { Fact, FactGrid, Section } from '@/components/ui/detail'
+import { ControlValue, Fact, FactGrid, Section } from '@/components/ui/detail'
 import { CardBrandGlyph } from '@/components/icons/method-icon'
 import { RecordUnavailable } from '@/components/ui/record-unavailable'
 import { useDrawerStore } from '@/stores/drawer-store'
+import { useUiStore, type Timezone } from '@/stores/ui-store'
 import { useAsync } from '@/hooks/use-async'
 import { fetchCustomer } from '@/mocks/api'
-import { activityTone, customerExceptions, kycTone, signalCountTone, CONTROL_LABELS } from '@/lib/tone-map'
-import { formatCurrency, formatCount, formatDateOnly, formatDateTime, truncateId } from '@/lib/format'
+import {
+  activityTone, attemptLimitTone, customerExceptions, customerProtectionTone,
+  fraudOverrideTone, kycTone, signalCountTone, threeDSProcessingTone, verificationTone,
+} from '@/lib/tone-map'
+import { formatCurrency, formatCount, formatDateOnly, formatTimeOnly, truncateId } from '@/lib/format'
 import type { Customer, CustomerActivity, SignalRow } from '@/types'
 import { cn } from '@/lib/cn'
 
@@ -62,19 +67,15 @@ export function CustomerDrawer() {
 
 function CustomerDrawerSkeleton() {
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex h-[92px] shrink-0 items-start gap-3 border-b border-border px-5 py-4">
-        <Skeleton className="size-10 rounded-full" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-3 w-56" />
-        </div>
+    <DrawerSkeleton avatar>
+      {/* Two 87px fact cards — the measured height of the Overview tab's
+          lifetime grid, not a rounded guess. */}
+      <div className="grid grid-cols-2 gap-2">
+        <Skeleton className="h-[87px]" />
+        <Skeleton className="h-[87px]" />
       </div>
-      <div className="grid grid-cols-2 gap-2 p-5">
-        <Skeleton className="h-20" />
-        <Skeleton className="h-20" />
-      </div>
-    </div>
+      <Skeleton className="h-14 w-full" />
+    </DrawerSkeleton>
   )
 }
 
@@ -84,7 +85,7 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex shrink-0 items-start gap-3 border-b border-border px-5 py-4">
+      <header className={DRAWER_HEADER_CLASS}>
         <Avatar name={customer.name} size={40} className="rounded-full" />
 
         <div className="min-w-0 flex-1">
@@ -102,7 +103,7 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
           <div className="group/row mt-1 flex items-center gap-1.5">
             <span className="truncate text-[12px] text-ink-muted">{customer.email}</span>
             <span className="text-ink-faint">·</span>
-            <span className="shrink-0 font-mono text-[11px] text-ink-faint">{truncateId(customer.id, 8, 4)}</span>
+            <span className="shrink-0 font-mono text-[12px] text-ink-faint">{truncateId(customer.id, 8, 4)}</span>
             <CopyButton value={customer.id} label="Copy customer ID" />
           </div>
         </div>
@@ -142,18 +143,20 @@ function OverviewTab({ customer, exceptions }: {
   customer: Customer
   exceptions: ReturnType<typeof customerExceptions>
 }) {
+  const timezone = useUiStore((state) => state.timezone)
+
   return (
     <>
       <Section title="Lifetime">
         <FactGrid>
           <Fact
             label="Total volume"
-            value={<span className="text-[18px] tabular-nums">{formatCurrency(customer.totalVolume)}</span>}
+            value={<span className="text-[17px] tabular-nums">{formatCurrency(customer.totalVolume)}</span>}
             hint={`${formatCount(customer.paymentCount)} payments`}
           />
           <Fact
             label="Overridden volume"
-            value={<span className="text-[18px] tabular-nums">{formatCurrency(customer.overriddenVolume)}</span>}
+            value={<span className="text-[17px] tabular-nums">{formatCurrency(customer.overriddenVolume)}</span>}
             hint={`${formatCount(customer.overriddenCount)} payments`}
           />
         </FactGrid>
@@ -180,12 +183,17 @@ function OverviewTab({ customer, exceptions }: {
 
       <Section title="Controls">
         <FactGrid>
-          <Fact label="Chargeback protection" value={customer.protectionEnabled ? 'Enabled' : 'Disabled'} />
-          <Fact label="3DS processing" value={CONTROL_LABELS.threeDSProcessing[customer.threeDSProcessing]} />
-          <Fact label="Attempt limit" value={CONTROL_LABELS.attemptLimit[customer.attemptLimit]} />
-          <Fact label="Verification" value={CONTROL_LABELS.verification[customer.verification]} />
-          <Fact label="Fraud override" value={CONTROL_LABELS.fraudOverride[customer.fraudOverride]} />
-          <Fact label="Member since" value={formatDateOnly(customer.createdAt)} hint={customer.merchant} />
+          {/* Every control renders through the same tone registry the tables
+              use, so a restricted attempt limit is a struck-through hand here
+              and a struck-through hand there. The label text now comes from the
+              descriptor rather than CONTROL_LABELS, which keeps one spelling
+              per state instead of two that can drift apart. */}
+          <Fact label="Chargeback protection" value={<ControlValue descriptor={customerProtectionTone(customer.protectionEnabled)} />} />
+          <Fact label="3DS processing" value={<ControlValue descriptor={threeDSProcessingTone(customer.threeDSProcessing)} />} />
+          <Fact label="Attempt limit" value={<ControlValue descriptor={attemptLimitTone(customer.attemptLimit)} />} />
+          <Fact label="Verification" value={<ControlValue descriptor={verificationTone(customer.verification)} />} />
+          <Fact label="Fraud override" value={<ControlValue descriptor={fraudOverrideTone(customer.fraudOverride)} />} />
+          <Fact label="Member since" value={formatDateOnly(customer.createdAt, timezone)} hint={customer.merchant} />
         </FactGrid>
       </Section>
     </>
@@ -193,11 +201,40 @@ function OverviewTab({ customer, exceptions }: {
 }
 
 /**
- * Activity timeline. Events are grouped under a sticky date heading so the
- * date is always visible while scrolling a long history — the original repeated
- * a static date header that scrolled away, leaving events undated mid-list.
+ * ACTIVITY TIMELINE
+ * =============================================================================
+ * Rebuilt on International Typographic Style lines, because the previous
+ * version had the failure the style exists to prevent: every event sat in its
+ * own rounded, bordered card, so nine events drew nine boxes plus their date
+ * headings — eighteen containers to present eighteen facts. Structure was being
+ * carried by decoration instead of by position.
+ *
+ * Four things changed, each removing ink rather than adding it:
+ *
+ * 1. NO CONTAINERS. Cards become rows on a shared grid, divided by a single
+ *    hairline. Alignment does what the borders were doing, and the eye tracks
+ *    one continuous left edge instead of re-entering a new box every 56px.
+ *
+ * 2. NO REPEATED DATE. The heading says AUG 29, 2026, so the row says 10:00 PM.
+ *    The date was previously printed twice within 40px of itself.
+ *
+ * 3. TIME IS A COLUMN. Times sit in a fixed 60px tabular column, so they form a
+ *    vertical rule of their own and can be compared down the page. In the card
+ *    version they floated at a different x on every row, after a metadata
+ *    string of varying length.
+ *
+ * 4. HIERARCHY BY SIZE AND WEIGHT, NOT COLOUR. A pill appears only for an
+ *    outcome that is not routine. "Completed" on six consecutive rows is not
+ *    information — it is the base rate, and pilling it made the two genuine
+ *    failures no louder than everything around them. This is pill taxonomy
+ *    rule 5, applied to a list instead of a table.
  */
 function ActivityTab({ activity }: { activity: CustomerActivity[] }) {
+  // Read from the store, not a prop: the tabs are siblings and none of them is
+  // an ancestor of the others, so threading the timezone down would make the
+  // drawer a message bus for a value it does not itself render.
+  const timezone = useUiStore((state) => state.timezone)
+
   // A brand-new customer has no history yet. Rendering nothing leaves the tab
   // blank below a populated tab bar, which reads as a failed render.
   if (activity.length === 0) {
@@ -213,67 +250,81 @@ function ActivityTab({ activity }: { activity: CustomerActivity[] }) {
   }
 
   const groups = activity.reduce<Record<string, CustomerActivity[]>>((accumulator, event) => {
-    const key = formatDateOnly(event.at)
+    const key = formatDateOnly(event.at, timezone)
     ;(accumulator[key] ??= []).push(event)
     return accumulator
   }, {})
 
   return (
-    <div className="pb-4">
+    <div className="pb-6">
       {Object.entries(groups).map(([date, events]) => (
-        <div key={date}>
-          <p className="sticky top-0 z-10 bg-surface/92 px-5 py-2 text-[11px] font-semibold uppercase tracking-wide text-ink-faint backdrop-blur">
+        <section key={date}>
+          {/* The heading is the only rule in the layout, and it stays visible
+              while its own events scroll — a long history should never leave
+              the reader looking at undated rows. */}
+          <h3 className="sticky top-0 z-10 border-b border-border bg-surface/95 px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-faint backdrop-blur">
             {date}
-          </p>
-          <ul className="space-y-1.5 px-5">
-            {events.map((event) => {
-              const tone = activityTone(event.status)
-              return (
-                <li
-                  key={event.id}
-                  className="flex items-center gap-3 rounded-[var(--radius-control)] border border-border p-2.5"
-                >
-                  <span className="flex size-7 shrink-0 items-center justify-center">
-                    {event.brand ? (
-                      <CardBrandGlyph brand={event.brand} />
-                    ) : (
-                      <span className="grid size-5 place-items-center rounded-[4px] bg-surface-sunk text-ink-faint">
-                        <CreditCard className="size-3" />
-                      </span>
-                    )}
-                  </span>
+          </h3>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-medium capitalize text-ink">
-                        {event.kind.replace('-', ' ')}
-                      </span>
-                      <Pill tone={tone.tone} variant="ghost" dot pulse={tone.pulse}>{tone.label}</Pill>
-                      {event.rail && <span className="text-[11px] text-ink-faint">{event.rail}</span>}
-                    </div>
-                    <p className="mt-0.5 truncate text-[11px] text-ink-faint">
-                      {formatDateTime(event.at)}
-                      {event.responseCode && event.responseCode !== '00' && ` · code ${event.responseCode}`}
-                      {event.note && ` · ${event.note}`}
-                    </p>
-                  </div>
-
-                  {event.amount > 0 && (
-                    <span className="shrink-0 font-mono text-[13px] tabular-nums text-ink">
-                      {formatCurrency(event.amount)}
-                    </span>
-                  )}
-                </li>
-              )
-            })}
+          <ul>
+            {events.map((event) => (
+              <ActivityRow key={event.id} event={event} timezone={timezone} />
+            ))}
           </ul>
-        </div>
+        </section>
       ))}
     </div>
   )
 }
 
+function ActivityRow({ event, timezone }: { event: CustomerActivity; timezone: Timezone }) {
+  const tone = activityTone(event.status)
+  // Routine outcomes are stated in words; only a deviation earns a pill.
+  const isRoutine = tone.tone === 'positive'
+
+  return (
+    <li className="grid grid-cols-[60px_1fr_auto] items-baseline gap-3 border-b border-border px-5 py-2.5 last:border-0">
+      <span className="text-[12px] tabular-nums leading-5 text-ink-faint">
+        {formatTimeOnly(event.at, timezone)}
+      </span>
+
+      <span className="min-w-0">
+        <span className="flex items-center gap-1.5">
+          {/* The brand mark rides with the label rather than owning a column of
+              its own: only card events have one, so a dedicated column was
+              empty on every payout and left a ragged gutter. */}
+          {event.brand && <CardBrandGlyph brand={event.brand} />}
+          <span className="truncate text-[13px] font-medium capitalize leading-5 text-ink">
+            {event.kind.replace('-', ' ')}
+          </span>
+          {!isRoutine && <StatusCell descriptor={tone} />}
+        </span>
+
+        {(event.rail || event.responseCode || event.note) && (
+          <span className="mt-0.5 block truncate text-[12px] leading-4 text-ink-faint">
+            {[
+              event.rail,
+              event.responseCode && event.responseCode !== '00' && `code ${event.responseCode}`,
+              event.note,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+        )}
+      </span>
+
+      {event.amount > 0 && (
+        <span className="w-[88px] shrink-0 text-[13px] tabular-nums leading-5 text-ink">
+          {formatCurrency(event.amount)}
+        </span>
+      )}
+    </li>
+  )
+}
+
 function MethodsTab({ customer }: { customer: Customer }) {
+  const timezone = useUiStore((state) => state.timezone)
+
   if (customer.cards.length === 0) {
     return (
       <div className="flex min-h-[240px] items-center justify-center p-5">
@@ -298,12 +349,12 @@ function MethodsTab({ customer }: { customer: Customer }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-[13px] text-ink">••{card.last4}</span>
-                  <span className="font-mono text-[11px] text-ink-faint">{card.expiry}</span>
+                  <span className="font-mono text-[12px] text-ink-faint">{card.expiry}</span>
                   {isUnused && <Pill tone="neutral" variant="ghost">Unused</Pill>}
                 </div>
                 <p className="mt-0.5 text-[11px] text-ink-faint">
                   {card.paymentCount > 0 ? `${formatCount(card.paymentCount)} payments` : 'No payments'}
-                  {' · Added '}{formatDateOnly(card.addedAt)}
+                  {' · Added '}{formatDateOnly(card.addedAt, timezone)}
                 </p>
                 <p className="mt-0.5 truncate text-[11px] text-ink-faint">{card.billingAddress}</p>
               </div>

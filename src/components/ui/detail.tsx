@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import type { ToneDescriptor } from '@/lib/tone-map'
+import { TONE_TEXT } from '@/lib/tone-classes'
 import { cn } from '@/lib/cn'
 
 /**
@@ -49,12 +51,39 @@ export function Fact({ label, value, hint, badge }: {
   return (
     <div className="rounded-[var(--radius-control)] border border-border p-2.5">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-ink-faint">{label}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint">{label}</p>
         {badge}
       </div>
       <p className="mt-1 break-words text-[13px] font-medium text-ink">{value}</p>
       {hint && <p className="mt-1 text-[11px] leading-snug text-ink-faint">{hint}</p>}
     </div>
+  )
+}
+
+/**
+ * A control's value as glyph + text, for use as a `Fact` value.
+ *
+ * Not a Pill: the surrounding Fact already supplies the label and the box, so a
+ * pill here would put a chip inside a chip. And not `AttributeCell` either —
+ * that renders an em-dash for default values, which is right in a dense table
+ * column but wrong in a labelled field, where "Chargeback protection: —" tells
+ * the reader nothing.
+ *
+ * A default posture stays in plain ink with a muted glyph. Colour is spent only
+ * on values that deviate, so a healthy customer's grid has no colour in it at
+ * all and the one bad field is the only thing that catches the eye.
+ */
+export function ControlValue({ descriptor }: { descriptor: ToneDescriptor }) {
+  const Icon = descriptor.icon
+  return (
+    <span className="flex items-center gap-1.5">
+      {Icon && (
+        <Icon
+          className={cn('size-3.5 shrink-0', descriptor.isDefault ? 'text-ink-faint' : TONE_TEXT[descriptor.tone])}
+        />
+      )}
+      <span className={cn(!descriptor.isDefault && TONE_TEXT[descriptor.tone])}>{descriptor.label}</span>
+    </span>
   )
 }
 

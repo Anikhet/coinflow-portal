@@ -79,6 +79,20 @@ export function formatTableTime(iso: string, timezone: 'local' | 'utc' = 'local'
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: zone })
 }
 
+/**
+ * Clock time only — for lists whose rows sit under a date heading. Repeating
+ * "Aug 29" on every row beneath a heading that already says AUG 29, 2026 spends
+ * the widest part of the line restating the one fact the reader just read.
+ */
+export function formatTimeOnly(iso: string, timezone: 'local' | 'utc' = 'local') {
+  return new Date(iso).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: timezone === 'utc' ? 'UTC' : undefined,
+  })
+}
+
 const RELATIVE = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
 const UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ['year', 31536000], ['month', 2592000], ['day', 86400],

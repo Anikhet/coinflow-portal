@@ -37,6 +37,12 @@ export function Sheet({ open, onOpenChange, children, size = 'md', label }: Shee
         />
         <Dialog.Content
           aria-label={label}
+          // The drawer has a visible title but no description, and Radix logs a
+          // dev warning for every open unless the opt-out is explicit. Passing
+          // undefined is the documented way to say "there is no description",
+          // rather than leaving a warning that trains people to ignore the
+          // console.
+          aria-describedby={undefined}
           className={cn(
             'sheet-panel fixed inset-y-0 right-0 z-50 flex flex-col bg-surface shadow-2xl',
             'border-l border-border outline-none',
