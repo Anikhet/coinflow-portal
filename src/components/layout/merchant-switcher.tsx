@@ -38,8 +38,8 @@ export function MerchantSwitcher({ collapsed }: { collapsed: boolean }) {
         {!collapsed && (
           <>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[12px] font-medium leading-tight text-ink">{active.name}</span>
-              <span className="block truncate text-[11px] leading-tight text-ink-faint">{active.scope}</span>
+              <span className="block truncate text-sm font-medium leading-tight text-ink">{active.name}</span>
+              <span className="block truncate text-xs leading-tight text-ink-faint">{active.scope}</span>
             </span>
             <ChevronsUpDown className="size-3.5 shrink-0 text-ink-faint" />
           </>

@@ -48,12 +48,12 @@ export function Pagination({ pageSize, total, loading = false }: {
   return (
     <nav
       aria-label="Pagination"
-      className="flex h-11 shrink-0 items-center justify-between gap-4 border-t border-border bg-canvas px-6"
+      className="flex h-12 shrink-0 items-center justify-between gap-4 border-t border-border bg-canvas px-8"
     >
       {loading ? (
         <Skeleton className="h-3 w-28" />
       ) : (
-        <p className="shrink-0 text-[12px] tabular-nums text-ink-muted">
+        <p className="shrink-0 text-sm tabular-nums text-ink-muted">
           {from.toLocaleString()}–{to.toLocaleString()} of {total.toLocaleString()}
         </p>
       )}
@@ -86,7 +86,7 @@ export function Pagination({ pageSize, total, loading = false }: {
               key={`gap-${index}`}
               aria-hidden
               style={{ width: slotWidth }}
-              className="grid h-7 shrink-0 place-items-center text-[12px] text-ink-faint"
+              className="grid h-7 shrink-0 place-items-center text-sm text-ink-faint"
             >
               …
             </span>
@@ -99,7 +99,7 @@ export function Pagination({ pageSize, total, loading = false }: {
               aria-current={item === page ? 'page' : undefined}
               style={{ width: slotWidth }}
               className={cn(
-                'h-7 shrink-0 rounded-[6px] text-[12px] tabular-nums transition-colors',
+                'h-7 shrink-0 rounded-[6px] text-sm tabular-nums transition-colors',
                 item === page
                   ? 'bg-brand text-brand-contrast font-medium'
                   : 'text-ink-muted hover:bg-surface-hover hover:text-ink',

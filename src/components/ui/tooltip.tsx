@@ -16,7 +16,7 @@ export function Tooltip({ content, children, side = 'top' }: {
         <TooltipPrimitive.Content
           side={side}
           sideOffset={6}
-          className="z-[60] max-w-[260px] rounded-[var(--radius-control)] bg-ink px-2 py-1.5 text-[12px] leading-snug text-[var(--canvas)] shadow-lg"
+          className="z-[60] max-w-[260px] rounded-[var(--radius-control)] bg-ink px-2 py-1.5 text-sm leading-snug text-[var(--canvas)] shadow-lg"
         >
           {content}
           <TooltipPrimitive.Arrow className="fill-ink" />

@@ -19,7 +19,7 @@ export function Input({ className, icon, trailing, ...props }: InputProps) {
     >
       {icon && <span className="shrink-0 text-ink-faint [&_svg]:size-3.5">{icon}</span>}
       <input
-        className="min-w-0 flex-1 bg-transparent text-[13px] text-ink outline-none placeholder:text-ink-faint"
+        className="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-ink-faint"
         {...props}
       />
       {trailing && <span className="shrink-0">{trailing}</span>}
@@ -29,7 +29,7 @@ export function Input({ className, icon, trailing, ...props }: InputProps) {
 
 export function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="rounded border border-border bg-surface-sunk px-1 py-0.5 font-sans text-[10px] font-medium text-ink-faint">
+    <kbd className="rounded border border-border bg-surface-sunk px-1 py-0.5 font-sans text-xs font-medium text-ink-faint">
       {children}
     </kbd>
   )

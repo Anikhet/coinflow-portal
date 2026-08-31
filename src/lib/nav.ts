@@ -81,18 +81,18 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Chargebacks', to: '/chargebacks', icon: Gavel, badge: 12, placeholder: true },
       { label: 'Unmatched', to: '/unmatched', icon: Unlink, badge: 3, placeholder: true },
-      { label: 'Chargeback ops', to: '/chargeback-ops', icon: ClipboardList, placeholder: true },
-      { label: 'Chargeback analytics', to: '/chargeback-analytics', icon: ChartColumnBig, placeholder: true },
+      { label: 'Chargeback Ops', to: '/chargeback-ops', icon: ClipboardList, placeholder: true },
+      { label: 'Chargeback Analytics', to: '/chargeback-analytics', icon: ChartColumnBig, placeholder: true },
       { label: 'Exposure', to: '/exposure', icon: Gauge, placeholder: true },
     ],
   },
   {
     label: 'Compliance',
     items: [
-      { label: 'Compliance center', to: '/compliance', icon: BookCheck, placeholder: true },
-      { label: '3DS stats', to: '/3ds', icon: ShieldCheck, placeholder: true },
-      { label: 'ACH refund review', to: '/ach-refunds', icon: FileSearch, badge: 5, placeholder: true },
-      { label: 'ACH returns', to: '/ach-returns', icon: BanknoteX, placeholder: true },
+      { label: 'Compliance Center', to: '/compliance', icon: BookCheck, placeholder: true },
+      { label: '3DS Stats', to: '/3ds', icon: ShieldCheck, placeholder: true },
+      { label: 'ACH Refund Review', to: '/ach-refunds', icon: FileSearch, badge: 5, placeholder: true },
+      { label: 'ACH Returns', to: '/ach-returns', icon: BanknoteX, placeholder: true },
     ],
   },
 ]

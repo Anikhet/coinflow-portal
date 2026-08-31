@@ -50,7 +50,7 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
       aria-label={collapsed ? accessibleNameFor(item) : undefined}
       className={cn(
         'group relative flex h-8 items-center gap-2.5 rounded-[var(--radius-control)] px-2',
-        'text-[13px] font-medium transition-colors',
+        'text-base font-medium transition-colors',
         collapsed && 'justify-center px-0',
         isActive
           ? 'bg-brand-soft text-brand'
@@ -84,21 +84,23 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
                 badge rides the icon's corner instead of disappearing. Dropping
                 it would mean collapsing the sidebar silently hides every
                 work-queue signal — the counts are the reason to look at these
-                rows at all. Ring matches the sidebar surface so the bubble
-                reads as sitting above the glyph rather than merged into it. */}
-            {/* Deliberately NOT a <Pill>: this is an 8px overlay bubble pinned
-                to the glyph's corner with an OUTSET ring that masks the icon
-                behind it. Forcing it through the badge component would mean
-                adding a size and a ring escape hatch that only this one caller
-                would ever use — the component would get worse to make one call
-                site shorter. */}
+                rows at all.
+
+                Same <Pill> as the expanded row, at the same size and tone: the
+                badge was previously hand-rolled here and a Pill there, so one
+                count rendered two different ways depending on sidebar state.
+                The outset ring is a box-shadow because Pill's own ring is
+                inset — it masks the glyph behind the bubble. */}
             {collapsed && item.badge != null && (
-              <span
+              <Pill
+                tone="critical"
+                variant="solid"
+                size="sm"
                 aria-hidden
-                className="absolute -right-2.5 -top-1.5 z-10 min-w-3 rounded-full bg-[var(--tone-critical-bg)] px-1 text-center text-[8px] font-semibold leading-[12px] tabular-nums text-[var(--tone-critical-fg)] ring-1 ring-surface"
+                className="pointer-events-none absolute -right-2.5 -top-2 z-10 rounded-full px-1 shadow-[0_0_0_2px_var(--surface)]"
               >
                 {item.badge > 9 ? '9+' : item.badge}
-              </span>
+              </Pill>
             )}
           </span>
           {!collapsed && (
@@ -196,7 +198,7 @@ export function Sidebar() {
             className="flex h-8 w-full items-center gap-2 rounded-[var(--radius-control)] px-2.5 text-left ring-1 ring-inset ring-border transition-colors hover:bg-surface-hover"
           >
             <Search className="size-3.5 shrink-0 text-ink-faint" />
-            <span className="flex-1 text-[13px] text-ink-faint">Search</span>
+            <span className="flex-1 text-base text-ink-faint">Search</span>
             <Kbd>⌘K</Kbd>
           </button>
         )}
@@ -208,7 +210,7 @@ export function Sidebar() {
           // group itself is unlabelled, unlike its array position.
           <div key={group.label ?? group.items[0].to} className="space-y-0.5">
             {group.label && !collapsed && (
-              <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-ink-faint">
+              <p className="px-2 pb-1 pt-1 text-xs font-semibold uppercase tracking-[0.06em] text-ink-faint">
                 {group.label}
               </p>
             )}
@@ -225,8 +227,8 @@ export function Sidebar() {
           <Avatar name="Ben Meeder" size={28} className="rounded-full" />
           {!collapsed && (
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[12px] font-medium leading-tight text-ink">Ben Meeder</span>
-              <span className="block truncate text-[11px] leading-tight text-ink-faint">Administrator</span>
+              <span className="block truncate text-sm font-medium leading-tight text-ink">Ben Meeder</span>
+              <span className="block truncate text-xs leading-tight text-ink-faint">Administrator</span>
             </span>
           )}
           <Tooltip content={theme === 'light' ? 'Dark mode' : 'Light mode'} side={collapsed ? 'right' : 'top'}>

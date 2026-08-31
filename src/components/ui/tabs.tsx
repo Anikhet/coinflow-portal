@@ -26,7 +26,7 @@ export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsP
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        'relative shrink-0 whitespace-nowrap px-2.5 py-2.5 text-[13px] font-medium text-ink-muted',
+        'relative shrink-0 whitespace-nowrap px-2.5 py-2.5 text-base font-medium text-ink-muted',
         'transition-colors hover:text-ink',
         'data-[state=active]:text-ink',
         // Underline is a pseudo-element so activating a tab does not change the
@@ -51,5 +51,5 @@ export function TabsContent({ className, ...props }: ComponentProps<typeof TabsP
 
 /** Count suffix on a tab label — muted so it never competes with the label. */
 export function TabCount({ value }: { value: number }) {
-  return <span className="ml-1.5 text-[11px] tabular-nums text-ink-faint">{value}</span>
+  return <span className="ml-1.5 text-xs tabular-nums text-ink-faint">{value}</span>
 }

@@ -100,7 +100,7 @@ function CriteriaList({ criteria }: { criteria: string[] }) {
       {criteria.map((label) => (
         <li
           key={label}
-          className="rounded-[var(--radius-control)] bg-surface-sunk px-2 py-0.5 text-[12px] text-ink-muted ring-1 ring-inset ring-border"
+          className="rounded-[var(--radius-control)] bg-surface-sunk px-2 py-0.5 text-sm text-ink-muted ring-1 ring-inset ring-border"
         >
           {label}
         </li>

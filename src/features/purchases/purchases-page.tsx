@@ -183,7 +183,7 @@ function TimezoneToggle({ value, onChange }: {
           onClick={() => onChange(option)}
           aria-pressed={value === option}
           className={cn(
-            'h-6 rounded-[6px] px-2.5 text-[12px] font-medium leading-none transition-colors',
+            'h-6 rounded-[6px] px-2.5 text-sm font-medium leading-none transition-colors',
             value === option ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink',
           )}
         >

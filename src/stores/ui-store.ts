@@ -63,4 +63,9 @@ export const useUiStore = create<UiState>()(
   ),
 )
 
-export const ROW_HEIGHT: Record<Density, number> = { compact: 36, cozy: 44 }
+/**
+ * Row heights. Compact stays the default — this is a tool people read for
+ * hours, and density is what makes a page scannable — but both gained a couple
+ * of pixels of air, and the toggle is there for anyone who wants more.
+ */
+export const ROW_HEIGHT: Record<Density, number> = { compact: 40, cozy: 52 }

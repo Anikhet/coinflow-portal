@@ -120,7 +120,7 @@ function PaletteBody({ onDismiss }: { onDismiss: () => void }) {
             setHighlight(0)
           }}
           placeholder="Jump to a page…"
-          className="flex-1 bg-transparent text-[14px] text-ink outline-none placeholder:text-ink-faint"
+          className="flex-1 bg-transparent text-lg text-ink outline-none placeholder:text-ink-faint"
         />
       </div>
 
@@ -148,7 +148,7 @@ function PaletteBody({ onDismiss }: { onDismiss: () => void }) {
                   onMouseEnter={() => setHighlight(index)}
                   onClick={() => commit(index)}
                   className={cn(
-                    'flex w-full items-center gap-2.5 rounded-[8px] px-2.5 py-2 text-left text-[13px]',
+                    'flex w-full items-center gap-2.5 rounded-[8px] px-2.5 py-2 text-left text-base',
                     index === activeIndex ? 'bg-surface-hover text-ink' : 'text-ink-muted',
                   )}
                 >

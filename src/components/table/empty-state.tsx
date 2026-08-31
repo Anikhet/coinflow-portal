@@ -47,9 +47,9 @@ export type EmptyStateTone = 'neutral' | 'critical'
  *
  * BRAND GRADIENT MARK
  *   The icon sits in a chip filled with the Coinflow violet gradient
- *   (`--brand` → `--brand-hover`), haloed by two hairline rings and lit by a
- *   radial highlight — see `EmptyStateMark` for why it is drawn that way and
- *   how it scales between the two layouts. Violet is
+ *   (`--brand` → `--brand-hover`) and lit by a radial highlight — see
+ *   `EmptyStateMark` for why it is drawn that way and how it scales between
+ *   the two layouts. Violet is
  *   this system's identity colour and is deliberately excluded from the status
  *   tone set (see index.css), so using it here cannot be mistaken for a
  *   severity signal the way a green or amber mark would be — an empty table is
@@ -101,8 +101,8 @@ export function EmptyState({
       <div className="flex w-full max-w-[420px] flex-col items-center">
         <EmptyStateMark icon={Icon} tone={tone} size={layout === 'page' ? 'page' : 'contained'} />
 
-        <p className="text-[14px] font-medium text-ink">{title}</p>
-        <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">{description}</p>
+        <p className="text-lg font-medium text-ink">{title}</p>
+        <p className="mt-1 text-base leading-relaxed text-ink-muted">{description}</p>
 
         {detail && <div className="mt-3">{detail}</div>}
 

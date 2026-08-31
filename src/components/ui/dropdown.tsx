@@ -34,7 +34,7 @@ export function DropdownItem({ className, ...props }: ComponentProps<typeof Drop
     <DropdownPrimitive.Item
       className={cn(
         'flex cursor-pointer select-none items-center gap-2 rounded-[6px] px-2 py-1.5',
-        'text-[13px] text-ink outline-none transition-colors',
+        'text-base text-ink outline-none transition-colors',
         'data-[highlighted]:bg-surface-hover [&_svg]:size-3.5 [&_svg]:text-ink-faint',
         className,
       )}
@@ -48,12 +48,12 @@ export function DropdownCheckboxItem({ className, ...props }: ComponentProps<typ
     <DropdownPrimitive.CheckboxItem
       className={cn(
         // Same px-2 as every other row. The tick used to be absolutely placed
-        // at the left with pl-7 reserving its lane, which pushed labels 20px in
+        // at the left with pl-6 reserving its lane, which pushed labels 20px in
         // from the menu's own padding and left a conspicuous empty gutter
         // whenever nothing was selected. It now sits at the trailing edge, so
         // rows start where the label starts.
         'flex cursor-pointer select-none items-center gap-2 rounded-[6px] px-2 py-1.5',
-        'text-[13px] text-ink outline-none transition-colors',
+        'text-base text-ink outline-none transition-colors',
         'data-[highlighted]:bg-surface-hover',
         className,
       )}
@@ -67,7 +67,7 @@ export const DropdownItemIndicator = DropdownPrimitive.ItemIndicator
 export function DropdownLabel({ className, ...props }: ComponentProps<typeof DropdownPrimitive.Label>) {
   return (
     <DropdownPrimitive.Label
-      className={cn('px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink-faint', className)}
+      className={cn('px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-faint', className)}
       {...props}
     />
   )

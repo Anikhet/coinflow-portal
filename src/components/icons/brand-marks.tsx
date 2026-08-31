@@ -157,6 +157,15 @@ export function PixMark() {
  */
 
 /** Letterform mark for processors without a distinctive symbol. */
+/**
+ * Monogram fallback for processors with no drawable logo.
+ *
+ * The sizes here are the ONE sanctioned exception to the type scale: this is
+ * lettering inside a mark, fitted to a fixed glyph box, not UI type. "MVB" needs
+ * 7px to sit inside the same 20px chip that holds a single-letter "h" at 11px.
+ * Forcing both onto the shared scale would either overflow the chip or leave the
+ * one-letter marks tiny. `scripts/check-scale.mjs` exempts this file.
+ */
 function LetterMark({ label, text, className, size = 'text-[9px]' }: {
   label: string
   text: string

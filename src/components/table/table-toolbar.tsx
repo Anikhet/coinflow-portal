@@ -91,7 +91,7 @@ export function TableToolbar({
   const hasActiveFilters = activeFilters.length > 0 || search.length > 0
 
   return (
-    <div className="shrink-0 border-b border-border bg-canvas px-6 py-3">
+    <div className="shrink-0 border-b border-border bg-canvas px-8 py-4">
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={search}
@@ -173,7 +173,7 @@ export function TableToolbar({
 
         <div className="ml-auto flex items-center gap-2">
           {resultCount != null && (
-            <span className="text-[12px] tabular-nums text-ink-muted">
+            <span className="text-sm tabular-nums text-ink-muted">
               {resultCount === totalCount
                 ? `${resultCount.toLocaleString()} records`
                 : `${resultCount.toLocaleString()} of ${(totalCount ?? 0).toLocaleString()}`}
@@ -263,7 +263,7 @@ export function TableToolbar({
           <button
             type="button"
             onClick={clearFilters}
-            className={cn('ml-1 text-[12px] font-medium text-brand hover:underline')}
+            className={cn('ml-1 text-sm font-medium text-brand hover:underline')}
           >
             Clear all
           </button>

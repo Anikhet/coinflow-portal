@@ -18,9 +18,9 @@ const button = cva(
         danger: 'bg-[var(--tone-critical-bg)] text-[var(--tone-critical-fg)] ring-1 ring-inset ring-[var(--tone-critical-ring)] hover:brightness-95',
       },
       size: {
-        sm: 'h-7 px-2 text-[12px] [&_svg]:size-3.5',
-        md: 'h-8 px-2.5 text-[13px] [&_svg]:size-4',
-        lg: 'h-9 px-3.5 text-[13px] [&_svg]:size-4',
+        sm: 'h-7 px-2 text-sm [&_svg]:size-3.5',
+        md: 'h-8 px-2.5 text-base [&_svg]:size-4',
+        lg: 'h-9 px-4 text-base [&_svg]:size-4',
         icon: 'size-8 [&_svg]:size-4',
         'icon-sm': 'size-7 [&_svg]:size-3.5',
       },
