@@ -2,6 +2,8 @@ import { ArrowUpRight, TrendingDown, TrendingUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Sparkline } from '@/components/charts/sparkline'
 import { Skeleton } from '@/components/ui/skeleton'
+import { InfoHint } from '@/components/ui/info-hint'
+import type { GlossaryTerm } from '@/lib/glossary'
 import { formatPercent } from '@/lib/format'
 import { cn } from '@/lib/cn'
 
@@ -24,6 +26,8 @@ import { cn } from '@/lib/cn'
 
 interface KpiCardProps {
   label: string
+  /** Glossary key for the "?" hint beside the label. */
+  term?: GlossaryTerm
   value: string
   secondary?: string
   deltaPct?: number
@@ -35,11 +39,11 @@ interface KpiCardProps {
 }
 
 export function KpiCard({
-  label, value, secondary, deltaPct, spark, invertDelta = false, href, loading,
+  label, term, value, secondary, deltaPct, spark, invertDelta = false, href, loading,
 }: KpiCardProps) {
   if (loading) {
     return (
-      <div className="h-[148px] rounded-[var(--radius-surface)] border border-border bg-surface p-4">
+      <div className="h-[172px] rounded-[var(--radius-surface)] border border-border bg-surface p-5">
         <Skeleton className="h-3 w-20" />
         <Skeleton className="mt-3 h-7 w-32" />
         <Skeleton className="mt-2 h-3 w-24" />
@@ -52,28 +56,31 @@ export function KpiCard({
   const isGood = invertDelta ? !isPositive : isPositive
 
   return (
-    <div className="group/card flex h-[148px] flex-col rounded-[var(--radius-surface)] border border-border bg-surface p-4 transition-colors hover:border-border-strong">
+    <div className="group/card flex h-[172px] flex-col rounded-[var(--radius-surface)] border border-border bg-surface p-5 transition-colors hover:border-border-strong">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[12px] font-medium text-ink-muted">{label}</p>
+        <span className="flex items-center gap-1.5">
+          <span className="text-sm font-medium text-ink-muted">{label}</span>
+          {term && <InfoHint term={term} label={label} />}
+        </span>
         {href && (
           <Link
             to={href}
-            className="inline-flex items-center gap-0.5 text-[11px] font-medium text-brand opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100"
+            className="inline-flex items-center gap-0.5 text-xs font-medium text-brand opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100"
           >
             View all <ArrowUpRight className="size-3" />
           </Link>
         )}
       </div>
 
-      <p className="mt-1.5 text-[24px] font-semibold leading-none tracking-tight tabular-nums text-ink">
+      <p className="mt-2.5 text-2xl font-semibold leading-none tracking-tight tabular-nums text-ink">
         {value}
       </p>
 
-      <div className="mt-2 flex items-center gap-2">
+      <div className="mt-2.5 flex items-center gap-2">
         {deltaPct != null && (
           <span
             className={cn(
-              'inline-flex items-center gap-0.5 text-[11px] font-medium tabular-nums',
+              'inline-flex items-center gap-0.5 text-xs font-medium tabular-nums',
               isGood ? 'text-[var(--tone-positive-fg)]' : 'text-[var(--tone-critical-fg)]',
             )}
           >
@@ -81,7 +88,7 @@ export function KpiCard({
             {formatPercent(deltaPct)}
           </span>
         )}
-        {secondary && <span className="truncate text-[11px] text-ink-faint">{secondary}</span>}
+        {secondary && <span className="truncate text-xs text-ink-faint">{secondary}</span>}
       </div>
 
       <div className="mt-auto">

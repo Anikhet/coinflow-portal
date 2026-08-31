@@ -17,3 +17,4 @@ export type {
   KycStatus,
 } from './customer'
 export type { OverviewMetrics, SeriesPoint, MethodSeries } from './analytics'
+export type { Payout, PayoutRail, MerchantPayout, CardSlice } from './payout'

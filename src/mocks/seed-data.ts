@@ -4,6 +4,7 @@ import type {
   ProtectionState, ThreeDSState, OrchestrationAttempt, PaymentFee,
 } from '@/types/payment'
 import type { Customer, CustomerActivity, CustomerCard, SignalRow } from '@/types/customer'
+import type { Payout, PayoutRail } from '@/types/payout'
 
 /**
  * SEEDED FIXTURE DATASET
@@ -244,7 +245,14 @@ function buildCustomer(random: Random, now: number): Customer {
   return {
     id,
     shortId: `${id.slice(0, 8)}`,
-    createdAt: new Date(now - random.int(3, 640) * 86_400_000 - random.int(0, 86_399) * 1000).toISOString(),
+    // Signups skew recent, as they do on a platform that is still growing.
+    // A uniform spread over 640 days put only two customers inside the charted
+    // week, which reads as a broken metric rather than a quiet one.
+    createdAt: new Date(
+      now
+        - Math.round(random.float(0, 1) ** 1.7 * 640) * 86_400_000
+        - random.int(0, 86_399) * 1000,
+    ).toISOString(),
     merchant: random.pick(MERCHANTS),
     name,
     email: emailFor(name, random),
@@ -290,6 +298,44 @@ const CUSTOMER_POOL = CUSTOMERS.map((c) => ({ id: c.id, name: c.name, email: c.e
  * read as noise rather than as a trend at lower counts.
  */
 export const PAYMENTS: Payment[] = Array.from({ length: 3200 }, () => buildPayment(random, NOW, CUSTOMER_POOL))
+  .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
+
+/**
+ * Customer withdrawal rails, weighted to look like real payout traffic: instant
+ * rails dominate by count because customers choose speed, while the slower
+ * bank rails carry larger average amounts.
+ */
+const RAIL_WEIGHTS: ReadonlyArray<readonly [PayoutRail, number]> = [
+  ['asap-rtp', 31], ['standard', 19], ['same-day', 14], ['card', 12],
+  ['paypal', 8], ['venmo', 6], ['iban', 4], ['wire', 3], ['interac', 2], ['eft', 1],
+]
+
+/** Slower rails move more money per transfer, which is why they still exist. */
+const RAIL_SCALE: Record<PayoutRail, number> = {
+  'asap-rtp': 0.8, 'same-day': 1.1, standard: 1.4, card: 0.6,
+  paypal: 0.7, venmo: 0.5, iban: 3.2, wire: 6.5, interac: 0.9, eft: 2.1,
+}
+
+function buildPayout(random: Random, now: number): Payout {
+  const rail = random.weighted(RAIL_WEIGHTS)
+  const base = amountFor(random)
+  const minutesAgo = Math.round(random.float(0, 1) ** 1.15 * 7 * 24 * 60)
+
+  return {
+    id: random.hex(16),
+    createdAt: new Date(now - minutesAgo * 60_000).toISOString(),
+    merchant: random.pick(MERCHANTS),
+    rail,
+    amount: Math.round(base * RAIL_SCALE[rail] * 100) / 100,
+    status: random.weighted([['completed', 92], ['pending', 6], ['failed', 2]] as const),
+  }
+}
+
+/**
+ * Customer withdrawals. Roughly a third the count of inbound payments, which is
+ * the ratio the original dashboard's headline numbers imply.
+ */
+export const PAYOUTS: Payout[] = Array.from({ length: 1100 }, () => buildPayout(random, NOW))
   .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
 
 export { NOW as DATASET_NOW }

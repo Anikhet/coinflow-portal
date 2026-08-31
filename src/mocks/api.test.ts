@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   fetchPayments, fetchPayment, fetchCustomers, fetchCustomer,
-  fetchMethodSeries, fetchOverview, listFilterOptions,
+  fetchOverview, fetchPaymentsChart, fetchPayoutsChart, listFilterOptions,
   PAYMENT_TOTAL, CUSTOMER_TOTAL,
 } from './api'
 
@@ -112,18 +112,18 @@ describe('fetchCustomers', () => {
 
 describe('fetchMethodSeries', () => {
   it('returns one point per requested day', async () => {
-    const { points } = await fetchMethodSeries(7)
+    const { amount: { points } } = await fetchPaymentsChart(7)
     expect(points).toHaveLength(7)
   })
 
   it('ranks series by total volume descending, so the chart can take the top N', async () => {
-    const { series } = await fetchMethodSeries(7)
+    const { amount: { series } } = await fetchPaymentsChart(7)
     const totals = series.map((entry) => entry.total)
     expect(totals).toEqual([...totals].sort((a, b) => b - a))
   })
 
   it('gives every point a numeric value for every series, so stacking never gaps', async () => {
-    const { points, series } = await fetchMethodSeries(7)
+    const { amount: { points, series } } = await fetchPaymentsChart(7)
     for (const point of points) {
       for (const entry of series) {
         expect(typeof point[entry.key]).toBe('number')
@@ -133,17 +133,34 @@ describe('fetchMethodSeries', () => {
 })
 
 describe('fetchOverview', () => {
-  it('produces a plausible authorization rate', async () => {
-    const metrics = await fetchOverview()
-    expect(metrics.authRate.pct).toBeGreaterThan(0)
-    expect(metrics.authRate.pct).toBeLessThanOrEqual(100)
-  })
-
   it('returns a non-empty sparkline for every metric', async () => {
     const metrics = await fetchOverview()
-    for (const key of ['payments', 'customers', 'payouts', 'authRate'] as const) {
+    for (const key of ['payments', 'customers', 'payouts'] as const) {
       expect(metrics[key].spark.length).toBeGreaterThan(1)
     }
+  })
+
+  /**
+   * "New customers" means new IN THE PERIOD. Reporting the whole corpus would
+   * show the same figure every day regardless of what happened.
+   */
+  it('counts only customers created within the period', async () => {
+    const metrics = await fetchOverview()
+    const all = await fetchCustomers({ pageSize: 500 })
+    expect(metrics.customers.count).toBeGreaterThan(0)
+    expect(metrics.customers.count).toBeLessThan(all.total)
+  })
+
+  /**
+   * The payouts KPI and the payouts chart must agree — they were previously
+   * two different numbers for one thing, the KPI being a share of inbound
+   * volume rather than the payout fixture.
+   */
+  it('reports payouts from the payout records, matching the payouts chart', async () => {
+    const metrics = await fetchOverview()
+    const chart = await fetchPayoutsChart(7)
+    const chartTotal = chart.amount.series.reduce((sum, entry) => sum + entry.total, 0)
+    expect(metrics.payouts.amount).toBeCloseTo(chartTotal, 0)
   })
 })
 
