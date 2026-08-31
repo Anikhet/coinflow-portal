@@ -1,5 +1,5 @@
 import {
-  ArrowUpRight, ExternalLink, Flag, Landmark, ShieldCheck, ShieldOff, Undo2, User, X,
+  ArrowUpRight, ExternalLink, Flag, Undo2, User, X,
 } from 'lucide-react'
 import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -17,13 +17,15 @@ import { useDrawerStore } from '@/stores/drawer-store'
 import { useUiStore } from '@/stores/ui-store'
 import { useAsync } from '@/hooks/use-async'
 import { fetchPayment } from '@/mocks/api'
-import { attemptOutcomeTone, paymentStatusTone } from '@/lib/tone-map'
+import { attemptOutcomeTone, paymentStatusTone, protectionTone } from '@/lib/tone-map'
 import { formatCurrency, formatDateTime, truncateId } from '@/lib/format'
 import { MethodGlyph, ProcessorGlyph } from '@/components/icons/method-icon'
 import { Avatar } from '@/components/ui/avatar'
+import { IssuerMark } from '@/components/ui/issuer-mark'
 import { processorLabel, methodLabel } from '@/lib/method-labels'
 import { SolanaMark } from '@/components/icons/brand-marks'
 import type { Payment } from '@/types'
+import type { ProtectionState } from '@/types/payment'
 import { cn } from '@/lib/cn'
 
 /**
@@ -101,18 +103,45 @@ function PaymentDrawerContent({ payment, onViewCustomer }: {
 
   return (
     <div className="flex h-full flex-col">
+      {/* DRAWER HEADER
+          -------------------------------------------------------------------
+          Three corrections, each applying a rule the rest of the system
+          already follows:
+
+          1. BASELINE, NOT CENTRE. The amount is 26px and the status pill is
+             20px, so centring them hangs the pill above the numerals' baseline
+             — the eye reads two objects floating at different heights rather
+             than one line. `items-baseline` sits the pill's label on the
+             amount's baseline, which is the whole reason a baseline exists.
+
+          2. PROXIMITY, NOT A SEPARATOR. The middot between the ID and the
+             timestamp was decoration doing a job position can do for free —
+             the same failure the activity timeline was rebuilt to remove. The
+             two facts are already in different typefaces and different inks
+             (mono/faint vs sans/muted); a 4px internal gap against a 12px gap
+             between groups makes them read as two groups by Gestalt, with one
+             less mark on the page.
+
+          3. RECORD ACTIONS ARE NOT CHROME. Refund, flag, view-customer and
+             explorer act on the PAYMENT; close acts on the DRAWER. Rendered as
+             five evenly spaced peers, "dismiss this panel" carried the same
+             weight as "refund this transaction". A wider gap — not a rule,
+             which would be new ink — separates the two kinds. */}
       <header className={DRAWER_HEADER_CLASS}>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-baseline gap-2">
             <SheetTitle className="text-2xl font-semibold leading-none tracking-tight tabular-nums text-ink">
               {formatCurrency(payment.subtotal)}
             </SheetTitle>
             <StatusPill descriptor={status} />
           </div>
-          <div className="group/row mt-1.5 flex items-center gap-1">
-            <span className="truncate font-mono text-sm text-ink-faint">{truncateId(payment.id, 12, 8)}</span>
-            <CopyButton value={payment.id} label="Copy payment ID" />
-            <span className="mx-1 text-ink-faint">·</span>
+          {/* gap-3 between groups, gap-1 inside one: a 3:1 ratio is the
+              smallest that reads as grouping rather than as loose spacing. */}
+          <div className="group/row mt-1.5 flex items-center gap-3">
+            <span className="flex min-w-0 items-center gap-1">
+              <span className="truncate font-mono text-sm text-ink-faint">{truncateId(payment.id, 12, 8)}</span>
+              <CopyButton value={payment.id} label="Copy payment ID" />
+            </span>
             <span className="shrink-0 text-sm text-ink-muted">
               {formatDateTime(payment.createdAt, timezone)}
             </span>
@@ -128,7 +157,7 @@ function PaymentDrawerContent({ payment, onViewCustomer }: {
             </Tooltip>
           ))}
           <SheetClose asChild>
-            <Button variant="ghost" size="icon" aria-label="Close"><X /></Button>
+            <Button variant="ghost" size="icon" aria-label="Close" className="ml-2"><X /></Button>
           </SheetClose>
         </div>
       </header>
@@ -154,9 +183,30 @@ function PaymentDrawerContent({ payment, onViewCustomer }: {
   )
 }
 
-function SummaryTab({ payment }: { payment: Payment }) {
-  const protectionApproved = payment.protection === 'approved'
+/**
+ * Prose for each protection state.
+ *
+ * The drawer previously tested `protection === 'approved'` and wrote "No
+ * chargeback protection" for everything else — which told a merchant whose
+ * CLAIM WAS DECLINED that they had never bought cover. Three states, three
+ * different facts, three sentences.
+ */
+const PROTECTION_COPY: Record<ProtectionState, { title: string; description: string }> = {
+  approved: {
+    title: 'Chargeback protection approved',
+    description: 'All chargeback liability is shifted away from the merchant for this payment.',
+  },
+  declined: {
+    title: 'Chargeback protection declined',
+    description: 'Cover was requested and refused, so the merchant retains full liability for this payment.',
+  },
+  standard: {
+    title: 'No chargeback protection',
+    description: 'This payment was not covered, so the merchant retains full chargeback liability.',
+  },
+}
 
+function SummaryTab({ payment }: { payment: Payment }) {
   return (
     <>
       {payment.cardBrand && payment.cardLast4 && (
@@ -173,19 +223,13 @@ function SummaryTab({ payment }: { payment: Payment }) {
       <Section title="Risk posture" term="chargebackProtection">
         <div className="space-y-2">
           <Callout
-            icon={protectionApproved ? <ShieldCheck /> : <ShieldOff />}
-            tone={protectionApproved ? 'info' : 'neutral'}
-            title={protectionApproved ? 'Chargeback protection approved' : 'No chargeback protection'}
-            description={
-              protectionApproved
-                ? 'All chargeback liability is shifted away from the merchant for this payment.'
-                : 'The merchant retains full chargeback liability for this payment.'
-            }
+            descriptor={protectionTone(payment.protection)}
+            title={PROTECTION_COPY[payment.protection].title}
+            description={PROTECTION_COPY[payment.protection].description}
           />
           {payment.status === 'failed' && (
             <Callout
-              icon={<Flag />}
-              tone="critical"
+              descriptor={paymentStatusTone('failed')}
               title={`Declined · code ${payment.responseCode}`}
               description={`${payment.responseLabel}. CVV response ${payment.cvvResponse} (${payment.cvvLabel}).`}
             />
@@ -203,13 +247,12 @@ function SummaryTab({ payment }: { payment: Payment }) {
           />
           <Fact
             label="Issuer"
-            // No issuer logos exist in this prototype, so the rail's own
-            // silhouette stands in — a generic bank mark, not a fake brand.
-            media={
-              <span className="grid size-5 place-items-center rounded-[4px] bg-surface-sunk text-ink-faint">
-                <Landmark className="size-3" />
-              </span>
-            }
+            // A derived monogram chip, not the bank's real logo — those are
+            // trademarks, and a CDN fetch would be a network dependency for
+            // decoration. The generic grey bank glyph it replaces made all
+            // seven issuers look identical; a tinted circle makes the issuer
+            // recognisable before the legal name is read. See lib/issuer.ts.
+            media={<IssuerMark issuer={payment.issuer} />}
             value={payment.issuer}
             hint={`${payment.issuerCountry} · ${payment.fundingType}`}
           />

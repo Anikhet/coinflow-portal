@@ -1,4 +1,4 @@
-import { Ban, CreditCard, Fingerprint, History, MapPin, ShieldCheck, Trash2, User, X } from 'lucide-react'
+import { Ban, CreditCard, Fingerprint, History, MapPin, Trash2, User, X } from 'lucide-react'
 import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabCount } from '@/components/ui/tabs'
 import { Avatar } from '@/components/ui/avatar'
@@ -19,9 +19,7 @@ import { useUiStore, type Timezone } from '@/stores/ui-store'
 import { useAsync } from '@/hooks/use-async'
 import { fetchCustomer } from '@/mocks/api'
 import {
-  activityTone, attemptLimitTone, blockedTone, customerExceptions, customerProtectionTone,
-  fraudOverrideTone, kycTone, signalCountTone, threeDSProcessingTone, verificationTone,
-  type ToneDescriptor,
+  allClearTone, activityTone, attemptLimitTone, blockedTone, customerExceptions, customerProtectionTone, fraudOverrideTone, kycTone, signalCountTone, threeDSProcessingTone, verificationTone, type ToneDescriptor,
 } from '@/lib/tone-map'
 import { formatCurrency, formatCount, formatDateOnly, formatTimeOnly, truncateId } from '@/lib/format'
 import type { Customer, CustomerActivity, SignalRow } from '@/types'
@@ -91,18 +89,22 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
         <Avatar name={customer.name} size={40} className="rounded-full" />
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          {/* Baseline-aligned and proximity-grouped, matching the payment
+              drawer header — the two records share a shell precisely so that
+              switching between them moves no furniture. */}
+          <div className="flex items-baseline gap-2">
             <SheetTitle className="truncate text-xl font-semibold leading-tight tracking-tight text-ink">
               {customer.name}
             </SheetTitle>
             <StatusPill descriptor={kyc} />
             {customer.blocked && <StatusPill descriptor={blockedTone(true)} />}
           </div>
-          <div className="group/row mt-1 flex items-center gap-1.5">
+          <div className="group/row mt-1 flex items-center gap-3">
             <span className="truncate text-sm text-ink-muted">{customer.email}</span>
-            <span className="text-ink-faint">·</span>
-            <span className="shrink-0 font-mono text-sm text-ink-faint">{truncateId(customer.id, 8, 4)}</span>
-            <CopyButton value={customer.id} label="Copy customer ID" />
+            <span className="flex shrink-0 items-center gap-1">
+              <span className="font-mono text-sm text-ink-faint">{truncateId(customer.id, 8, 4)}</span>
+              <CopyButton value={customer.id} label="Copy customer ID" />
+            </span>
           </div>
         </div>
 
@@ -111,7 +113,7 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
             <Button variant="ghost" size="icon" aria-label="Block customer"><Ban /></Button>
           </Tooltip>
           <SheetClose asChild>
-            <Button variant="ghost" size="icon" aria-label="Close"><X /></Button>
+            <Button variant="ghost" size="icon" aria-label="Close" className="ml-2"><X /></Button>
           </SheetClose>
         </div>
       </header>
@@ -164,8 +166,7 @@ function OverviewTab({ customer, exceptions }: {
       <Section title="Exceptions">
         {exceptions.length === 0 ? (
           <Callout
-            tone="positive"
-            icon={<ShieldCheck />}
+            descriptor={allClearTone()}
             title="No exceptions"
             description="All controls are at their default posture."
           />

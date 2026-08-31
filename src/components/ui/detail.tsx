@@ -49,7 +49,17 @@ export function Row({ label, value, mono = false }: {
 }
 
 /**
- * Boxed label/value used in the two-column facts grid.
+ * A label/value pair in the two-column facts grid.
+ *
+ * NOT a box. Six facts used to mean six rounded, bordered cards stacked two
+ * across — twelve borders drawn to present six pieces of information, with the
+ * section already sitting inside the drawer's own frame. Structure now comes
+ * from the grid and a single hairline between rows, which is the whole premise
+ * of the International Typographic Style this app's tables already follow:
+ * alignment and type do the work, and a rule appears only at a real boundary.
+ *
+ * The practical gain is density. The same six facts occupy roughly a third
+ * less height, so the Solana block below them is visible without scrolling.
  *
  * `media` is a leading mark for facts that name a THING the product already has
  * a mark for — a customer, a merchant, a payment rail. Those marks exist in the
@@ -69,7 +79,9 @@ export function Fact({ label, term, value, hint, badge, media }: {
   media?: ReactNode
 }) {
   return (
-    <div className="rounded-[var(--radius-control)] border border-border p-3">
+    // The top rule is suppressed on the first ROW (both cells) by FactGrid, so
+    // the section heading above is not immediately followed by a second line.
+    <div className="border-t border-border py-3">
       <div className="flex items-start justify-between gap-2">
         <span className="flex items-center gap-1.5">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-faint">{label}</p>
@@ -117,28 +129,47 @@ export function ControlValue({ descriptor }: { descriptor: ToneDescriptor }) {
 }
 
 export function FactGrid({ children }: { children: ReactNode }) {
-  return <div className="grid grid-cols-2 gap-2.5">{children}</div>
+  return (
+    // gap-x only: the vertical rhythm comes from each Fact's own padding and
+    // its hairline, so a gap here would double-space the rules and break the
+    // grid into floating pairs again. The nth-child rule drops the rule on the
+    // first two cells, i.e. the first row.
+    <div className="grid grid-cols-2 gap-x-8 [&>*:nth-child(-n+2)]:border-t-0">
+      {children}
+    </div>
+  )
 }
 
-/** Full-width callout for a single notable fact. */
-export function Callout({ icon, title, description, tone = 'neutral' }: {
-  icon: ReactNode
+/**
+ * Full-width callout for a single notable fact.
+ *
+ * Takes a ToneDescriptor rather than a loose icon and tone. Every callout used
+ * to choose its own: the payment drawer drew an OUTLINE lucide shield in an
+ * `info` chip for protection, while the column three feet away drew the FILLED
+ * registry shield in `neutral` for the identical state. Same fact, two shapes,
+ * two colours — which is precisely what a central registry exists to stop.
+ *
+ * Prose stays a prop, because a callout explains at more length than a pill's
+ * one or two words. Only the glyph and the tone come from the registry.
+ */
+export function Callout({ descriptor, title, description }: {
+  descriptor: ToneDescriptor
   title: string
   description: string
-  tone?: 'positive' | 'caution' | 'critical' | 'info' | 'neutral'
 }) {
+  const Icon = descriptor.icon
   const toneClass = {
     positive: 'text-[var(--tone-positive-fg)] bg-[var(--tone-positive-bg)]',
     caution: 'text-[var(--tone-caution-fg)] bg-[var(--tone-caution-bg)]',
     critical: 'text-[var(--tone-critical-fg)] bg-[var(--tone-critical-bg)]',
     info: 'text-[var(--tone-info-fg)] bg-[var(--tone-info-bg)]',
     neutral: 'text-ink-muted bg-surface-sunk',
-  }[tone]
+  }[descriptor.tone]
 
   return (
     <div className="flex items-start gap-2.5 rounded-[var(--radius-control)] border border-border p-2.5">
-      <span className={cn('grid size-7 shrink-0 place-items-center rounded-[6px] [&_svg]:size-3.5', toneClass)}>
-        {icon}
+      <span className={cn('grid size-7 shrink-0 place-items-center rounded-[6px]', toneClass)}>
+        {Icon && <Icon className="size-3.5" aria-hidden />}
       </span>
       <div className="min-w-0">
         <p className="text-base font-medium text-ink">{title}</p>
@@ -147,3 +178,4 @@ export function Callout({ icon, title, description, tone = 'neutral' }: {
     </div>
   )
 }
+
