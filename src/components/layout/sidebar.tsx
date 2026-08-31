@@ -52,22 +52,24 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
         'group relative flex h-8 items-center gap-2.5 rounded-[var(--radius-control)] px-2',
         'text-base font-medium transition-colors',
         collapsed && 'justify-center px-0',
+        // The active row is a white card lifted off the sunk ground: surface
+        // fill, hairline ring, one soft shadow. On a grey sidebar this is the
+        // stronger signal than a tint — the row physically rises to the plane
+        // the content sits on, which is literally what selecting it does.
+        //
+        // Label goes to full ink rather than brand. The card already says
+        // "here"; colouring the text as well would spend the brand on a cue
+        // that is already made, and leave the icon nothing to say.
         isActive
-          ? 'bg-brand-soft text-brand'
-          : 'text-ink-muted hover:bg-surface-hover hover:text-ink',
+          ? 'bg-surface text-ink ring-1 ring-inset ring-border shadow-[0_1px_2px_oklch(0_0_0/0.05)]'
+          // Hover rises PART of the way — a translucent white, so it reads as
+          // approaching the active state without impersonating it. At full
+          // opacity a hovered row and the selected row would be identical.
+          : 'text-ink-muted hover:bg-surface/70 hover:text-ink',
         item.placeholder && 'cursor-default',
       )}
     >
         <>
-          {/* Active marker is an absolutely positioned pseudo-bar so activating
-              an item adds no width and cannot shift the label. */}
-          <span
-            aria-hidden
-            className={cn(
-              'absolute left-0 h-4 w-0.5 rounded-r-full bg-brand transition-opacity',
-              isActive ? 'opacity-100' : 'opacity-0',
-            )}
-          />
           {/* Duotone rather than a separate solid icon set: lucide ships
               outline only, and hand-drawing thirteen solid glyphs would have
               cost the distinct silhouettes this nav is built on (see nav.ts).
@@ -78,7 +80,7 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
               the weight is a third redundant cue for "you are here" rather than
               decoration — and at 4px of icon detail, weight is the cue that
               survives peripheral vision. */}
-          <span className="relative shrink-0">
+          <span className={cn('relative shrink-0', isActive && 'text-brand')}>
             <Icon className="size-4" fill="currentColor" fillOpacity={isActive ? 0.28 : 0.15} />
             {/* Collapsed, the row has nowhere to put an inline count, so the
                 badge rides the icon's corner instead of disappearing. Dropping
@@ -136,7 +138,11 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-30 flex flex-col border-r border-border bg-surface',
+        // Sunk, not surface. The sidebar is chrome, not content: giving it the
+        // recessed grey and leaving white to the tables and drawers says which
+        // plane the work happens on, and the border stops being the only thing
+        // separating navigation from data.
+        'fixed inset-y-0 left-0 z-30 flex flex-col border-r border-border bg-surface-sunk',
         'transition-[width] duration-200 ease-out',
         collapsed ? 'w-[60px]' : 'w-[232px]',
       )}
@@ -155,7 +161,7 @@ export function Sidebar() {
               onClick={toggleSidebar}
               aria-label="Expand sidebar"
               aria-expanded={false}
-              className="grid size-8 place-items-center rounded-[8px] transition-colors hover:bg-surface-hover"
+              className="grid size-8 place-items-center rounded-[8px] transition-colors hover:bg-surface"
             >
               <CoinflowLogo compact />
             </button>
@@ -168,7 +174,7 @@ export function Sidebar() {
             type="button"
             onClick={toggleSidebar}
             aria-label="Collapse sidebar"
-            className="ml-auto grid size-7 place-items-center rounded-[6px] text-ink-faint transition-colors hover:bg-surface-hover hover:text-ink"
+            className="ml-auto grid size-7 place-items-center rounded-[6px] text-ink-faint transition-colors hover:bg-surface hover:text-ink"
           >
             <PanelLeft className="size-4" />
           </button>
@@ -186,7 +192,7 @@ export function Sidebar() {
               type="button"
               onClick={() => setCommandOpen(true)}
               aria-label="Search"
-              className="grid h-8 w-full place-items-center rounded-[var(--radius-control)] text-ink-faint ring-1 ring-inset ring-border transition-colors hover:bg-surface-hover hover:text-ink"
+              className="grid h-8 w-full place-items-center rounded-[var(--radius-control)] text-ink-faint ring-1 ring-inset ring-border transition-colors hover:bg-surface hover:text-ink"
             >
               <Search className="size-4" />
             </button>
@@ -195,7 +201,7 @@ export function Sidebar() {
           <button
             type="button"
             onClick={() => setCommandOpen(true)}
-            className="flex h-8 w-full items-center gap-2 rounded-[var(--radius-control)] px-2.5 text-left ring-1 ring-inset ring-border transition-colors hover:bg-surface-hover"
+            className="flex h-8 w-full items-center gap-2 rounded-[var(--radius-control)] px-2.5 text-left ring-1 ring-inset ring-border transition-colors hover:bg-surface"
           >
             <Search className="size-3.5 shrink-0 text-ink-faint" />
             <span className="flex-1 text-base text-ink-faint">Search</span>
@@ -236,7 +242,7 @@ export function Sidebar() {
               type="button"
               onClick={toggleTheme}
               aria-label="Toggle theme"
-              className="grid size-7 shrink-0 place-items-center rounded-[6px] text-ink-faint transition-colors hover:bg-surface-hover hover:text-ink"
+              className="grid size-7 shrink-0 place-items-center rounded-[6px] text-ink-faint transition-colors hover:bg-surface hover:text-ink"
             >
               {theme === 'light' ? <Moon className="size-3.5" /> : <Sun className="size-3.5" />}
             </button>
@@ -246,7 +252,7 @@ export function Sidebar() {
               <button
                 type="button"
                 aria-label="Sign out"
-                className="grid size-7 shrink-0 place-items-center rounded-[6px] text-ink-faint transition-colors hover:bg-surface-hover hover:text-ink"
+                className="grid size-7 shrink-0 place-items-center rounded-[6px] text-ink-faint transition-colors hover:bg-surface hover:text-ink"
               >
                 <LogOut className="size-3.5" />
               </button>
