@@ -11,7 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "check:scale": "node scripts/check-scale.mjs"
+    "check:scale": "node scripts/check-scale.mjs",
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "check": "tsc -b --noEmit && node scripts/check-scale.mjs && node scripts/check-contrast.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
@@ -23,7 +25,6 @@
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "date-fns": "^4.4.0",
     "lucide-react": "^1.37.0",
     "react": "^19.2.8",
     "react-day-picker": "^10.0.1",

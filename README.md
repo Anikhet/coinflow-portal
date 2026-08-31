@@ -6,11 +6,13 @@ primitives on Radix, mocked API.
 
 ```bash
 pnpm install
-pnpm dev        # http://localhost:5173
-pnpm test         # unit tests
-pnpm check:scale  # fails on off-scale type or spacing
-pnpm coverage   # ~87% statements on logic modules
+pnpm dev              # http://localhost:5173
 pnpm build
+
+pnpm check            # typecheck + design-scale + colour guards
+pnpm check:scale      # fails on off-scale type or spacing
+pnpm check:contrast   # fails on sub-AA contrast or brand/status collision
+pnpm test             # unit tests over the logic modules
 ```
 
 No backend required — the API is mocked in `src/mocks/`.
@@ -211,7 +213,8 @@ our side.
 
 **Bundle** — Recharts is used on one screen but was loaded eagerly, so operators
 opening the tables paid for a charting library they never render. Code-split:
-main bundle 861KB → 512KB (160KB gzipped).
+the chart splits into its own 356KB chunk, leaving a 635KB main bundle
+(196KB gzipped).
 
 **CLS** — every async surface reserves its box before paint: fixed-height KPI
 cards, a chart with a fixed floor, skeletons matched to real geometry, and the

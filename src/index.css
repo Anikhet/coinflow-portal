@@ -73,17 +73,28 @@
 
 :root {
   /* -- structure ---------------------------------------------------------- */
-  --canvas:        oklch(0.985 0.002 285);
+  /* The page ground sits meaningfully below the card fill. It was 0.985
+     against a white surface — 1.04:1, which is no separation at all, so a card
+     was defined only by a 1.23:1 hairline and read as floating rather than as
+     a panel. Dropping the ground does the work the border was failing to do,
+     and it is the reason white cards read as raised at all. */
+  --canvas:        oklch(0.966 0.004 285);
   --surface:       oklch(1 0 0);
-  --surface-sunk:  oklch(0.968 0.003 285);
-  --surface-hover: oklch(0.972 0.004 285);
+  --surface-sunk:  oklch(0.940 0.005 285);
+  --surface-hover: oklch(0.976 0.004 285);
 
-  --border:        oklch(0.916 0.004 285);
-  --border-strong: oklch(0.861 0.006 285);
+  --border:        oklch(0.898 0.005 285);
+  --border-strong: oklch(0.836 0.007 285);
 
-  --ink:           oklch(0.19 0.014 285);
-  --ink-muted:     oklch(0.53 0.012 285);
-  --ink-faint:     oklch(0.68 0.010 285);
+  /* Three text levels, RE-SPACED so every one clears WCAG AA (4.5:1) on the
+     lightest surface it is used against — verified by scripts/check-contrast.
+     `ink-faint` was 0.68, which measured 2.89:1: barely two thirds of the
+     floor, and it is what every section label, column header and card
+     sub-label uses. OKLCH is excellent for building an even ramp and useless
+     for judging legibility by eye, which is exactly how it drifted. */
+  --ink:           oklch(0.19 0.014 285);   /* 18.5:1 — headings, values */
+  --ink-muted:     oklch(0.44 0.013 285);   /*  7.8:1 — body, secondary   */
+  --ink-faint:     oklch(0.52 0.011 285);   /*  4.6:1 — labels, meta      */
 
   /* -- brand (interactive + identity ONLY, never a status) ----------------
      Coinflow's own palette: midnight navy + mint. The navy is the identity
@@ -175,10 +186,10 @@
   --tone-critical-dot:  oklch(0.60 0.205 21);
   --tone-critical-contrast: oklch(0.99 0.008 21);
 
-  --tone-info-fg:       oklch(0.49 0.115 245);
-  --tone-info-bg:       oklch(0.963 0.028 245);
-  --tone-info-ring:     oklch(0.49 0.115 245 / 0.32);
-  --tone-info-dot:      oklch(0.60 0.145 245);
+  --tone-info-fg:       oklch(0.49 0.115 222);
+  --tone-info-bg:       oklch(0.963 0.030 222);
+  --tone-info-ring:     oklch(0.49 0.115 222 / 0.32);
+  --tone-info-dot:      oklch(0.60 0.145 222);
 
   --tone-neutral-fg:    oklch(0.45 0.010 285);
   --tone-neutral-bg:    oklch(0.960 0.004 285);
@@ -202,7 +213,7 @@
   --chart-6: oklch(0.55 0.190 355);
   --chart-7: oklch(0.60 0.140 105);
   --chart-8: oklch(0.50 0.160 330);
-  --chart-9: oklch(0.57 0.115 175);
+  --chart-9: oklch(0.72 0.100 175);
   --chart-grid: oklch(0.92 0.004 285);
   /* -- identity avatars ----------------------------------------------------
      A merchant chip's HUE comes from its name (see lib/avatar.ts); the
@@ -227,21 +238,27 @@
     --border:        oklch(0.278 0.011 285);
     --border-strong: oklch(0.348 0.013 285);
 
-    --ink:           oklch(0.965 0.004 285);
-    --ink-muted:     oklch(0.715 0.012 285);
-    --ink-faint:     oklch(0.565 0.012 285);
+    --ink:           oklch(0.965 0.004 285);  /* 15.1:1 */
+    --ink-muted:     oklch(0.740 0.012 285);  /*  8.0:1 */
+    --ink-faint:     oklch(0.620 0.012 285);  /*  5.1:1 */
 
     /* Dark mode inverts the pair, exactly as the marque does on midnight: the
        mint becomes the interactive colour and the navy becomes the ground. */
     --logo-filter:    brightness(0) invert(1);
-    --brand:          oklch(0.88 0.095 163);
-    --brand-hover:    oklch(0.93 0.085 163);
+    /* HUE 276 — the same violet as light. It was 163 (a green), which meant
+       the brand changed identity between themes AND collided with the success
+       tone at hue 158: in dark mode the active nav rail, the focus ring, the
+       primary button, the chart line and the "Settled" badge were all the same
+       green. The single rule this system rests on — a coloured element that is
+       not a status is brand — did not survive the theme switch. */
+    --brand:          oklch(0.72 0.150 276);
+    --brand-hover:    oklch(0.80 0.140 276);
     --brand-soft:     oklch(0.30 0.055 276);
     --glyph-from:     oklch(0.90 0.095 163);
     --glyph-to:       oklch(0.62 0.095 163);
     --glyph-critical-from: oklch(0.82 0.140 21);
     --glyph-critical-to:   oklch(0.60 0.160 21);
-    --brand-ring:     oklch(0.88 0.095 163 / 0.40);
+    --brand-ring:     oklch(0.72 0.150 276 / 0.40);
     --brand-contrast: oklch(0.22 0.050 276);
     /* The dark-mode chip is MINT (L 0.88), not navy. A white highlight at 0.20
        over a colour that light is invisible, so the light source has to be
@@ -269,10 +286,10 @@
     --tone-critical-dot:  oklch(0.70 0.180 21);
     --tone-critical-contrast: oklch(0.17 0.020 21);
 
-    --tone-info-fg:       oklch(0.80 0.115 245);
-    --tone-info-bg:       oklch(0.288 0.058 245);
-    --tone-info-ring:     oklch(0.80 0.115 245 / 0.38);
-    --tone-info-dot:      oklch(0.72 0.135 245);
+    --tone-info-fg:       oklch(0.80 0.115 222);
+    --tone-info-bg:       oklch(0.288 0.058 222);
+    --tone-info-ring:     oklch(0.80 0.115 222 / 0.38);
+    --tone-info-dot:      oklch(0.72 0.135 222);
 
     --tone-neutral-fg:    oklch(0.755 0.010 285);
     --tone-neutral-bg:    oklch(0.268 0.010 285);
@@ -293,7 +310,7 @@
     --chart-6: oklch(0.55 0.190 355);
     --chart-7: oklch(0.66 0.140 105);
     --chart-8: oklch(0.58 0.150 330);
-    --chart-9: oklch(0.67 0.115 175);
+    --chart-9: oklch(0.83 0.090 175);
     --chart-grid: oklch(0.278 0.011 285);
     /* Inverted for midnight: deep tint carrying light text. */
     --avatar-bg-l: 0.315;
@@ -312,19 +329,25 @@
   --border:        oklch(0.278 0.011 285);
   --border-strong: oklch(0.348 0.013 285);
 
-  --ink:           oklch(0.965 0.004 285);
-  --ink-muted:     oklch(0.715 0.012 285);
-  --ink-faint:     oklch(0.565 0.012 285);
+  --ink:           oklch(0.965 0.004 285);  /* 15.1:1 */
+  --ink-muted:     oklch(0.740 0.012 285);  /*  8.0:1 */
+  --ink-faint:     oklch(0.620 0.012 285);  /*  5.1:1 */
 
   --logo-filter:    brightness(0) invert(1);
-  --brand:          oklch(0.88 0.095 163);
-  --brand-hover:    oklch(0.93 0.085 163);
+    /* HUE 276 — the same violet as light. It was 163 (a green), which meant
+     the brand changed identity between themes AND collided with the success
+     tone at hue 158: in dark mode the active nav rail, the focus ring, the
+     primary button, the chart line and the "Settled" badge were all the same
+     green. The single rule this system rests on — a coloured element that is
+     not a status is brand — did not survive the theme switch. */
+  --brand:        oklch(0.72 0.150 276);
+  --brand-hover:    oklch(0.80 0.140 276);
   --brand-soft:     oklch(0.30 0.055 276);
   --glyph-from:     oklch(0.90 0.095 163);
   --glyph-to:       oklch(0.62 0.095 163);
   --glyph-critical-from: oklch(0.82 0.140 21);
   --glyph-critical-to:   oklch(0.60 0.160 21);
-  --brand-ring:     oklch(0.88 0.095 163 / 0.40);
+  --brand-ring:     oklch(0.72 0.150 276 / 0.40);
   --brand-contrast: oklch(0.22 0.050 276);
   --accent:         oklch(0.910 0.091 163);
   --accent-strong:  oklch(0.80 0.120 163);
@@ -346,10 +369,10 @@
   --tone-critical-dot:  oklch(0.70 0.180 21);
   --tone-critical-contrast: oklch(0.17 0.020 21);
 
-  --tone-info-fg:       oklch(0.80 0.115 245);
-  --tone-info-bg:       oklch(0.288 0.058 245);
-  --tone-info-ring:     oklch(0.80 0.115 245 / 0.38);
-  --tone-info-dot:      oklch(0.72 0.135 245);
+  --tone-info-fg:       oklch(0.80 0.115 222);
+  --tone-info-bg:       oklch(0.288 0.058 222);
+  --tone-info-ring:     oklch(0.80 0.115 222 / 0.38);
+  --tone-info-dot:      oklch(0.72 0.135 222);
 
   --tone-neutral-fg:    oklch(0.755 0.010 285);
   --tone-neutral-bg:    oklch(0.268 0.010 285);
@@ -364,7 +387,7 @@
   --chart-6: oklch(0.55 0.190 355);
   --chart-7: oklch(0.66 0.140 105);
   --chart-8: oklch(0.58 0.150 330);
-  --chart-9: oklch(0.67 0.115 175);
+  --chart-9: oklch(0.83 0.090 175);
   --chart-grid: oklch(0.278 0.011 285);
   /* Inverted for midnight: deep tint carrying light text. */
   --avatar-bg-l: 0.315;
@@ -487,7 +510,7 @@
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: none; }
   }
-  .animate-tab-panel { animation: tab-panel-in 0.36s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .animate-tab-panel { animation: tab-panel-in 0.3s ease-in-out both; }
 }
 
 @media (prefers-reduced-motion: reduce) {
