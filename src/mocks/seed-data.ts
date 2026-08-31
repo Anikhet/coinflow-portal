@@ -3,7 +3,9 @@ import type {
   Payment, PaymentMethod, PaymentStatus, Processor,
   ProtectionState, ThreeDSState, OrchestrationAttempt, PaymentFee,
 } from '@/types/payment'
-import type { Customer, CustomerActivity, CustomerCard, SignalRow } from '@/types/customer'
+import type {
+  Customer, CustomerActivity, CustomerCard, SignalRow, CustomerDispute, AuditEntry,
+} from '@/types/customer'
 import type { Payout, PayoutRail } from '@/types/payout'
 
 /**
@@ -229,6 +231,60 @@ function buildActivity(random: Random, count: number, now: number): CustomerActi
   }).sort((a, b) => +new Date(b.at) - +new Date(a.at))
 }
 
+const DISPUTE_REASONS = [
+  ['10.4', 'Other fraud — card absent environment'],
+  ['13.1', 'Merchandise or services not received'],
+  ['13.3', 'Not as described or defective'],
+  ['12.6', 'Duplicate processing'],
+  ['4853', 'Cardholder dispute'],
+] as const
+
+function buildDisputes(random: Random, count: number, now: number): CustomerDispute[] {
+  return Array.from({ length: count }, () => {
+    const [reasonCode, reason] = random.pick(DISPUTE_REASONS)
+    return {
+      id: random.hex(12),
+      openedAt: new Date(now - random.int(2, 180) * 86_400_000).toISOString(),
+      amount: amountFor(random),
+      reasonCode,
+      reason,
+      status: random.weighted([
+        ['under-review', 40], ['won', 30], ['lost', 20], ['open', 10],
+      ] as const),
+    }
+  }).sort((a, b) => +new Date(b.openedAt) - +new Date(a.openedAt))
+}
+
+/**
+ * Audit entries. Deliberately mixes system and human actors: the point of an
+ * audit log is telling the two apart when explaining why an account is in the
+ * state it is.
+ */
+const AUDIT_ACTIONS = [
+  ['Fraud rule applied', 'Velocity rule v4 restricted attempt limit'],
+  ['Verification requested', 'Identity documents requested from customer'],
+  ['KYC status changed', 'Moved to verified after document review'],
+  ['Payment method added', 'Card ending in 4642 added'],
+  ['Protection enabled', 'Chargeback protection switched on'],
+  ['Manual review', 'Reviewed after elevated IP count'],
+  ['Attempt limit changed', 'Raised to elevated by operator'],
+] as const
+
+function buildAuditLog(random: Random, count: number, now: number): AuditEntry[] {
+  return Array.from({ length: count }, () => {
+    const [action, detail] = random.pick(AUDIT_ACTIONS)
+    return {
+      id: random.hex(12),
+      at: new Date(now - random.int(1, 400) * 86_400_000 - random.int(0, 86_399) * 1000).toISOString(),
+      actor: random.weighted([
+        ['System', 55], ['ben@coinflowlabs.app', 25], ['ops@coinflowlabs.app', 20],
+      ] as const),
+      action,
+      detail,
+    }
+  }).sort((a, b) => +new Date(b.at) - +new Date(a.at))
+}
+
 function buildCustomer(random: Random, now: number): Customer {
   const name = fullName(random)
   const id = `${random.hex(8)}-${random.hex(4)}-${random.hex(12)}`
@@ -278,6 +334,8 @@ function buildCustomer(random: Random, now: number): Customer {
     }, totalVolume),
     cards: buildCards(random, random.int(1, 7), now),
     activity: buildActivity(random, random.int(12, 60), now),
+    disputes: buildDisputes(random, disputeCount, now),
+    auditLog: buildAuditLog(random, random.int(3, 9), now),
   }
 }
 

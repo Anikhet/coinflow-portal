@@ -3,9 +3,20 @@ import { create } from 'zustand'
 interface DrawerState {
   paymentId: string | null
   customerId: string | null
+  /**
+   * Ids of the rows currently on screen, in display order, so the drawer can
+   * step to the next record without going back to the table.
+   *
+   * The table owns this list and the drawer consumes it, with no useful common
+   * ancestor between them — the same reason the open record itself lives here.
+   */
+  recordIds: string[]
   openPayment: (id: string) => void
   openCustomer: (id: string) => void
   closeAll: () => void
+  setRecordIds: (ids: string[]) => void
+  /** Steps the open record by an offset within recordIds; a no-op at the ends. */
+  step: (offset: number) => void
 }
 
 /**
@@ -23,7 +34,20 @@ interface DrawerState {
 export const useDrawerStore = create<DrawerState>((set) => ({
   paymentId: null,
   customerId: null,
+  recordIds: [],
   openPayment: (paymentId) => set({ paymentId, customerId: null }),
   openCustomer: (customerId) => set({ customerId, paymentId: null }),
   closeAll: () => set({ paymentId: null, customerId: null }),
+
+  setRecordIds: (recordIds) => set({ recordIds }),
+
+  step: (offset) =>
+    set((state) => {
+      const openId = state.customerId ?? state.paymentId
+      if (!openId) return {}
+      const index = state.recordIds.indexOf(openId)
+      const next = state.recordIds[index + offset]
+      if (index === -1 || next === undefined) return {}
+      return state.customerId ? { customerId: next } : { paymentId: next }
+    }),
 }))

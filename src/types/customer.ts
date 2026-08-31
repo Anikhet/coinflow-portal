@@ -35,6 +35,25 @@ export interface CustomerActivity {
   note: string | null
 }
 
+/** A dispute raised against one of this customer's payments. */
+export interface CustomerDispute {
+  id: string
+  openedAt: string
+  amount: number
+  reasonCode: string
+  reason: string
+  status: 'open' | 'won' | 'lost' | 'under-review'
+}
+
+/** One entry in the customer's audit trail. */
+export interface AuditEntry {
+  id: string
+  at: string
+  actor: string
+  action: string
+  detail: string
+}
+
 export interface Customer {
   id: string
   shortId: string
@@ -59,4 +78,6 @@ export interface Customer {
   ipLocations: SignalRow[]
   cards: CustomerCard[]
   activity: CustomerActivity[]
+  disputes: CustomerDispute[]
+  auditLog: AuditEntry[]
 }

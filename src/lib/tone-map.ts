@@ -1,4 +1,4 @@
-import { BanknoteArrowUp, CircleDashed, Gavel, LoaderCircle, RotateCcw } from 'lucide-react'
+import { BanknoteArrowUp, CircleDashed, Clock, Gavel, LoaderCircle, RotateCcw } from 'lucide-react'
 import type { ComponentType } from 'react'
 import {
   BanFilled, CircleCheckFilled, CircleXFilled, ClockFilled, HandOffFilled,
@@ -12,7 +12,7 @@ import type {
   ProtectionState,
   ThreeDSState,
 } from '@/types/payment'
-import type { Customer, CustomerActivity, KycStatus } from '@/types/customer'
+import type { Customer, CustomerActivity, CustomerDispute, KycStatus } from '@/types/customer'
 
 /**
  * DOMAIN → TONE REGISTRY
@@ -33,8 +33,16 @@ import type { Customer, CustomerActivity, KycStatus } from '@/types/customer'
  * to draw it". Where a field has its own glyph family the default uses it
  * (protection Enabled is a shield, 3DS Functional is a padlock); where it does
  * not, the default takes CircleCheckFilled, which is the app's one mark for
- * "nothing unusual here". Defaults still render in ink-faint, so the glyph adds
- * completeness without adding noise.
+ * "nothing unusual here".
+ *
+ * A healthy default is toned `positive`, not `neutral`: "Standard" on a fraud
+ * control is not an absent value, it is a control confirmed to be in its
+ * correct posture, and the tick that says so should be the same green as a
+ * settled payment. `isDefault` — not the tone — is what keeps such a value
+ * quiet: `ControlValue` colours the GLYPH by tone but leaves a default's LABEL
+ * in plain ink, so a deviating value is still the only coloured TEXT in the
+ * grid. States that genuinely mean "this never happened" (Not enrolled, No KYC,
+ * Skipped) stay `neutral`, because there is nothing there to call healthy.
  */
 
 export interface ToneDescriptor {
@@ -82,7 +90,7 @@ export function protectionTone(state: ProtectionState): ToneDescriptor {
     // Shield family throughout: chargeback protection IS a shield product, and
     // keeping one column to one family means the glyph identifies the COLUMN
     // as fast as the state.
-    case 'approved': return { tone: 'neutral', label: 'Protected', isDefault: true, icon: ShieldCheckFilled }
+    case 'approved': return { tone: 'positive', label: 'Protected', isDefault: true, icon: ShieldCheckFilled }
     // A refusal gets the stop-sign, not another shield: at 12px the shield
     // family's silhouettes differ only by their knocked-out mark, so "claim
     // refused" and "no cover bought" were telling themselves apart on a 2px
@@ -199,19 +207,19 @@ export function customerExceptions(customer: Customer): ToneDescriptor[] {
 
 export function customerProtectionTone(enabled: boolean): ToneDescriptor {
   return enabled
-    ? { tone: 'neutral', label: 'Enabled', isDefault: true, icon: ShieldCheckFilled }
+    ? { tone: 'positive', label: 'Enabled', isDefault: true, icon: ShieldCheckFilled }
     : { tone: 'caution', label: 'Disabled', icon: ShieldOffFilled }
 }
 
 export function blockedTone(blocked: boolean): ToneDescriptor {
   return blocked
     ? { tone: 'critical', label: 'Blocked', icon: BanFilled }
-    : { tone: 'neutral', label: 'Not blocked', isDefault: true, icon: CircleCheckFilled }
+    : { tone: 'positive', label: 'Not blocked', isDefault: true, icon: CircleCheckFilled }
 }
 
 export function threeDSProcessingTone(state: Customer['threeDSProcessing']): ToneDescriptor {
   switch (state) {
-    case 'functional': return { tone: 'neutral', label: 'Functional', isDefault: true, icon: LockFilled }
+    case 'functional': return { tone: 'positive', label: 'Functional', isDefault: true, icon: LockFilled }
     case 'degraded':   return { tone: 'caution', label: 'Degraded', icon: LockOpenFilled }
     case 'off':        return { tone: 'critical', label: 'Off', icon: UnlockFilled }
   }
@@ -219,7 +227,7 @@ export function threeDSProcessingTone(state: Customer['threeDSProcessing']): Ton
 
 export function attemptLimitTone(limit: Customer['attemptLimit']): ToneDescriptor {
   switch (limit) {
-    case 'standard':   return { tone: 'neutral', label: 'Standard', isDefault: true, icon: CircleCheckFilled }
+    case 'standard':   return { tone: 'positive', label: 'Standard', isDefault: true, icon: CircleCheckFilled }
     case 'restricted': return { tone: 'caution', label: 'Restricted', icon: HandOffFilled }
     case 'elevated':   return { tone: 'info', label: 'Elevated', icon: TrendingUpFilled }
   }
@@ -227,15 +235,15 @@ export function attemptLimitTone(limit: Customer['attemptLimit']): ToneDescripto
 
 export function verificationTone(state: Customer['verification']): ToneDescriptor {
   switch (state) {
-    case 'enforced':  return { tone: 'neutral', label: 'Enforced', isDefault: true, icon: ShieldCheckFilled }
+    case 'enforced':  return { tone: 'positive', label: 'Enforced', isDefault: true, icon: ShieldCheckFilled }
     case 'not-found': return { tone: 'caution', label: 'Not found', icon: UserOffFilled }
-    case 'standard':  return { tone: 'neutral', label: 'Standard', isDefault: true, icon: CircleCheckFilled }
+    case 'standard':  return { tone: 'positive', label: 'Standard', isDefault: true, icon: CircleCheckFilled }
   }
 }
 
 export function fraudOverrideTone(override: Customer['fraudOverride']): ToneDescriptor {
   switch (override) {
-    case 'standard': return { tone: 'neutral', label: 'Standard', isDefault: true, icon: CircleCheckFilled }
+    case 'standard': return { tone: 'positive', label: 'Standard', isDefault: true, icon: CircleCheckFilled }
     case 'allow':    return { tone: 'info', label: 'Always allow', icon: CircleCheckFilled }
     case 'deny':     return { tone: 'critical', label: 'Always deny', icon: OctagonXFilled }
   }
@@ -287,6 +295,16 @@ export function disbursedTone(disbursed: boolean): ToneDescriptor {
  */
 export function allClearTone(): ToneDescriptor {
   return { tone: 'positive', label: 'No exceptions', icon: ShieldCheckFilled }
+}
+
+/** Outcome of a chargeback dispute. */
+export function disputeStatusTone(status: CustomerDispute['status']): ToneDescriptor {
+  switch (status) {
+    case 'won':          return { tone: 'positive', label: 'Won', icon: CircleCheckFilled }
+    case 'lost':         return { tone: 'critical', label: 'Lost', icon: CircleXFilled }
+    case 'under-review': return { tone: 'caution', label: 'Under review', icon: Clock }
+    case 'open':         return { tone: 'caution', label: 'Open', icon: Gavel }
+  }
 }
 
 export function signalCountTone(count: number, threshold: number): Tone {
