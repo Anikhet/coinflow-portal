@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Wallet, CreditCard, Users, Gavel, Unlink, ClipboardList,
+  House, Wallet, CreditCard, Users, Gavel, Unlink, ClipboardList,
   ChartColumnBig, Gauge, BookCheck, ShieldCheck, FileSearch, BanknoteX,
   type LucideIcon,
 } from 'lucide-react'
@@ -65,7 +65,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: null,
     items: [
-      { label: 'Home', to: '/', icon: LayoutDashboard },
+      { label: 'Home', to: '/', icon: House },
       { label: 'Liquidity', to: '/liquidity', icon: Wallet, placeholder: true },
     ],
   },

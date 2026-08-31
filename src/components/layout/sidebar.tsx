@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { PanelLeft, Search, LogOut, Moon, Sun } from 'lucide-react'
 import { NAV_GROUPS, type NavItem } from '@/lib/nav'
 import { useUiStore } from '@/stores/ui-store'
@@ -6,6 +6,8 @@ import { CoinflowLogo } from './logo'
 import { MerchantSwitcher } from './merchant-switcher'
 import { Tooltip } from '@/components/ui/tooltip'
 import { Kbd } from '@/components/ui/input'
+import { Avatar } from '@/components/ui/avatar'
+import { Pill } from '@/components/ui/pill'
 import { cn } from '@/lib/cn'
 
 /**
@@ -16,26 +18,46 @@ import { cn } from '@/lib/cn'
  * cannot cause the icons to reflow or the page to shift.
  */
 
+/** Collapsed rows render no text, so the name (and any count) must come from aria. */
+function accessibleNameFor(item: NavItem) {
+  return item.badge != null ? `${item.label}, ${item.badge} pending` : item.label
+}
+
 function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const Icon = item.icon
+  const { pathname } = useLocation()
+
+  /**
+   * Active state is derived here rather than via NavLink's render-prop.
+   *
+   * Passing BOTH a function `className` and function `children` to NavLink does
+   * not work: the className function is stringified into the class attribute.
+   * The resulting string then splits on whitespace, so bare tokens like `flex`
+   * and `px-2` accidentally applied while quoted ones like `"justify-center`
+   * and `px-0"` did not — which silently left every collapsed icon 14px off
+   * centre and killed the active styling. Deriving `isActive` from the location
+   * keeps both props plain values and removes the whole failure mode.
+   */
+  const isActive =
+    item.to === '/'
+      ? pathname === '/'
+      : pathname === item.to || pathname.startsWith(`${item.to}/`)
 
   const link = (
     <NavLink
       to={item.to}
       end={item.to === '/'}
-      className={({ isActive }) =>
-        cn(
-          'group relative flex h-8 items-center gap-2.5 rounded-[var(--radius-control)] px-2',
-          'text-[13px] font-medium transition-colors',
-          collapsed && 'justify-center px-0',
-          isActive
-            ? 'bg-brand-soft text-brand'
-            : 'text-ink-muted hover:bg-surface-hover hover:text-ink',
-          item.placeholder && 'cursor-default',
-        )
-      }
+      aria-label={collapsed ? accessibleNameFor(item) : undefined}
+      className={cn(
+        'group relative flex h-8 items-center gap-2.5 rounded-[var(--radius-control)] px-2',
+        'text-[13px] font-medium transition-colors',
+        collapsed && 'justify-center px-0',
+        isActive
+          ? 'bg-brand-soft text-brand'
+          : 'text-ink-muted hover:bg-surface-hover hover:text-ink',
+        item.placeholder && 'cursor-default',
+      )}
     >
-      {({ isActive }) => (
         <>
           {/* Active marker is an absolutely positioned pseudo-bar so activating
               an item adds no width and cannot shift the label. */}
@@ -46,23 +68,60 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
               isActive ? 'opacity-100' : 'opacity-0',
             )}
           />
-          <Icon className="size-4 shrink-0" />
+          {/* Duotone rather than a separate solid icon set: lucide ships
+              outline only, and hand-drawing thirteen solid glyphs would have
+              cost the distinct silhouettes this nav is built on (see nav.ts).
+              Filling the existing paths keeps every outline exactly as chosen
+              and just gives it a body.
+
+              The active row fills harder. It already has a tint and a rail, so
+              the weight is a third redundant cue for "you are here" rather than
+              decoration — and at 4px of icon detail, weight is the cue that
+              survives peripheral vision. */}
+          <span className="relative shrink-0">
+            <Icon className="size-4" fill="currentColor" fillOpacity={isActive ? 0.28 : 0.15} />
+            {/* Collapsed, the row has nowhere to put an inline count, so the
+                badge rides the icon's corner instead of disappearing. Dropping
+                it would mean collapsing the sidebar silently hides every
+                work-queue signal — the counts are the reason to look at these
+                rows at all. Ring matches the sidebar surface so the bubble
+                reads as sitting above the glyph rather than merged into it. */}
+            {/* Deliberately NOT a <Pill>: this is an 8px overlay bubble pinned
+                to the glyph's corner with an OUTSET ring that masks the icon
+                behind it. Forcing it through the badge component would mean
+                adding a size and a ring escape hatch that only this one caller
+                would ever use — the component would get worse to make one call
+                site shorter. */}
+            {collapsed && item.badge != null && (
+              <span
+                aria-hidden
+                className="absolute -right-2.5 -top-1.5 z-10 min-w-3 rounded-full bg-[var(--tone-critical-bg)] px-1 text-center text-[8px] font-semibold leading-[12px] tabular-nums text-[var(--tone-critical-fg)] ring-1 ring-surface"
+              >
+                {item.badge > 9 ? '9+' : item.badge}
+              </span>
+            )}
+          </span>
           {!collapsed && (
             <>
               <span className="flex-1 truncate">{item.label}</span>
               {item.badge != null && (
-                <span className="shrink-0 rounded-full bg-[var(--tone-critical-bg)] px-1.5 text-[10px] font-semibold tabular-nums text-[var(--tone-critical-fg)]">
+                <Pill tone="critical" variant="solid" size="sm" className="rounded-full">
                   {item.badge}
-                </span>
+                </Pill>
               )}
             </>
           )}
         </>
-      )}
     </NavLink>
   )
 
-  return collapsed ? <Tooltip content={item.label} side="right">{link}</Tooltip> : link
+  return collapsed ? (
+    <Tooltip content={accessibleNameFor(item)} side="right">
+      {link}
+    </Tooltip>
+  ) : (
+    link
+  )
 }
 
 export function Sidebar() {
@@ -81,7 +140,27 @@ export function Sidebar() {
       )}
     >
       <div className={cn('flex h-14 shrink-0 items-center gap-2 px-3', collapsed && 'justify-center px-0')}>
-        <CoinflowLogo compact={collapsed} />
+        {/* Collapsed, the logo IS the expand control — the only one. It is the
+            largest, most obvious target in the rail and sits where the eye
+            already goes, so reaching for it is the natural first instinct.
+            There used to be a second chevron pinned to the bottom of the rail
+            as well; two controls for one action just made the reader wonder
+            whether they did different things. */}
+        {collapsed ? (
+          <Tooltip content="Expand sidebar" side="right">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              aria-label="Expand sidebar"
+              aria-expanded={false}
+              className="grid size-8 place-items-center rounded-[8px] transition-colors hover:bg-surface-hover"
+            >
+              <CoinflowLogo compact />
+            </button>
+          </Tooltip>
+        ) : (
+          <CoinflowLogo compact={false} />
+        )}
         {!collapsed && (
           <button
             type="button"
@@ -143,9 +222,7 @@ export function Sidebar() {
 
       <div className={cn('shrink-0 border-t border-border p-3', collapsed && 'px-2')}>
         <div className={cn('flex items-center gap-2', collapsed && 'flex-col gap-1')}>
-          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft text-[11px] font-semibold text-brand">
-            BM
-          </span>
+          <Avatar name="Ben Meeder" size={28} className="rounded-full" />
           {!collapsed && (
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[12px] font-medium leading-tight text-ink">Ben Meeder</span>
@@ -174,16 +251,6 @@ export function Sidebar() {
             </Tooltip>
           )}
         </div>
-        {collapsed && (
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            aria-label="Expand sidebar"
-            className="mt-2 grid h-7 w-full place-items-center rounded-[6px] text-ink-faint transition-colors hover:bg-surface-hover hover:text-ink"
-          >
-            <PanelLeft className="size-4 rotate-180" />
-          </button>
-        )}
       </div>
     </aside>
   )
