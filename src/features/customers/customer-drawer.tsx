@@ -16,7 +16,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill } from '@/components/ui/status-pill'
 import { TabCount, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { truncateId } from '@/lib/format'
-import { blockedTone, customerExceptions, kycTone } from '@/lib/tone-map'
+import { Truncated } from '@/components/ui/truncated'
+import { blockedTone, kycTone } from '@/lib/tone-map'
 import { fetchCustomer } from '@/mocks/api'
 import { useDrawerStore } from '@/stores/drawer-store'
 import type { Customer } from '@/types'
@@ -75,7 +76,6 @@ function CustomerDrawerSkeleton() {
 
 function CustomerDrawerContent({ customer }: { customer: Customer }) {
   const kyc = kycTone(customer.kyc)
-  const exceptions = customerExceptions(customer)
 
   return (
     <div className="flex h-full flex-col">
@@ -94,9 +94,9 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
             {customer.blocked && <StatusPill descriptor={blockedTone(true)} />}
           </div>
           <div className="group/row mt-1 flex items-center gap-3">
-            <span className="truncate text-sm text-ink-muted">{customer.email}</span>
+            <Truncated className="text-sm text-ink-muted">{customer.email}</Truncated>
             <span className="flex shrink-0 items-center gap-1">
-              <span className="font-mono text-sm text-ink-faint">{truncateId(customer.id, 8, 4)}</span>
+              <Truncated always title={customer.id} className="font-mono text-sm text-ink-faint">{truncateId(customer.id, 8, 4)}</Truncated>
               <CopyButton value={customer.id} label="Copy customer ID" />
             </span>
           </div>
@@ -148,7 +148,7 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
           <TabsTrigger value="audit">Audit log</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview"><OverviewTab customer={customer} exceptions={exceptions} /></TabsContent>
+        <TabsContent value="overview"><OverviewTab customer={customer} /></TabsContent>
         <TabsContent value="activity"><ActivityTab activity={customer.activity} /></TabsContent>
         <TabsContent value="disputes"><DisputesTab customer={customer} /></TabsContent>
         <TabsContent value="methods"><MethodsTab customer={customer} /></TabsContent>

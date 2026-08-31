@@ -13,11 +13,14 @@ import { Fingerprint, MapPin, User } from 'lucide-react'
  * control grid — the tab an operator lands on and often never leaves.
  */
 
-export function OverviewTab({ customer, exceptions }: {
-  customer: Customer
-  exceptions: ReturnType<typeof customerExceptions>
-}) {
+export function OverviewTab({ customer }: { customer: Customer }) {
   const timezone = useUiStore((state) => state.timezone)
+
+  // Derived here rather than handed down. The drawer that renders this tab
+  // computed the list only to forward it, and this is the sole consumer — a
+  // prop that passes through a component untouched is drilling, and a value
+  // derived from a prop already in hand needs no prop of its own.
+  const exceptions = customerExceptions(customer)
 
   return (
     <>
