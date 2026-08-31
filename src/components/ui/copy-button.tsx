@@ -1,5 +1,6 @@
 import { Check, Copy } from 'lucide-react'
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/cn'
 
 /**
@@ -25,12 +26,25 @@ export function CopyButton({ value, label = 'Copy', className }: {
   const handleCopy = useCallback(
     (event: React.MouseEvent) => {
       event.stopPropagation()
-      void navigator.clipboard.writeText(value)
-      setCopied(true)
-      if (timer.current) clearTimeout(timer.current)
-      timer.current = setTimeout(() => setCopied(false), 1400)
+      navigator.clipboard.writeText(value).then(
+        () => {
+          // Labels read as commands ("Copy payment ID"); the toast reads as a
+          // result, so drop the verb rather than saying "Copy payment ID copied".
+          const subject = label.replace(/^copy\s+/i, '') || 'Value'
+          toast.success(`${subject.charAt(0).toUpperCase()}${subject.slice(1)} copied`, {
+            description: value,
+          })
+          setCopied(true)
+          if (timer.current) clearTimeout(timer.current)
+          timer.current = setTimeout(() => setCopied(false), 1400)
+        },
+        (error: unknown) => {
+          console.error('Clipboard write failed:', error)
+          toast.error('Could not copy to clipboard')
+        },
+      )
     },
-    [value],
+    [value, label],
   )
 
   return (

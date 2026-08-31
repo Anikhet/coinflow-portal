@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { CommandPalette } from '@/components/layout/command-palette'
+import { Toaster } from '@/components/ui/toaster'
 import { HomePage } from '@/features/home/home-page'
 import { PurchasesPage } from '@/features/purchases/purchases-page'
 import { CustomersPage } from '@/features/customers/customers-page'
@@ -19,6 +20,7 @@ export default function App() {
     <TooltipProvider delayDuration={300} skipDelayDuration={200}>
       <BrowserRouter>
         <CommandPalette />
+        <Toaster />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/purchases" element={<PurchasesPage />} />
