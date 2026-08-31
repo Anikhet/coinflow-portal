@@ -32,7 +32,7 @@ export function LazyMethodChart({ points, series, metric, selected }: {
 export function MethodChartFallback() {
   return (
     <div className="flex flex-1 flex-col">
-      <Skeleton className="min-h-[220px] w-full flex-1" />
+      <Skeleton className="min-h-[320px] w-full flex-1" />
       <Skeleton className="mt-3 h-[17px] w-2/3" />
     </div>
   )

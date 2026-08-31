@@ -94,7 +94,7 @@ export function MethodChart({ points, series, metric = 'amount', selected }: {
     <div className="flex h-full flex-col">
       {/* Minimum height reserves the box before mount; the chart then grows to
           fill whatever height the card has, so no dead space is left below. */}
-      <div className="min-h-[220px] w-full flex-1">
+      <div className="min-h-[320px] w-full flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartPoints} margin={{ top: 4, right: 4, bottom: 0, left: -8 }}>
             <defs>
