@@ -34,10 +34,21 @@ export function TabsList({ className, children, ...props }: ComponentProps<typeo
       <span
         aria-hidden
         className={cn(
-          'pointer-events-none absolute -bottom-px left-0 h-0.5 origin-left rounded-full bg-brand',
+          // 3px, not the original hairline. A 2px bar moving is easy to miss
+          // entirely — the motion is real, but there is not enough of it on
+          // screen to register. Extra weight is what makes the glide legible.
+          'pointer-events-none absolute -bottom-px left-0 h-[3px] origin-left rounded-full bg-brand',
           // Translate + scale rather than animating `left`/`width`: those are
           // layout properties and would reflow the strip on every frame.
-          'transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+          //
+          // A symmetric ease-in-out, NOT the drawer's (0.16, 1, 0.3, 1). That
+          // curve covers ~83% of the travel in its first 70ms and then creeps,
+          // which the eye reads as a snap with a lazy tail rather than a glide.
+          // This one accelerates and decelerates evenly, so the bar is visibly
+          // mid-flight halfway through and actually looks like it is moving.
+          // 300ms ease-in-out matches the sliding indicator in the echos
+          // `animated-tabs` component, so tab motion feels the same in both.
+          'transition-[transform,opacity] duration-300 ease-in-out',
           'motion-reduce:transition-none',
           // The very first placement jumps into position; only later moves slide.
           !indicator.ready && 'opacity-0 transition-none',
@@ -64,7 +75,7 @@ export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsP
         'relative shrink-0 whitespace-nowrap px-2.5 py-2.5 text-base font-medium text-ink-muted',
         // Label colour eases on the same curve and duration as the sliding
         // underline, so the two halves of the transition read as one motion.
-        'transition-colors duration-300 ease-out hover:text-ink',
+        'transition-colors duration-300 ease-in-out hover:text-ink',
         'data-[state=active]:text-ink',
         className,
       )}
