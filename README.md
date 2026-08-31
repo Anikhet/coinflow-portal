@@ -86,6 +86,13 @@ well and costs a scan-line in production.
 
 ## What else changed, and why
 
+**Layout** — the shell is pinned to the viewport height, so each page's body is
+the scrolling region rather than the document. Page header, toolbar and
+paginator stay put; only rows move. Before this the document scrolled, which
+meant a table's `overflow-auto` never engaged — there was no scroll container
+for the sticky header to stick inside, and the paginator sat ~900px below the
+fold.
+
 **Tables** — both tables keep their full production column set in the same order
 with the same labels (Purchases: 13, Customers: 10), so an operator moving
 between the two doesn't have to re-learn where anything lives. What changed is
