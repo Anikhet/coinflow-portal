@@ -7,7 +7,8 @@ primitives on Radix, mocked API.
 ```bash
 pnpm install
 pnpm dev        # http://localhost:5173
-pnpm test       # 51 unit tests
+pnpm test         # unit tests
+pnpm check:scale  # fails on off-scale type or spacing
 pnpm coverage   # ~87% statements on logic modules
 pnpm build
 ```
@@ -76,7 +77,49 @@ Two consequences worth calling out:
   The default here is the *good* state; only the absence or refusal of
   protection earns ink.
 
-### 3. Density is a feature
+### 3. One scale, enforced
+
+Swiss method, not Swiss styling. The International Typographic Style has two
+separable halves: a *look* (Helvetica, an accent red, poster whitespace) and a
+*method* — decide a system once, then never pick a number by feel again.
+
+The look would damage this product. Helvetica's closed apertures blur `c`/`o`
+at small sizes and its `I`, `l` and `1` are near-identical — a correctness
+hazard in a console that is mostly IDs, last-4s, response codes and Solana
+hashes read at 11–13px. Inter exists specifically to fix that. A Swiss accent
+red would collide with red-means-failed. And poster whitespace is the opposite
+of what an operator reading this for eight hours needs.
+
+The method is worth everything. Type had accumulated **twelve sizes**, including
+three pairs no reader can distinguish — 14 against 15, 17 against 18, 24
+against 26. Nobody chose those splits; they came from building components in
+different sittings. There is now one closed scale, declared in `index.css`, with
+Tailwind's own sizes cleared so the names mean these values and nothing else:
+
+```
+text-xs    11px   table headers, pill labels, meta
+text-sm    12px   secondary and supporting text
+text-base  13px   body, table cells — the default
+text-lg    15px   page title, card and section headings
+text-xl    18px   section totals, record titles
+text-2xl   26px   KPI figures, the drawer amount
+```
+
+Tight at the bottom where dense UI needs fine gradation, opening up at the top
+where jumps must read as hierarchy. Spacing is a 2px-based scale on the same
+principle.
+
+Crucially the scale is **checked, not documented**: `pnpm check:scale` fails on
+any off-scale `text-[Npx]` or spacing step. A convention decays — the next
+person needing something "a bit bigger" types `text-[16px]`, nothing objects,
+and the twelve sizes come back. The guard caught three off-scale spacing values
+the moment it was written. The single sanctioned exception is the processor
+monogram, which is lettering fitted to a glyph box rather than UI type.
+
+The consolidation is visually invisible, which is the proof: the pairs it
+collapsed were imperceptible, and only the inconsistency was real.
+
+### 4. Density is a feature
 
 This is a tool people live in for eight hours. Rows are **36px compact** by
 default with a density toggle. The original's generous whitespace photographs
@@ -115,7 +158,17 @@ forcing operators to learn the product twice. The topographic card render is
 kept — it was the one genuinely delightful element, and it makes the drawer
 identifiable before any text is read.
 
-**Home** — KPI cards gain a delta and a sparkline, because a number with no
+**Home** — carries the same four sections as production: the Payments and
+Payouts charts side by side (each with its own Amount/Count toggle, switching
+between two pre-computed datasets so it responds instantly), then Card payments
+breakdown and Merchant Payouts. Both breakdowns are part-to-whole views of a
+single total, so they render as ranked proportional bars rather than pies — a
+ranked bar list compares on a shared baseline and degrades gracefully as slices
+grow, where a pie forces angle comparison. Their bars use brand violet at
+varying opacity rather than a categorical palette, because these are one
+quantity split up, not independent series.
+
+KPI cards gain a delta and a sparkline, because a number with no
 reference point cannot be acted on. Authorization rate is added as a fourth
 metric: volume tells you what happened, auth rate tells you whether something is
 wrong *right now*. The method chart plotted all ten rails on a shared linear
@@ -182,6 +235,15 @@ real traffic. A table where a fifth of rows were red would have led to tuning
 the design against the wrong picture.
 
 ---
+
+**Explaining the jargon** — this console is dense with payments vocabulary
+("chargeback protection", "3-D Secure", "attempt limit", "authorization rate"),
+and the original explained none of it. Every such term now carries a small info
+hint whose copy comes from one shared glossary (`lib/glossary.ts`), for the same
+reason tones do: "Chargeback protection" appears on two tables and in two
+drawers, and four hand-written explanations drift into four different meanings.
+Each hint is a real focusable button, not a hover-only icon, so the explanation
+is reachable by keyboard and announced to a screen reader.
 
 ## Accessibility
 
