@@ -1,6 +1,7 @@
 import { Ban, CreditCard, Fingerprint, History, MapPin, ShieldCheck, Trash2, User, X } from 'lucide-react'
 import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabCount } from '@/components/ui/tabs'
+import { Avatar } from '@/components/ui/avatar'
 import { Pill } from '@/components/ui/pill'
 import { StatusCell } from '@/components/table/cells'
 import { Button } from '@/components/ui/button'
@@ -84,9 +85,7 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
   return (
     <div className="flex h-full flex-col">
       <header className="flex shrink-0 items-start gap-3 border-b border-border px-5 py-4">
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-soft text-[13px] font-semibold text-brand">
-          {customer.name.split(' ').map((part) => part[0]).join('').slice(0, 2)}
-        </span>
+        <Avatar name={customer.name} size={40} className="rounded-full" />
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

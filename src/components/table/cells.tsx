@@ -112,14 +112,19 @@ export function AttributeCell({ descriptor }: { descriptor: ToneDescriptor }) {
       </span>
     )
   }
-  // Colour alone is not an accessible signal — roughly 1 in 12 men cannot
-  // separate the red "Declined" pill from the amber "3DS Attempt" one. The
-  // glyph is the redundant encoding that makes the state readable without it.
+
+  // Emphasis follows severity, not column. Previously every non-default
+  // attribute rendered identically, so "None" — the benign fact that a merchant
+  // never bought cover — shouted exactly as loud as "Declined", a claim the
+  // network actively refused. Nothing in the column told the operator which of
+  // the two needed them. Now a refusal is tinted and the facts stay quiet.
   const Icon = descriptor.icon
+  const isRefusal = descriptor.tone === 'critical'
+
   return (
     <Pill
       tone={descriptor.tone}
-      variant="ghost"
+      variant={isRefusal ? 'alert' : 'ghost'}
       // Sized to the 11px cap height beside it, so the glyph reads as part of
       // the word rather than as a second element competing with it.
       icon={Icon ? <Icon className="size-3 shrink-0" aria-hidden /> : undefined}
@@ -158,16 +163,19 @@ export function ExceptionsCell({ items }: { items: ToneDescriptor[] }) {
     <span className="flex items-center gap-1">
       <Pill
         tone={first.tone}
-        variant="ghost"
+        // Same severity rule as AttributeCell: the surfaced exception is
+        // already the worst one on the row, so when it is critical it should
+        // look it.
+        variant={first.tone === 'critical' ? 'alert' : 'ghost'}
         icon={first.icon ? <first.icon className="size-3 shrink-0" aria-hidden /> : undefined}
       >
         {first.label}
       </Pill>
       {rest.length > 0 && (
         <Tooltip content={rest.map((item) => item.label).join(' · ')}>
-          <span className="shrink-0 cursor-default rounded-[var(--radius-pill)] px-1 text-[11px] font-medium text-ink-faint ring-1 ring-inset ring-border">
+          <Pill tone="neutral" size="sm" className="cursor-default text-ink-faint">
             +{rest.length}
-          </span>
+          </Pill>
         </Tooltip>
       )}
     </span>

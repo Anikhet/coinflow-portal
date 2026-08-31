@@ -6,6 +6,7 @@ import { methodLabel, processorLabel } from '@/lib/method-labels'
 import { SolanaMark } from '@/components/icons/brand-marks'
 import { paymentStatusTone, protectionTone, threeDSTone } from '@/lib/tone-map'
 import { formatTableTime, formatDateTime, truncateId } from '@/lib/format'
+import { Avatar } from '@/components/ui/avatar'
 import { Tooltip } from '@/components/ui/tooltip'
 import { CopyButton } from '@/components/ui/copy-button'
 import { Pill } from '@/components/ui/pill'
@@ -57,10 +58,11 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       id: 'merchant',
       accessorKey: 'merchant',
       header: 'Merchant',
-      size: 150,
+      size: 165,
       meta: { label: 'Merchant' },
       cell: ({ row }) => (
-        <span className="flex items-center gap-1">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <Avatar name={row.original.merchant} size={18} />
           <span className="truncate text-ink">{row.original.merchant}</span>
           <CopyButton value={row.original.merchant} label="Copy merchant" />
         </span>

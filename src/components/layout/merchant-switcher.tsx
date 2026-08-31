@@ -24,8 +24,13 @@ export function MerchantSwitcher({ collapsed }: { collapsed: boolean }) {
     <Dropdown>
       <DropdownTrigger
         className={cn(
+          // No resting border. The switcher sits alone above the nav with
+          // nothing to be confused for, so an outline only draws a box the eye
+          // has to dismiss — and it made the avatar read as a chip inside a
+          // second chip. The hover fill still carries the affordance, and the
+          // focus ring is untouched for keyboard users.
           'flex w-full items-center gap-2 rounded-[var(--radius-control)] p-1.5 text-left',
-          'ring-1 ring-inset ring-border transition-colors hover:bg-surface-hover',
+          'transition-colors hover:bg-surface-hover',
           collapsed && 'justify-center',
         )}
       >

@@ -126,9 +126,9 @@ export function TableToolbar({
                 <Filter />
                 {group.label}
                 {selected.length > 0 && (
-                  <span className="ml-0.5 rounded-full bg-brand-soft px-1.5 text-[10px] font-semibold tabular-nums text-brand">
+                  <Pill tone="brand" variant="solid" size="sm" className="ml-0.5 rounded-full">
                     {selected.length}
-                  </span>
+                  </Pill>
                 )}
               </Button>
             </DropdownTrigger>
