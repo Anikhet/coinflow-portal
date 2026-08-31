@@ -244,7 +244,7 @@ function buildCustomer(random: Random, now: number): Customer {
   return {
     id,
     shortId: `${id.slice(0, 8)}`,
-    createdAt: new Date(now - random.int(3, 640) * 86_400_000).toISOString(),
+    createdAt: new Date(now - random.int(3, 640) * 86_400_000 - random.int(0, 86_399) * 1000).toISOString(),
     merchant: random.pick(MERCHANTS),
     name,
     email: emailFor(name, random),
