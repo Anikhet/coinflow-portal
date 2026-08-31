@@ -1,5 +1,5 @@
-import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import type { EmptyGlyphName } from '@/components/icons/empty-glyphs'
 import { cn } from '@/lib/cn'
 import { EmptyStateMark } from './empty-state-mark'
 
@@ -46,7 +46,7 @@ export type EmptyStateTone = 'neutral' | 'critical'
  *   keeps it from looking like an error toast.
  *
  * BRAND GRADIENT MARK
- *   The icon sits in a chip filled with the Coinflow violet gradient
+ *   The mark is a solid glyph filled with the Coinflow violet gradient
  *   (`--brand` → `--brand-hover`) and lit by a radial highlight — see
  *   `EmptyStateMark` for why it is drawn that way and how it scales between
  *   the two layouts. Violet is
@@ -63,7 +63,8 @@ export type EmptyStateTone = 'neutral' | 'critical'
  *   wrong place to author a colour.
  */
 export interface EmptyStateProps {
-  icon: LucideIcon
+  /** Which mark to draw — a STATE name, not a picture. See empty-glyphs.tsx. */
+  glyph: EmptyGlyphName
   title: string
   description: string
   /** Optional short summary of what produced this state (active filters, etc). */
@@ -79,7 +80,7 @@ export interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon: Icon, title, description, detail, action, secondaryAction,
+  glyph, title, description, detail, action, secondaryAction,
   tone = 'neutral', layout = 'contained',
 }: EmptyStateProps) {
   return (
@@ -99,7 +100,7 @@ export function EmptyState({
     >
       {/* Inner measure: the card may be 1200px wide, the prose never is. */}
       <div className="flex w-full max-w-[420px] flex-col items-center">
-        <EmptyStateMark icon={Icon} tone={tone} size={layout === 'page' ? 'page' : 'contained'} />
+        <EmptyStateMark glyph={glyph} tone={tone} size={layout === 'page' ? 'page' : 'contained'} />
 
         <p className="text-lg font-medium text-ink">{title}</p>
         <p className="mt-1 text-base leading-relaxed text-ink-muted">{description}</p>

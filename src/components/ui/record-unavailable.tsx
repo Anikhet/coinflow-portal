@@ -1,4 +1,4 @@
-import { FileQuestion, RotateCw, TriangleAlert } from 'lucide-react'
+import { RotateCw } from 'lucide-react'
 import { EmptyState } from '@/components/table/empty-state'
 import { Button } from '@/components/ui/button'
 import { useDrawerStore } from '@/stores/drawer-store'
@@ -34,7 +34,7 @@ export function RecordUnavailable({ entity, error, onRetry }: {
     <div className="flex h-full items-center justify-center p-6">
       {error ? (
         <EmptyState
-          icon={TriangleAlert}
+          glyph="error"
           tone="critical"
           title={`Could not load this ${entity}`}
           description="The request failed, not the record."
@@ -48,7 +48,7 @@ export function RecordUnavailable({ entity, error, onRetry }: {
         />
       ) : (
         <EmptyState
-          icon={FileQuestion}
+          glyph="notFound"
           title={`${capitalize(entity)} not found`}
           description={`It no longer exists, or is outside your scope.`}
           action={close}

@@ -1,3 +1,4 @@
+import type { EmptyGlyphName } from '@/components/icons/empty-glyphs'
 import {
   House, Wallet, CreditCard, Users, Gavel, Unlink, ClipboardList,
   ChartColumnBig, Gauge, BookCheck, ShieldCheck, FileSearch, BanknoteX,
@@ -50,6 +51,13 @@ export interface NavItem {
   label: string
   to: string
   icon: LucideIcon
+  /**
+   * The mark its placeholder page draws. Named here beside the nav icon so the
+   * two are chosen together — the outline in the rail and the solid glyph on
+   * the page it leads to should be the same idea, and a route added later
+   * cannot forget one of them.
+   */
+  glyph: EmptyGlyphName
   /** Live counts render as a tabular badge; undefined renders nothing. */
   badge?: number
   /** Routes not implemented in this prototype are visibly inert, not broken. */
@@ -65,34 +73,34 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: null,
     items: [
-      { label: 'Home', to: '/', icon: House },
-      { label: 'Liquidity', to: '/liquidity', icon: Wallet, placeholder: true },
+      { label: 'Home', to: '/', glyph: 'overview', icon: House },
+      { label: 'Liquidity', to: '/liquidity', glyph: 'liquidity', icon: Wallet, placeholder: true },
     ],
   },
   {
     label: 'Money movement',
     items: [
-      { label: 'Purchases', to: '/purchases', icon: CreditCard },
-      { label: 'Customers', to: '/customers', icon: Users },
+      { label: 'Purchases', to: '/purchases', glyph: 'payments', icon: CreditCard },
+      { label: 'Customers', to: '/customers', glyph: 'customers', icon: Users },
     ],
   },
   {
     label: 'Disputes & risk',
     items: [
-      { label: 'Chargebacks', to: '/chargebacks', icon: Gavel, badge: 12, placeholder: true },
-      { label: 'Unmatched', to: '/unmatched', icon: Unlink, badge: 3, placeholder: true },
-      { label: 'Chargeback Ops', to: '/chargeback-ops', icon: ClipboardList, placeholder: true },
-      { label: 'Chargeback Analytics', to: '/chargeback-analytics', icon: ChartColumnBig, placeholder: true },
-      { label: 'Exposure', to: '/exposure', icon: Gauge, placeholder: true },
+      { label: 'Chargebacks', to: '/chargebacks', glyph: 'disputes', icon: Gavel, badge: 12, placeholder: true },
+      { label: 'Unmatched', to: '/unmatched', glyph: 'unmatched', icon: Unlink, badge: 3, placeholder: true },
+      { label: 'Chargeback Ops', to: '/chargeback-ops', glyph: 'queue', icon: ClipboardList, placeholder: true },
+      { label: 'Chargeback Analytics', to: '/chargeback-analytics', glyph: 'analytics', icon: ChartColumnBig, placeholder: true },
+      { label: 'Exposure', to: '/exposure', glyph: 'exposure', icon: Gauge, placeholder: true },
     ],
   },
   {
     label: 'Compliance',
     items: [
-      { label: 'Compliance Center', to: '/compliance', icon: BookCheck, placeholder: true },
-      { label: '3DS Stats', to: '/3ds', icon: ShieldCheck, placeholder: true },
-      { label: 'ACH Refund Review', to: '/ach-refunds', icon: FileSearch, badge: 5, placeholder: true },
-      { label: 'ACH Returns', to: '/ach-returns', icon: BanknoteX, placeholder: true },
+      { label: 'Compliance Center', to: '/compliance', glyph: 'rulebook', icon: BookCheck, placeholder: true },
+      { label: '3DS Stats', to: '/3ds', glyph: 'authentication', icon: ShieldCheck, placeholder: true },
+      { label: 'ACH Refund Review', to: '/ach-refunds', glyph: 'review', icon: FileSearch, badge: 5, placeholder: true },
+      { label: 'ACH Returns', to: '/ach-returns', glyph: 'returns', icon: BanknoteX, placeholder: true },
     ],
   },
 ]

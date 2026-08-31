@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react'
+import type { EmptyGlyphName } from '@/components/icons/empty-glyphs'
 import { Link, useLocation } from 'react-router-dom'
 import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { EmptyState } from '@/components/table/empty-state'
@@ -14,7 +14,7 @@ import { resolvePlaceholderExits } from '@/lib/placeholder-actions'
  * dispute screen offers the payments the dispute is raised against and a
  * compliance screen offers customer records — see `resolvePlaceholderExits`.
  */
-export function PlaceholderPage({ title, icon }: { title: string; icon: LucideIcon }) {
+export function PlaceholderPage({ title, glyph }: { title: string; glyph: EmptyGlyphName }) {
   const { pathname } = useLocation()
   const { description, primary, secondary } = resolvePlaceholderExits(pathname)
 
@@ -27,7 +27,7 @@ export function PlaceholderPage({ title, icon }: { title: string; icon: LucideIc
       <div className="flex flex-1 p-4">
         <EmptyState
           layout="page"
-          icon={icon}
+          glyph={glyph}
           title={`${title} is not built yet`}
           description={description}
           action={

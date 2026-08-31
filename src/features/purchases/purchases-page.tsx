@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { CreditCard } from 'lucide-react'
 import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { DataTable } from '@/components/table/data-table'
 import { TableToolbar, type FilterGroup } from '@/components/table/table-toolbar'
@@ -139,7 +138,7 @@ function PurchasesView() {
         empty={
           <TableEmpty
             entity="payments"
-            icon={CreditCard}
+            glyph="payments"
             totalCount={PAYMENT_TOTAL}
             error={error}
             onRetry={reload}

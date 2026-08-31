@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Users, TriangleAlert } from 'lucide-react'
+import { TriangleAlert } from 'lucide-react'
 import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { DataTable } from '@/components/table/data-table'
 import { TableToolbar, type FilterGroup } from '@/components/table/table-toolbar'
@@ -128,7 +128,7 @@ function CustomersView() {
         empty={
           <TableEmpty
             entity="customers"
-            icon={Users}
+            glyph="customers"
             totalCount={CUSTOMER_TOTAL}
             error={error}
             onRetry={reload}

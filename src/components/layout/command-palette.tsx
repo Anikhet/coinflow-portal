@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, SearchX, CornerDownLeft } from 'lucide-react'
+import { Search, CornerDownLeft } from 'lucide-react'
 import { NAV_GROUPS, type NavItem } from '@/lib/nav'
 import { useUiStore } from '@/stores/ui-store'
 import { EmptyState } from '@/components/table/empty-state'
@@ -133,7 +133,7 @@ function PaletteBody({ onDismiss }: { onDismiss: () => void }) {
                 named cause and a padded container. A bare line of grey text
                 here read as a broken list rather than a deliberate result. */}
             <EmptyState
-              icon={SearchX}
+              glyph="noMatch"
               title="No matches"
               description="Try a shorter term."
             />

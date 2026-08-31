@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { FilterX, RotateCw, SearchX, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { FilterX, RotateCw } from 'lucide-react'
+import type { EmptyGlyphName } from '@/components/icons/empty-glyphs'
 import { EmptyState } from './empty-state'
 import { Button } from '@/components/ui/button'
 import { useTableView } from '@/stores/table-view-context'
@@ -30,15 +31,15 @@ import { describeCriteria } from '@/lib/criteria'
 export interface TableEmptyProps {
   /** Plural noun for the rows, lowercase — "payments", "customers". */
   entity: string
-  /** Icon for the no-data case; the filtered and error cases have their own. */
-  icon: LucideIcon
+  /** Mark for the no-data case; the filtered and error cases have their own. */
+  glyph: EmptyGlyphName
   /** Unfiltered row count for the scope. Distinguishes "no results" from "no data". */
   totalCount: number
   error?: Error | null
   onRetry?: () => void
 }
 
-export function TableEmpty({ entity, icon, totalCount, error, onRetry }: TableEmptyProps) {
+export function TableEmpty({ entity, glyph, totalCount, error, onRetry }: TableEmptyProps) {
   const search = useTableView((state) => state.search)
   const filters = useTableView((state) => state.filters)
   const toggles = useTableView((state) => state.toggles)
@@ -51,7 +52,7 @@ export function TableEmpty({ entity, icon, totalCount, error, onRetry }: TableEm
   if (error) {
     return (
       <EmptyState
-        icon={TriangleAlert}
+        glyph="error"
         tone="critical"
         title={`Could not load ${entity}`}
         description="The request failed. Your filters are untouched."
@@ -70,7 +71,7 @@ export function TableEmpty({ entity, icon, totalCount, error, onRetry }: TableEm
   if (criteria.length > 0) {
     return (
       <EmptyState
-        icon={SearchX}
+        glyph="noMatch"
         title={`No ${entity} match these filters`}
         description={`All ${totalCount.toLocaleString()} ${entity} were excluded.`}
         detail={<CriteriaList criteria={criteria} />}
@@ -86,7 +87,7 @@ export function TableEmpty({ entity, icon, totalCount, error, onRetry }: TableEm
 
   return (
     <EmptyState
-      icon={icon}
+      glyph={glyph}
       title={`No ${entity} yet`}
       description={`New ${entity} appear here as they are processed.`}
     />

@@ -1,4 +1,4 @@
-import { Ban, CreditCard, Fingerprint, History, MapPin, Trash2, User, X } from 'lucide-react'
+import { Ban, Fingerprint, MapPin, Trash2, User, X } from 'lucide-react'
 import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabCount } from '@/components/ui/tabs'
 import { Avatar } from '@/components/ui/avatar'
@@ -239,7 +239,7 @@ function ActivityTab({ activity }: { activity: CustomerActivity[] }) {
     return (
       <div className="flex min-h-[240px] items-center justify-center p-5">
         <EmptyState
-          icon={History}
+          glyph="activity"
           title="No activity yet"
           description="Authorizations and refunds appear here."
         />
@@ -327,7 +327,7 @@ function MethodsTab({ customer }: { customer: Customer }) {
     return (
       <div className="flex min-h-[240px] items-center justify-center p-5">
         <EmptyState
-          icon={CreditCard}
+          glyph="payments"
           title="No saved payment methods"
           description="Cards are saved on the first opted-in payment."
         />

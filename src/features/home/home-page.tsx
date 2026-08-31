@@ -22,8 +22,7 @@ import { methodLabel } from '@/lib/method-labels'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { PaymentDrawer } from '@/features/purchases/payment-drawer'
 import {
-  CheckCircle2, CreditCard, Landmark, RotateCw, TriangleAlert,
-  WalletCards, type LucideIcon,
+  CreditCard, Landmark, RotateCw, WalletCards, type LucideIcon,
 } from 'lucide-react'
 
 /**
@@ -223,7 +222,7 @@ export function HomePage() {
               ) : recent.error ? (
                 <div className="flex h-full items-center justify-center">
                   <EmptyState
-                    icon={TriangleAlert}
+                    glyph="error"
                     tone="critical"
                     title="Could not load failures"
                     description="The numbers above are unaffected."
@@ -240,7 +239,7 @@ export function HomePage() {
                    success rather than as an absence of data. */
                 <div className="flex h-full items-center justify-center">
                   <EmptyState
-                    icon={CheckCircle2}
+                    glyph="allClear"
                     title="Nothing needs attention"
                     description="No payments failed in this period."
                   />
