@@ -1,5 +1,5 @@
-import { useId } from 'react'
-import { EmptyGlyph, type EmptyGlyphName } from '@/components/icons/empty-glyphs'
+import type { EmptyGlyphName } from '@/components/icons/empty-glyphs'
+import { GradientGlyph } from '@/components/icons/gradient-glyph'
 import type { EmptyStateTone } from './empty-state'
 
 /**
@@ -29,11 +29,10 @@ import type { EmptyStateTone } from './empty-state'
  *   it as a uniform block of colour. Stops come from `--glyph-from` /
  *   `--glyph-to`, which invert with the theme.
  *
- * WHY A UNIQUE GRADIENT ID
- *   SVG ids are document-global. Two empty states on one page — a table's and
- *   a panel's — sharing a fixed id means the first definition wins for both,
- *   so the second silently adopts the first one's stops. `useId` per instance
- *   removes the collision.
+ * WHERE THE GRADIENT LIVES
+ *   In `GradientGlyph`, which paints any filled glyph with the brand ramp and
+ *   handles the per-instance gradient id. This component is now only the
+ *   geometry and the tone-to-stops decision.
  *
  * NO LAYOUT SHIFT
  *   Both sizes are fixed pixel values, never content-derived, so the mark
@@ -55,26 +54,16 @@ export function EmptyStateMark({ glyph, tone, size }: {
   size: EmptyStateMarkSize
 }) {
   const { box } = SIZES[size]
-  const gradientId = `empty-mark-${useId().replace(/:/g, '')}`
-
-  const from = tone === 'critical' ? 'var(--glyph-critical-from)' : 'var(--glyph-from)'
-  const to = tone === 'critical' ? 'var(--glyph-critical-to)' : 'var(--glyph-to)'
+  const critical = tone === 'critical'
 
   return (
     <span className="mb-4 grid shrink-0 place-items-center" style={{ width: box, height: box }} aria-hidden>
-      {/* The gradient has to be defined in the same document as the glyph that
-          references it, so it rides along inside this span rather than being
-          hoisted to a shared <defs> the caller has to remember to mount. */}
-      <svg width="0" height="0" className="absolute" aria-hidden>
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={from} />
-            <stop offset="100%" stopColor={to} />
-          </linearGradient>
-        </defs>
-      </svg>
-
-      <EmptyGlyph name={glyph} paint={`url(#${gradientId})`} size={box} />
+      <GradientGlyph
+        name={glyph}
+        size={box}
+        from={critical ? 'var(--glyph-critical-from)' : undefined}
+        to={critical ? 'var(--glyph-critical-to)' : undefined}
+      />
     </span>
   )
 }
