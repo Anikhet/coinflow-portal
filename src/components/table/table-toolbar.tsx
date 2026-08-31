@@ -1,8 +1,9 @@
-import { Columns3, Download, Filter, Rows3, Search, X } from 'lucide-react'
+import { Columns3, Download, Rows3, Search, X, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Pill } from '@/components/ui/pill'
+import { FilterChip } from './filter-chip'
 import { Tooltip } from '@/components/ui/tooltip'
 import {
   Dropdown, DropdownCheckboxItem, DropdownContent,
@@ -10,7 +11,6 @@ import {
 } from '@/components/ui/dropdown'
 import { useUiStore } from '@/stores/ui-store'
 import { useTableView } from '@/stores/table-view-context'
-import { cn } from '@/lib/cn'
 
 /**
  * Shared toolbar for every table.
@@ -50,6 +50,21 @@ export interface FilterOption {
 export interface FilterGroup {
   id: string
   label: string
+  /**
+   * The facet's own mark, NOT a funnel.
+   *
+   * Three adjacent triggers all wearing the same funnel spend the row's entire
+   * icon budget restating what their position already says — that these are
+   * filters — and leave the reader to tell Status from Method from Processor by
+   * reading three labels. An icon that repeats across every sibling carries
+   * zero information, which is the same failure the sidebar had when five
+   * routes shared a shield.
+   *
+   * Required, not optional with a funnel fallback: a filter group added later
+   * must choose a mark rather than silently rejoining the identical set. Pick
+   * for what the facet DEPICTS, following the rule in lib/nav.ts.
+   */
+  icon: LucideIcon
   options: FilterOption[]
 }
 
@@ -88,7 +103,27 @@ export function TableToolbar({
     return selected.map((value) => ({ group, value, label: labels.get(value) ?? value }))
   })
 
-  const hasActiveFilters = activeFilters.length > 0 || search.length > 0
+  /**
+   * Search and facet filters render as ONE list of chips.
+   *
+   * They were previously two near-identical JSX blocks that had already
+   * drifted — the search chip labelled itself "search" while a facet chip
+   * lowercased its group label — so the same control was built twice and
+   * looked like two. Normalising them to {field, value, onRemove} here means
+   * the chip is described once and rendered once.
+   */
+  const chips = [
+    ...(search
+      ? [{ id: 'search', field: 'Search', value: search, onRemove: () => setSearch('') }]
+      : []),
+    ...activeFilters.map(({ group, value, label }) => ({
+      id: `${group.id}-${value}`,
+      field: group.label,
+      value: label,
+      onRemove: () =>
+        setFilter(group.id, (selectedFilters[group.id] ?? []).filter((item) => item !== value)),
+    })),
+  ]
 
   return (
     <div className="shrink-0 border-b border-border bg-canvas px-4 py-2">
@@ -123,7 +158,7 @@ export function TableToolbar({
           <Dropdown key={group.id}>
             <DropdownTrigger asChild>
               <Button variant="secondary" size="md">
-                <Filter />
+                <group.icon />
                 {group.label}
                 {selected.length > 0 && (
                   <Pill tone="brand" variant="solid" size="sm" className="ml-0.5 rounded-full">
@@ -132,7 +167,7 @@ export function TableToolbar({
                 )}
               </Button>
             </DropdownTrigger>
-            <DropdownContent className="max-h-[320px] overflow-y-auto">
+            <DropdownContent>
               <DropdownLabel>{group.label}</DropdownLabel>
               {group.options.map((option) => {
                 const checked = selectedSet.has(option.value)
@@ -197,7 +232,7 @@ export function TableToolbar({
                   </Button>
                 </Tooltip>
               </DropdownTrigger>
-              <DropdownContent className="max-h-[360px] overflow-y-auto">
+              <DropdownContent>
                 <DropdownLabel>Visible columns</DropdownLabel>
                 {columns.map((column) => {
                   const visible = columnVisibility[column.id] !== false
@@ -226,38 +261,33 @@ export function TableToolbar({
         </div>
       </div>
 
-      {/* Active filter pills. Reserved space is not needed — this row appears
-          below the controls and pushes nothing above it. */}
-      {hasActiveFilters && (
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          {search && (
-            <Pill tone="neutral" variant="ghost">
-              <span className="text-ink-faint">search</span>
-              <span className="text-ink">{search}</span>
-              <button type="button" onClick={() => setSearch('')} aria-label="Clear search filter">
-                <X className="size-3 text-ink-faint hover:text-ink" />
-              </button>
-            </Pill>
-          )}
-          {activeFilters.map(({ group, value, label }) => (
-            <Pill key={`${group.id}-${value}`} tone="neutral" variant="ghost">
-              <span className="text-ink-faint">{group.label.toLowerCase()}</span>
-              <span className="text-ink">{label}</span>
-              <button
-                type="button"
-                aria-label={`Remove ${label} filter`}
-                onClick={() =>
-                  setFilter(group.id, (selectedFilters[group.id] ?? []).filter((item) => item !== value))
-                }
-              >
-                <X className="size-3 text-ink-faint hover:text-ink" />
-              </button>
-            </Pill>
+      {/*
+        The applied-conditions row.
+
+        Flush left on the same 16px rule as the controls above it, separated by
+        one 8px module rather than a half step — the row is a distinct band of
+        information, not a continuation of the toolbar, and the space is what
+        says so. No reserved height is needed: it appears below the controls
+        and pushes nothing above it.
+      */}
+      {chips.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {chips.map((chip) => (
+            <FilterChip
+              key={chip.id}
+              field={chip.field}
+              value={chip.value}
+              onRemove={chip.onRemove}
+            />
           ))}
+          {/* A rule, not a gap, divides the per-chip removals from the action
+              that clears them all. Without it "Clear all" reads as one more
+              chip in the sequence rather than as the operation on the set. */}
+          <span aria-hidden className="h-3.5 w-px shrink-0 bg-border" />
           <button
             type="button"
             onClick={clearFilters}
-            className={cn('ml-1 text-sm font-medium text-brand hover:underline')}
+            className="text-sm font-medium text-brand hover:underline"
           >
             Clear all
           </button>
