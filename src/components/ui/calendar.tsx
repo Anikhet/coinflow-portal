@@ -16,7 +16,11 @@ export function Calendar({ className, classNames, ...props }: ComponentProps<typ
   return (
     <DayPicker
       showOutsideDays
-      className={cn('p-3', className)}
+      // `relative` is load-bearing: both nav buttons are absolutely
+      // positioned, and without a positioned ancestor here they resolve
+      // against the popover instead — which put the previous-month arrow on
+      // top of the preset list beside the calendar.
+      className={cn('relative p-3', className)}
       classNames={{
         months: 'flex flex-col sm:flex-row gap-4',
         month: 'space-y-3',
@@ -40,12 +44,36 @@ export function Calendar({ className, classNames, ...props }: ComponentProps<typ
           'size-8 rounded-[6px] font-normal text-ink transition-colors',
           'hover:bg-surface-hover focus-visible:outline-none',
         ),
-        selected: 'bg-brand text-brand-contrast hover:bg-brand hover:text-brand-contrast',
-        range_start: 'range-start bg-brand text-brand-contrast rounded-[6px]',
-        range_end: 'range-end bg-brand text-brand-contrast rounded-[6px]',
+        // Every selection state paints the CELL and then reaches into the day
+        // button for the text colour.
+        //
+        // react-day-picker applies these classes to the cell, but the number is
+        // rendered by the button inside it — and `day_button` sets its own
+        // `text-ink`, which beats anything the parent merely passes down by
+        // inheritance. That is why selected days rendered as near-black digits
+        // on the dark brand fill: the token was right, it just never reached
+        // the element doing the painting. Same reason the button's hover fill
+        // has to be neutralised — otherwise hovering a selected day covered the
+        // brand with `surface-hover`.
+        selected: cn(
+          'bg-brand rounded-[6px]',
+          '[&>button]:text-brand-contrast [&>button:hover]:bg-transparent [&>button:hover]:text-brand-contrast',
+        ),
+        range_start: cn(
+          'range-start bg-brand rounded-[6px]',
+          '[&>button]:text-brand-contrast [&>button:hover]:bg-transparent [&>button:hover]:text-brand-contrast',
+        ),
+        range_end: cn(
+          'range-end bg-brand rounded-[6px]',
+          '[&>button]:text-brand-contrast [&>button:hover]:bg-transparent [&>button:hover]:text-brand-contrast',
+        ),
         // Days between the endpoints carry the soft band, so the range reads
         // as one continuous selection rather than two disconnected markers.
-        range_middle: 'bg-brand-soft text-ink rounded-none hover:bg-brand-soft',
+        // Ink stays normal here — the band is a tint, not a fill.
+        range_middle: cn(
+          'bg-brand-soft rounded-none',
+          '[&>button]:text-ink [&>button:hover]:bg-transparent',
+        ),
         today: 'font-semibold text-brand',
         outside: 'text-ink-faint/50',
         disabled: 'text-ink-faint/40',
