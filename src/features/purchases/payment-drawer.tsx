@@ -237,7 +237,7 @@ function SummaryTab({ payment }: { payment: Payment }) {
         </div>
       </Section>
 
-      <Section title="Payment details">
+      <Section title="Extra payment details">
         <FactGrid>
           <Fact
             label="Customer"
@@ -430,7 +430,7 @@ function FeesTab({ payment }: { payment: Payment }) {
 
   return (
     <>
-      <Section title="Settlement">
+      <Section title="Totals, fees, splits and FX">
         <Row label="Subtotal" value={<span className="tabular-nums">{formatCurrency(payment.subtotal)}</span>} />
         <Row
           label="Total fees"

@@ -110,9 +110,12 @@ export function Fact({ label, term, value, hint, badge, media }: {
  * column but wrong in a labelled field, where "Chargeback protection: —" tells
  * the reader nothing.
  *
- * A default posture stays in plain ink with a muted glyph. Colour is spent only
- * on values that deviate, so a healthy customer's grid has no colour in it at
- * all and the one bad field is the only thing that catches the eye.
+ * The GLYPH always carries its tone's colour — a tick that means "approved"
+ * reads green, the same green the settled pill uses. The LABEL is what stays in
+ * plain ink for a default posture. That split keeps both properties: the state
+ * of each control is legible from colour at a glance, and a deviating value is
+ * still the only thing rendered as coloured TEXT, so it remains the loudest
+ * thing in the grid rather than competing with a row of green words.
  */
 export function ControlValue({ descriptor }: { descriptor: ToneDescriptor }) {
   const Icon = descriptor.icon
@@ -120,7 +123,7 @@ export function ControlValue({ descriptor }: { descriptor: ToneDescriptor }) {
     <span className="flex items-center gap-1.5">
       {Icon && (
         <Icon
-          className={cn('size-3.5 shrink-0', descriptor.isDefault ? 'text-ink-faint' : TONE_TEXT[descriptor.tone])}
+          className={cn('size-3.5 shrink-0', TONE_TEXT[descriptor.tone])}
         />
       )}
       <span className={cn(!descriptor.isDefault && TONE_TEXT[descriptor.tone])}>{descriptor.label}</span>
@@ -167,9 +170,13 @@ export function Callout({ descriptor, title, description }: {
   }[descriptor.tone]
 
   return (
-    <div className="flex items-start gap-2.5 rounded-[var(--radius-control)] border border-border p-2.5">
-      <span className={cn('grid size-7 shrink-0 place-items-center rounded-[6px]', toneClass)}>
-        {Icon && <Icon className="size-3.5" aria-hidden />}
+    // items-stretch, not items-start: the chip is sized by the text block next
+    // to it rather than by a fixed height, so it spans the title AND the
+    // description as one block instead of hanging off the first line. Width
+    // stays fixed so a stack of callouts keeps one left rule for its prose.
+    <div className="flex items-stretch gap-2.5 rounded-[var(--radius-control)] border border-border p-2.5">
+      <span className={cn('grid w-9 shrink-0 place-items-center rounded-[6px]', toneClass)}>
+        {Icon && <Icon className="size-4" aria-hidden />}
       </span>
       <div className="min-w-0">
         <p className="text-base font-medium text-ink">{title}</p>
