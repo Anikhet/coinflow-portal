@@ -3,7 +3,7 @@ import type { ComponentType } from 'react'
 import {
   BanFilled, CircleCheckFilled, CircleXFilled, ClockFilled, HandOffFilled,
   LockFilled, LockOpenFilled, OctagonXFilled, ShieldCheckFilled,
-  ShieldOffFilled, ShieldXFilled, TrendingUpFilled, UnlockFilled, UserOffFilled,
+  ShieldOffFilled, TrendingUpFilled, UnlockFilled, UserOffFilled,
 } from '@/components/icons/filled-glyphs'
 import type { Tone } from '@/types'
 import type {
@@ -71,7 +71,10 @@ export function paymentStatusTone(status: PaymentStatus): ToneDescriptor {
     case 'settled':   return { tone: 'positive', label: 'Settled', icon: CircleCheckFilled }
     case 'initiated': return { tone: 'caution', label: 'Initiated', pulse: true, icon: LoaderCircle }
     case 'failed':    return { tone: 'critical', label: 'Failed', icon: CircleXFilled }
-    case 'refunded':  return { tone: 'neutral', label: 'Refunded', icon: RotateCcw }
+    // Informational, not neutral: a refund is a deliberate reversal someone
+    // performed, not an absent value. Blue says "something happened here, and
+    // it was not a failure" — the one reading a grey chip could not give.
+    case 'refunded':  return { tone: 'info', label: 'Refunded', icon: RotateCcw }
     // Same gavel as the Chargebacks nav item: one concept, one glyph, across
     // navigation and data.
     case 'disputed':  return { tone: 'critical', label: 'Disputed', icon: Gavel }
@@ -96,18 +99,22 @@ export function protectionTone(state: ProtectionState): ToneDescriptor {
     // refused" and "no cover bought" were telling themselves apart on a 2px
     // detail. The octagon separates them by OUTLINE, before colour or mark.
     case 'declined': return { tone: 'critical', label: 'Declined', icon: OctagonXFilled }
-    case 'standard': return { tone: 'neutral', label: 'None', icon: ShieldOffFilled }
+    // Caution, not neutral: an unprotected payment is an exposure the merchant
+    // carries, not a missing field. Grey read as "nothing to see" when the
+    // honest reading is "this one is uncovered". It stays below critical
+    // because no claim has actually been refused.
+    case 'standard': return { tone: 'caution', label: 'None', icon: ShieldOffFilled }
   }
 }
 
 /**
  * Uses `info`, not `positive`, for a successful authentication.
  *
- * Green is reserved for the Status column. Keeping every other column off the
- * positive tone means a green pill anywhere in a row can only mean "this
- * payment settled" — one glance, one meaning. Letting 3DS also render green
- * would put two unrelated greens in the same row and force the reader to
- * check which column they are in.
+ * Green in a row means "this money is where it should be" — the payment
+ * settled, the funds were disbursed. A passed 3DS challenge is not that: it is
+ * a step of the process reporting a clean result, which is what `info` says.
+ * Keeping the authentication columns off green means the reader never has to
+ * check WHICH column a green chip is in to know what it is claiming.
  */
 export function threeDSTone(state: ThreeDSState): ToneDescriptor {
   switch (state) {
@@ -147,7 +154,11 @@ export function activityTone(status: CustomerActivity['status']): ToneDescriptor
   switch (status) {
     case 'settled':   return { tone: 'positive', label: 'Settled', icon: CircleCheckFilled }
     case 'completed': return { tone: 'positive', label: 'Completed', icon: CircleCheckFilled }
-    case 'pending':   return { tone: 'caution', label: 'Pending', pulse: true, icon: ClockFilled }
+    // No pulse. The other in-flight states carry a LoaderCircle, whose whole
+    // form is a rotating arc — spinning it is what the glyph is for. A clock
+    // face read as spinning instead says time is racing, and it sat in a
+    // static list of past activity where nothing was actually resolving.
+    case 'pending':   return { tone: 'caution', label: 'Pending', icon: ClockFilled }
     case 'failed':    return { tone: 'critical', label: 'Failed', icon: CircleXFilled }
     case 'opened':    return { tone: 'critical', label: 'Dispute opened', icon: Gavel }
   }
@@ -307,12 +318,18 @@ export function attemptOutcomeTone(
 /**
  * Whether settlement funds have reached the merchant.
  *
+ * `Sent` is toned positive rather than neutral: funds landing is the outcome
+ * the merchant actually cares about, and rendering it grey made the column's
+ * one meaningful value indistinguishable from an empty cell. The absent state
+ * stays a default, so the column still reads as "green where money moved,
+ * quiet everywhere else" rather than two competing chips per row.
+ *
  * In the registry like every other cell value, so the Disbursed column stops
  * being the one table cell that hand-writes its own tone and label.
  */
 export function disbursedTone(disbursed: boolean): ToneDescriptor {
   return disbursed
-    ? { tone: 'neutral', label: 'Sent', icon: BanknoteArrowUp }
+    ? { tone: 'positive', label: 'Sent', icon: BanknoteArrowUp }
     : { tone: 'neutral', label: 'Not disbursed', isDefault: true, icon: ClockFilled }
 }
 
