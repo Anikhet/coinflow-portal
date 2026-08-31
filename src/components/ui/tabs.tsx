@@ -1,24 +1,59 @@
 import * as TabsPrimitive from '@radix-ui/react-tabs'
 import type { ComponentProps } from 'react'
 import { cn } from '@/lib/cn'
+import { useTabIndicator } from '@/components/ui/use-tab-indicator'
 
 export const Tabs = TabsPrimitive.Root
+
+/** Matches the trigger's `px-2.5`, so the bar underlines the label only. */
+const UNDERLINE_INSET = 10
 
 /**
  * The tab strip scrolls horizontally rather than clipping. The original drawer
  * cut "Audit Log" in half at the panel edge, which reads as a rendering bug and
  * hides a destination entirely.
+ *
+ * The active underline is a single element owned by the list, not a border on
+ * each trigger, so changing tabs slides one bar across rather than swapping two
+ * separate underlines.
  */
-export function TabsList({ className, ...props }: ComponentProps<typeof TabsPrimitive.List>) {
+export function TabsList({ className, children, ...props }: ComponentProps<typeof TabsPrimitive.List>) {
+  const { listRef, indicator } = useTabIndicator<HTMLDivElement>()
+
   return (
     <TabsPrimitive.List
+      ref={listRef}
       className={cn(
-        'flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-4',
+        'relative flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border px-4',
         '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      <span
+        aria-hidden
+        className={cn(
+          'pointer-events-none absolute -bottom-px left-0 h-0.5 origin-left rounded-full bg-brand',
+          // Translate + scale rather than animating `left`/`width`: those are
+          // layout properties and would reflow the strip on every frame.
+          'transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+          'motion-reduce:transition-none',
+          // The very first placement jumps into position; only later moves slide.
+          !indicator.ready && 'opacity-0 transition-none',
+        )}
+        // Base width is 1px so scaleX() reads directly as the target width in
+        // pixels. The inset keeps the bar under the label, not the trigger's
+        // horizontal padding — matching the px-2.5 the trigger uses.
+        style={{
+          width: 1,
+          transform: `translateX(${indicator.left + UNDERLINE_INSET}px) scaleX(${Math.max(
+            indicator.width - UNDERLINE_INSET * 2,
+            0,
+          )})`,
+        }}
+      />
+    </TabsPrimitive.List>
   )
 }
 
@@ -27,12 +62,10 @@ export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsP
     <TabsPrimitive.Trigger
       className={cn(
         'relative shrink-0 whitespace-nowrap px-2.5 py-2.5 text-base font-medium text-ink-muted',
-        'transition-colors hover:text-ink',
+        // Label colour eases on the same curve and duration as the sliding
+        // underline, so the two halves of the transition read as one motion.
+        'transition-colors duration-300 ease-out hover:text-ink',
         'data-[state=active]:text-ink',
-        // Underline is a pseudo-element so activating a tab does not change the
-        // trigger's box and shift its neighbours.
-        'after:absolute after:inset-x-2.5 after:-bottom-px after:h-0.5 after:rounded-full after:bg-transparent',
-        'data-[state=active]:after:bg-brand',
         className,
       )}
       {...props}
@@ -43,7 +76,7 @@ export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsP
 export function TabsContent({ className, ...props }: ComponentProps<typeof TabsPrimitive.Content>) {
   return (
     <TabsPrimitive.Content
-      className={cn('flex-1 overflow-y-auto outline-none animate-in-up', className)}
+      className={cn('flex-1 overflow-y-auto outline-none animate-tab-panel', className)}
       {...props}
     />
   )
