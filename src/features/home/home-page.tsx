@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill } from '@/components/ui/status-pill'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/table/empty-state'
+import { Truncated } from '@/components/ui/truncated'
 import { useAsync } from '@/hooks/use-async'
 import { fetchPayments } from '@/mocks/api'
 import { fetchOverview, fetchPaymentsChart, fetchPayoutsChart, fetchCardBreakdown, fetchMerchantPayouts } from '@/mocks/analytics'
@@ -20,7 +21,7 @@ import { methodLabel } from '@/lib/method-labels'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { PaymentDrawer } from '@/features/purchases/payment-drawer'
 import {
-  CreditCard, Landmark, RotateCw, WalletCards, type LucideIcon,
+  ArrowDownToLine, CreditCard, Landmark, RotateCw, UserRound, WalletCards, type LucideIcon,
 } from 'lucide-react'
 
 /**
@@ -94,6 +95,7 @@ export function HomePage() {
           <KpiCard
             loading={overview.loading}
             label="Settled volume"
+            icon={CreditCard}
             term="settledVolume"
             value={metrics ? formatCurrency(metrics.payments.amount) : ''}
             secondary={metrics ? `${formatCount(metrics.payments.count)} payments` : undefined}
@@ -104,6 +106,7 @@ export function HomePage() {
           <KpiCard
             loading={overview.loading}
             label="Payouts"
+            icon={ArrowDownToLine}
             term="payouts"
             value={metrics ? formatCurrency(metrics.payouts.amount) : ''}
             secondary={metrics ? `${formatCount(metrics.payouts.count)} withdrawals` : undefined}
@@ -113,6 +116,7 @@ export function HomePage() {
           <KpiCard
             loading={overview.loading}
             label="New customers"
+            icon={UserRound}
             term="customers"
             value={metrics ? formatCount(metrics.customers.count) : ''}
             secondary="in this period"
@@ -258,12 +262,12 @@ export function HomePage() {
                         >
                           <MethodGlyph method={payment.method} cardBrand={payment.cardBrand} />
                           <span className="min-w-0 flex-1">
-                            <span className="block truncate text-base font-medium leading-tight text-ink">
+                            <Truncated className="block text-base font-medium leading-tight text-ink">
                               {payment.customerName}
-                            </span>
-                            <span className="block truncate text-xs leading-tight text-ink-faint">
+                            </Truncated>
+                            <Truncated className="block text-xs leading-tight text-ink-faint">
                               {methodLabel(payment.method)} · {formatRelative(payment.createdAt)} · code {payment.responseCode}
-                            </span>
+                            </Truncated>
                           </span>
                           <span className="flex shrink-0 flex-col items-end gap-1">
                             <span className="text-base font-medium tabular-nums text-ink">
