@@ -63,11 +63,13 @@ pill always means "look here."**
 
 Two consequences worth calling out:
 
-- Those six customer columns collapse into one **Exceptions** column that is
-  empty for a normal customer. Nothing is lost — it is all in the drawer, and
-  filterable — but the table now reads at a glance. The freed width buys
-  lifetime volume, payment count and distinct-IP count, which matter far more
-  for triage and were missing entirely.
+- Those six customer columns **stay exactly where they are**, but each mapper
+  marks its majority value as the default, so a normal customer renders six
+  em-dashes instead of six near-identical green pills. On a full page the two or
+  three customers with a real problem are the only things carrying colour. The
+  redesign's extra columns (lifetime volume, payment count, distinct IPs, KYC)
+  are defined but hidden by default and available from the column menu —
+  additions should be opt-in, not a silent change to the default view.
 - **Protection inverts polarity.** Two thirds of payments *are* protected (67%
   overall; 73% of payments that didn't fail), so "Protected" is the
   boring majority and drawing it as a pill would refill the column with noise.
@@ -84,10 +86,10 @@ well and costs a scan-line in production.
 
 ## What else changed, and why
 
-**Tables** — the Purchases table keeps all thirteen production columns in the
-same order with the same labels, so an operator moving between the two doesn't
-have to re-learn where anything lives. What changed is the encoding inside those
-columns, not the columns themselves. Sticky header and a frozen first column, so scrolling right to read
+**Tables** — both tables keep their full production column set in the same order
+with the same labels (Purchases: 13, Customers: 10), so an operator moving
+between the two doesn't have to re-learn where anything lives. What changed is
+the encoding inside those columns, not the columns themselves. Sticky header and a frozen first column, so scrolling right to read
 a status never detaches it from the record it belongs to. Row height comes from
 the density token, never from content, so a cell with two pills cannot make its
 row taller than its neighbours. Skeletons match the real box exactly.
