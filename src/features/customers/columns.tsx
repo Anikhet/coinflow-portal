@@ -162,7 +162,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       accessorKey: 'totalVolume',
       header: 'Volume',
       size: 120,
-      meta: { align: 'right', label: 'Lifetime volume' },
+      meta: { label: 'Lifetime volume' },
       cell: ({ row }) => <AmountCell value={row.original.totalVolume} />,
     },
     {
@@ -170,7 +170,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       accessorKey: 'paymentCount',
       header: 'Payments',
       size: 100,
-      meta: { align: 'right', label: 'Payment count' },
+      meta: { label: 'Payment count' },
       cell: ({ row }) => (
         <span className="tabular-nums text-ink-muted">{formatCount(row.original.paymentCount)}</span>
       ),
@@ -180,7 +180,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       header: 'IPs',
       size: 80,
       enableSorting: false,
-      meta: { align: 'right', label: 'Distinct IPs' },
+      meta: { label: 'Distinct IPs' },
       cell: ({ row }) => {
         const count = row.original.ipLocations.length
         const tone = signalCountTone(count, 3)

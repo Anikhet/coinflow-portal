@@ -41,10 +41,12 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
     {
       id: 'createdAt',
       accessorKey: 'createdAt',
-      // The original header states which timezone is in force; it must track
-      // the toggle rather than always claiming "local".
+      // Matches the production header, which names the timezone in force and
+      // tracks the toolbar toggle. The column is sized to hold the longer
+      // "Date (local)" on ONE line — the label wrapping to two lines was a
+      // width problem, not a reason to drop information the original shows.
       header: timezone === 'utc' ? 'Date (UTC)' : 'Date (local)',
-      size: 110,
+      size: 140,
       meta: { label: 'Date' },
       cell: ({ row }) => (
         <Tooltip content={formatDateTime(row.original.createdAt, timezone)}>
@@ -111,7 +113,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       accessorKey: 'subtotal',
       header: 'Subtotal',
       size: 110,
-      meta: { align: 'right', label: 'Subtotal' },
+      meta: { label: 'Subtotal' },
       cell: ({ row }) => <AmountCell value={row.original.subtotal} />,
     },
     {

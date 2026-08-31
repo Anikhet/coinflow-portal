@@ -28,9 +28,14 @@ export function IdCell({ value, display }: { value: string; display?: string }) 
 }
 
 /**
- * Currency. Right-aligned and tabular so decimal points form a vertical line —
- * this is what lets an operator spot an order-of-magnitude outlier without
- * reading a single number.
+ * Currency. Left-aligned with the rest of the table, so every column starts on
+ * the same vertical line and the eye has one edge to track down the page.
+ *
+ * `tabular-nums` still does the numeric work it can from the left: digits are
+ * equal width, so figures of the SAME magnitude stack exactly and a value that
+ * is an order of magnitude larger is longer than its neighbours. That is a
+ * weaker cue than right-aligned decimal points, which line up regardless of
+ * magnitude — the trade accepted here for a single consistent alignment.
  */
 export function AmountCell({ value, muted = false }: { value: number; muted?: boolean }) {
   return (

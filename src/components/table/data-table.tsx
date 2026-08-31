@@ -50,8 +50,12 @@ export interface DataTableProps<T> {
   data: T[]
   columns: ColumnDef<T, unknown>[]
   loading?: boolean
-  /** Number of skeleton rows while loading. Should match the page size. */
-  skeletonRows?: number
+  /**
+   * Rows to render while loading. MUST equal the page size — a skeleton that
+   * is shorter than the page it stands in for means the table grows the moment
+   * data arrives, which is the single largest layout shift in the app.
+   */
+  skeletonRows: number
   onRowClick?: (row: T) => void
   activeRowId?: string | null
   getRowId: (row: T) => string
@@ -64,7 +68,7 @@ export interface DataTableProps<T> {
  * page would make the page a message bus for state it does not itself use.
  */
 export function DataTable<T>({
-  data, columns, loading = false, skeletonRows = 12,
+  data, columns, loading = false, skeletonRows,
   onRowClick, activeRowId, getRowId, empty,
 }: DataTableProps<T>) {
   const density = useUiStore((state) => state.density)
@@ -117,13 +121,25 @@ export function DataTable<T>({
         style={{ minWidth: minTableWidth }}
         className="w-full border-separate border-spacing-0 text-[13px]"
       >
-        <thead className="sticky top-0 z-10">
+        {/*
+          LAYERING
+          The header must outrank the pinned first COLUMN, or the top-left cell
+          is contested by two sticky elements at once.
+
+          `z-30` here is load-bearing. Setting a z-index on <thead> creates a
+          stacking context, which means the pinned <th>'s own z-index is
+          resolved INSIDE that context and cannot compete with the body cells.
+          With thead at z-10 and the pinned <td>s also at z-10, the tie broke on
+          DOM order and the first data row painted over the header.
+
+          Order is therefore: thead (30) > pinned body cells (10) > normal cells.
+        */}
+        <thead className="sticky top-0 z-30">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header, index) => {
                 const canSort = header.column.columnDef.enableSorting !== false
                 const isSorted = sortBy === header.column.id
-                const meta = header.column.columnDef.meta
 
                 return (
                   <th
@@ -133,8 +149,15 @@ export function DataTable<T>({
                     className={cn(
                       'h-9 border-b border-border bg-canvas px-3 text-left align-middle',
                       'text-[11px] font-semibold uppercase tracking-[0.04em] text-ink-faint',
-                      meta?.align === 'right' && 'text-right',
+                      // Headers never wrap. A two-line header makes its row
+                      // taller than the 36px the header is sized for, so the
+                      // sticky offset stops matching and the whole header band
+                      // shifts. A label too long for its column truncates
+                      // instead; the column menu carries the full name.
+                      'overflow-hidden whitespace-nowrap',
                       // Pin the first column across both axes.
+                      // Above sibling headers, so the corner cell wins when
+                      // both axes are scrolled. Scoped within thead's context.
                       index === 0 && 'sticky left-0 z-20',
                       index === 0 && isScrolled && PINNED_EDGE,
                     )}
@@ -148,16 +171,19 @@ export function DataTable<T>({
                           // does not reliably inherit text-transform from its
                           // <th>, which left sortable headers title-cased and
                           // non-sortable ones uppercased in the same row.
-                          'group/sort inline-flex items-center gap-1 rounded uppercase transition-colors hover:text-ink',
+                          'group/sort inline-flex min-w-0 max-w-full items-center gap-1 rounded uppercase transition-colors hover:text-ink',
                           isSorted && 'text-brand',
-                          meta?.align === 'right' && 'flex-row-reverse',
                         )}
                       >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        <span className="min-w-0 truncate">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </span>
                         {isSorted ? (
-                          sortDir === 'asc' ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />
+                          sortDir === 'asc'
+                            ? <ArrowUp className="size-3 shrink-0" />
+                            : <ArrowDown className="size-3 shrink-0" />
                         ) : (
-                          <ChevronsUpDown className="size-3 opacity-0 transition-opacity group-hover/sort:opacity-60" />
+                          <ChevronsUpDown className="size-3 shrink-0 opacity-0 transition-opacity group-hover/sort:opacity-60" />
                         )}
                       </button>
                     ) : (
@@ -227,8 +253,7 @@ export function DataTable<T>({
                         key={cell.id}
                         className={cn(
                           'max-w-0 truncate border-b border-border px-3 align-middle text-ink transition-colors',
-                          meta?.align === 'right' && 'text-right',
-                          meta?.mono && 'font-mono text-[12px]',
+                              meta?.mono && 'font-mono text-[12px]',
                           cellIndex === 0 && 'sticky left-0 z-10',
                           cellIndex === 0 && isScrolled && PINNED_EDGE,
                         )}
