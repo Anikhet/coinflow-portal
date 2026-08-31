@@ -31,7 +31,7 @@ export function MethodChartFallback() {
   return (
     <div className="flex flex-1 flex-col">
       <Skeleton className="min-h-[220px] w-full flex-1" />
-      <Skeleton className="mt-3 h-4 w-2/3" />
+      <Skeleton className="mt-3 h-[17px] w-2/3" />
     </div>
   )
 }

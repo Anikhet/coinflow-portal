@@ -48,7 +48,7 @@ export function HomePage() {
         }
       />
 
-      <div className="flex-1 space-y-4 p-6">
+      <div className="flex-1 space-y-4 overflow-y-auto p-6">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard
             loading={overview.loading}
@@ -121,7 +121,7 @@ export function HomePage() {
               {recent.loading ? (
                 <div className="space-y-1.5">
                   {Array.from({ length: 6 }).map((_, index) => (
-                    <Skeleton key={index} className="h-[52px] w-full" />
+                    <Skeleton key={index} className="h-[66px] w-full" />
                   ))}
                 </div>
               ) : recent.error ? (

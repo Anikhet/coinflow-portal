@@ -132,7 +132,7 @@ function PurchasesView() {
         data={data?.rows ?? []}
         columns={columns}
         loading={loading}
-        skeletonRows={12}
+        skeletonRows={PAGE_SIZE}
         getRowId={(payment) => payment.id}
         onRowClick={(payment) => openPayment(payment.id)}
         activeRowId={activePaymentId}
@@ -147,7 +147,7 @@ function PurchasesView() {
         }
       />
 
-      <Pagination pageSize={PAGE_SIZE} total={data?.total ?? 0} />
+      <Pagination pageSize={PAGE_SIZE} total={data?.total ?? 0} loading={loading} />
 
       <PaymentDrawer />
     </AppShell>

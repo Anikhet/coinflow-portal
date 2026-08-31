@@ -7,11 +7,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const collapsed = useUiStore((state) => state.sidebarCollapsed)
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="h-screen overflow-hidden bg-canvas">
       <Sidebar />
+      {/*
+        The shell is pinned to the VIEWPORT height, not min-height.
+        
+        With `min-h-screen` the document itself scrolled, so a table's
+        `overflow-auto` never engaged: there was no scroll container for the
+        sticky header to stick inside, and the paginator sat ~900px below the
+        fold. Constraining the shell makes each page's own body the scrolling
+        region, which is what an operations console wants — the page header,
+        toolbar and paginator stay put, and only the rows move.
+      */}
       <main
         className={cn(
-          'flex min-h-screen flex-col transition-[padding] duration-200 ease-out',
+          'flex h-screen flex-col overflow-hidden transition-[padding] duration-200 ease-out',
           collapsed ? 'pl-[60px]' : 'pl-[232px]',
         )}
       >
@@ -31,7 +41,7 @@ export function PageHeader({ title, description, actions }: {
   actions?: ReactNode
 }) {
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-canvas/85 px-6 backdrop-blur-md">
+    <header className="z-20 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-canvas px-6">
       <div className="min-w-0 flex-1">
         <h1 className="truncate text-[15px] font-semibold leading-tight tracking-tight text-ink">{title}</h1>
         {description && <p className="truncate text-[12px] leading-tight text-ink-muted">{description}</p>}

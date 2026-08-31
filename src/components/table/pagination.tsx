@@ -1,7 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useTableView } from '@/stores/table-view-context'
-import { buildPageItems } from '@/lib/pagination'
+import { buildPageItems, PAGE_SLOT_COUNT } from '@/lib/pagination'
 import { cn } from '@/lib/cn'
 
 /**
@@ -19,7 +20,17 @@ import { cn } from '@/lib/cn'
  * Reads `page` from the table view store; `total` and `pageSize` stay props
  * because they describe the fetched result, not the user's view state.
  */
-export function Pagination({ pageSize, total }: { pageSize: number; total: number }) {
+export function Pagination({ pageSize, total, loading = false }: {
+  pageSize: number
+  total: number
+  /**
+   * While loading, `total` is 0 — which would render "0–0 of 0" and a single
+   * page slot, then snap to seven slots and a three-digit page count when data
+   * lands. That is the same reflow the fixed slot sizing exists to prevent, so
+   * the loading state renders placeholder slots at the SAME geometry instead.
+   */
+  loading?: boolean
+}) {
   const page = useTableView((state) => state.page)
   const setPage = useTableView((state) => state.setPage)
 
@@ -32,16 +43,20 @@ export function Pagination({ pageSize, total }: { pageSize: number; total: numbe
   // one-digit "5", so the control still resized as you paged. Every slot is
   // therefore sized for the widest page number in the set. Safe with tabular
   // figures, where each digit occupies the same advance width.
-  const slotWidth = Math.max(28, 16 + String(pageCount).length * 8)
+  const slotWidth = Math.max(28, 16 + String(loading ? 100 : pageCount).length * 8)
 
   return (
     <nav
       aria-label="Pagination"
       className="flex h-11 shrink-0 items-center justify-between gap-4 border-t border-border bg-canvas px-6"
     >
-      <p className="shrink-0 text-[12px] tabular-nums text-ink-muted">
-        {from.toLocaleString()}–{to.toLocaleString()} of {total.toLocaleString()}
-      </p>
+      {loading ? (
+        <Skeleton className="h-3 w-28" />
+      ) : (
+        <p className="shrink-0 text-[12px] tabular-nums text-ink-muted">
+          {from.toLocaleString()}–{to.toLocaleString()} of {total.toLocaleString()}
+        </p>
+      )}
 
       <div className="flex items-center gap-1">
         <Button
@@ -54,7 +69,15 @@ export function Pagination({ pageSize, total }: { pageSize: number; total: numbe
           <ChevronLeft />
         </Button>
 
-        {items.map((item, index) =>
+        {loading
+          ? Array.from({ length: PAGE_SLOT_COUNT }).map((_, index) => (
+              <Skeleton
+                key={`slot-${index}`}
+                style={{ width: slotWidth }}
+                className="h-7 rounded-[6px]"
+              />
+            ))
+          : items.map((item, index) =>
           item === 'ellipsis' ? (
             <span
               // Index is part of the identity here: the two gaps are
@@ -84,8 +107,8 @@ export function Pagination({ pageSize, total }: { pageSize: number; total: numbe
             >
               {item}
             </button>
-          ),
-        )}
+            ),
+            )}
 
         <Button
           variant="ghost"

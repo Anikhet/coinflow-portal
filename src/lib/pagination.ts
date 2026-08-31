@@ -1,6 +1,12 @@
 export type PageItem = number | 'ellipsis'
 
 /**
+ * Default number of page slots. Exported so the loading state can reserve the
+ * same count the loaded paginator will render.
+ */
+export const PAGE_SLOT_COUNT = 7
+
+/**
  * Builds the page-number slots for a paginator.
  *
  * Guarantees a CONSTANT number of items — exactly `slots`, or `pageCount` when
@@ -17,7 +23,7 @@ export type PageItem = number | 'ellipsis'
  * @param slots      how many items to render; must be odd and >= 5 so the
  *                   window sits symmetrically around the current page
  */
-export function buildPageItems(page: number, pageCount: number, slots = 7): PageItem[] {
+export function buildPageItems(page: number, pageCount: number, slots = PAGE_SLOT_COUNT): PageItem[] {
   if (pageCount <= 0) return []
 
   const clampedPage = Math.min(Math.max(page, 1), pageCount)

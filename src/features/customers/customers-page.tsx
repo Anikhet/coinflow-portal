@@ -121,7 +121,7 @@ function CustomersView() {
         data={data?.rows ?? []}
         columns={columns}
         loading={loading}
-        skeletonRows={12}
+        skeletonRows={PAGE_SIZE}
         getRowId={(customer) => customer.id}
         onRowClick={(customer) => openCustomer(customer.id)}
         activeRowId={activeCustomerId}
@@ -136,7 +136,7 @@ function CustomersView() {
         }
       />
 
-      <Pagination pageSize={PAGE_SIZE} total={data?.total ?? 0} />
+      <Pagination pageSize={PAGE_SIZE} total={data?.total ?? 0} loading={loading} />
 
       <CustomerDrawer />
     </AppShell>
