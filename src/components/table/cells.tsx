@@ -1,5 +1,6 @@
 import { CopyButton } from '@/components/ui/copy-button'
 import { Pill } from '@/components/ui/pill'
+import { StatusPill, AttributePill } from '@/components/ui/status-pill'
 import { Tooltip } from '@/components/ui/tooltip'
 import { formatCurrency, truncateId } from '@/lib/format'
 import type { ToneDescriptor } from '@/lib/tone-map'
@@ -18,7 +19,7 @@ export function IdCell({ value, display }: { value: string; display?: string }) 
   return (
     <span className="flex items-center gap-1">
       <Tooltip content={value}>
-        <span className="truncate font-mono text-[12px] text-ink-muted">
+        <span className="truncate font-mono text-sm text-ink-muted">
           {display ?? truncateId(value)}
         </span>
       </Tooltip>
@@ -68,8 +69,8 @@ export function IdentityCell({ glyph, label, sublabel }: {
     // would sit a pixel off the processor column beside it.
     <span className="flex h-6 min-w-0 items-center gap-1.5">
       {glyph}
-      <span className="truncate text-[12px] text-ink">{label}</span>
-      {sublabel && <span className="shrink-0 font-mono text-[11px] text-ink-faint">{sublabel}</span>}
+      <span className="truncate text-sm text-ink">{label}</span>
+      {sublabel && <span className="shrink-0 font-mono text-xs text-ink-faint">{sublabel}</span>}
     </span>
   )
 }
@@ -82,25 +83,7 @@ export function IdentityCell({ glyph, label, sublabel }: {
  * icon set exists to fix. The dot survives only as the fallback.
  */
 export function StatusCell({ descriptor }: { descriptor: ToneDescriptor }) {
-  const Icon = descriptor.icon
-  return (
-    <Pill
-      tone={descriptor.tone}
-      variant="solid"
-      dot={!Icon}
-      pulse={descriptor.pulse}
-      icon={
-        Icon && (
-          <Icon
-            className={cn('size-3 shrink-0', descriptor.pulse && 'animate-spin [animation-duration:2s]')}
-            aria-hidden
-          />
-        )
-      }
-    >
-      {descriptor.label}
-    </Pill>
-  )
+  return <StatusPill descriptor={descriptor} />
 }
 
 /**
@@ -123,20 +106,7 @@ export function AttributeCell({ descriptor }: { descriptor: ToneDescriptor }) {
   // never bought cover — shouted exactly as loud as "Declined", a claim the
   // network actively refused. Nothing in the column told the operator which of
   // the two needed them. Now a refusal is tinted and the facts stay quiet.
-  const Icon = descriptor.icon
-  const isRefusal = descriptor.tone === 'critical'
-
-  return (
-    <Pill
-      tone={descriptor.tone}
-      variant={isRefusal ? 'alert' : 'ghost'}
-      // Sized to the 11px cap height beside it, so the glyph reads as part of
-      // the word rather than as a second element competing with it.
-      icon={Icon ? <Icon className="size-3 shrink-0" aria-hidden /> : undefined}
-    >
-      {descriptor.label}
-    </Pill>
-  )
+  return <AttributePill descriptor={descriptor} />
 }
 
 /** Most severe first, so the one surfaced pill is always the worst one. */
@@ -166,16 +136,10 @@ export function ExceptionsCell({ items }: { items: ToneDescriptor[] }) {
 
   return (
     <span className="flex items-center gap-1">
-      <Pill
-        tone={first.tone}
-        // Same severity rule as AttributeCell: the surfaced exception is
-        // already the worst one on the row, so when it is critical it should
-        // look it.
-        variant={first.tone === 'critical' ? 'alert' : 'ghost'}
-        icon={first.icon ? <first.icon className="size-3 shrink-0" aria-hidden /> : undefined}
-      >
-        {first.label}
-      </Pill>
+      {/* The surfaced exception is an attribute like any other, so it renders
+          through the shared AttributePill rather than restating the severity
+          rule here — the drawer's exception chips use the same call. */}
+      <AttributePill descriptor={first} />
       {rest.length > 0 && (
         <Tooltip content={rest.map((item) => item.label).join(' · ')}>
           <Pill tone="neutral" size="sm" className="cursor-default text-ink-faint">

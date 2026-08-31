@@ -1,4 +1,4 @@
-import { CircleDashed, Gavel, LoaderCircle, RotateCcw } from 'lucide-react'
+import { BanknoteArrowUp, CircleDashed, Gavel, LoaderCircle, RotateCcw } from 'lucide-react'
 import type { ComponentType } from 'react'
 import {
   BanFilled, CircleCheckFilled, CircleXFilled, ClockFilled, HandOffFilled,
@@ -7,6 +7,7 @@ import {
 } from '@/components/icons/filled-glyphs'
 import type { Tone } from '@/types'
 import type {
+  OrchestrationAttempt,
   PaymentStatus,
   ProtectionState,
   ThreeDSState,
@@ -229,6 +230,42 @@ export function fraudOverrideTone(override: Customer['fraudOverride']): ToneDesc
     case 'allow':    return { tone: 'info', label: 'Always allow', icon: CircleCheckFilled }
     case 'deny':     return { tone: 'critical', label: 'Always deny', icon: OctagonXFilled }
   }
+}
+
+/**
+ * Outcome of one processor attempt in a routing chain.
+ *
+ * In the registry rather than inline in the drawer so a succeeded/failed
+ * outcome carries the same tone and glyph as every other success and failure
+ * in the app — previously the routing chain hand-built its own pills with dots
+ * while every other status used the registry's glyphs.
+ */
+export function attemptOutcomeTone(
+  outcome: OrchestrationAttempt['outcome'],
+  /**
+   * Whether another processor was tried after this one. A failure only "failed
+   * OVER" if something caught it — on the last attempt, or on the chain's
+   * overall result, the honest word is just "Failed".
+   */
+  hasFallback = false,
+): ToneDescriptor {
+  switch (outcome) {
+    case 'succeeded': return { tone: 'positive', label: 'Succeeded', icon: CircleCheckFilled }
+    case 'failed':    return { tone: 'critical', label: hasFallback ? 'Failed over' : 'Failed', icon: CircleXFilled }
+    case 'skipped':   return { tone: 'neutral', label: 'Skipped', isDefault: true }
+  }
+}
+
+/**
+ * Whether settlement funds have reached the merchant.
+ *
+ * In the registry like every other cell value, so the Disbursed column stops
+ * being the one table cell that hand-writes its own tone and label.
+ */
+export function disbursedTone(disbursed: boolean): ToneDescriptor {
+  return disbursed
+    ? { tone: 'neutral', label: 'Sent', icon: BanknoteArrowUp }
+    : { tone: 'neutral', label: 'Not disbursed', isDefault: true }
 }
 
 export function signalCountTone(count: number, threshold: number): Tone {

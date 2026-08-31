@@ -99,17 +99,20 @@ const pillVariants = cva(
   [
     'inline-flex min-w-0 max-w-full shrink-0 items-center rounded-[var(--radius-pill)]',
     'font-medium leading-none ring-1 ring-inset',
-    // Icon sizing lives here, so no call site has to remember it and every
-    // glyph in every badge is the same size.
-    '[&_[data-icon]]:shrink-0',
+    // Glyph sizing lives here so no call site has to remember it. It targets
+    // the svg directly rather than the [data-icon] wrapper, because that
+    // wrapper is display:contents — it generates no box, so a size applied to
+    // it never reached the glyph and every call site was re-declaring
+    // `size-3 shrink-0` by hand.
+    '[&_svg]:shrink-0 [&_[data-icon]]:shrink-0',
   ],
   {
     variants: {
       size: {
         /** The table anatomy: 20px tall, 11px label. */
-        md: 'h-5 gap-1 text-[11px] [&_[data-icon]]:size-3',
+        md: 'h-5 gap-1 text-xs [&_svg]:size-3',
         /** Counts and overflow chips — nav badges, filter counts, "+2". */
-        sm: 'h-[18px] gap-0.5 px-1.5 text-[10px] tabular-nums [&_[data-icon]]:size-2.5',
+        sm: 'h-[18px] gap-0.5 px-1.5 text-xs tabular-nums [&_svg]:size-2.5',
       },
       variant: {
         solid: '',
