@@ -42,8 +42,9 @@ export type EmptyStateTone = 'neutral' | 'critical'
  *   and hairline border every other content region uses — rather than as text
  *   floating on the canvas. Loose centred text in a large void reads as a
  *   rendering failure; a deliberate, padded card reads as a designed state and
- *   gives the copy and its actions a clear boundary. Generous internal padding
- *   keeps it from looking like an error toast.
+ *   gives the copy and its actions a clear boundary. The internal padding is a
+ *   floor for the short-container case only — the block is centred inside a
+ *   full-height region, so extra vertical padding buys nothing but bulk.
  *
  * BRAND GRADIENT MARK
  *   The mark is a solid glyph filled with the Coinflow violet gradient
@@ -95,7 +96,7 @@ export function EmptyState({
       aria-live="polite"
       className={cn(
         'flex w-full flex-col items-center justify-center text-center',
-        'rounded-[var(--radius-surface)] border border-border bg-surface px-6 py-8',
+        'rounded-[var(--radius-surface)] border border-border bg-surface px-6 py-6',
         'shadow-[0_1px_2px_rgb(0_0_0/0.04)]',
         // `flex-1 self-stretch` rather than `h-full`: the page wrapper is a
         // flex box whose own height comes from flex growth, so a percentage

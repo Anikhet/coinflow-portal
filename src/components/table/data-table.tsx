@@ -306,15 +306,26 @@ export function DataTable<T>({
            `flex-1` claims every remaining pixel below the header, inset by the
            same 16px gutter every other band of chrome uses.
 
-           The min-height is still declared as a FLOOR. When the table sits in a
-           short container there is no leftover height for flex-1 to hand out,
-           and without it the message would collapse against the header — so
-           this reserves roughly the height a full page of rows would occupy
-           (capped, so a tall page size cannot strand the message off-screen).
-           Between the two, nothing below the table moves when the result set
-           flips between empty and populated. */
+           The min-height reserves roughly the height a full page of rows would
+           occupy (capped, so a tall page size cannot strand the message
+           off-screen), which is what keeps everything below the table still
+           when the result set flips between empty and populated.
+
+           `flex-1` on top of that floor lets the block claim every remaining
+           pixel below the header, so the empty state IS the region the rows
+           would have filled rather than a card marooned above white space.
+
+           HORIZONTAL SCROLL
+           This block lives inside the same scroll container as the table, which
+           is as wide as the summed column widths. Left in normal flow it is
+           laid out once at the scroll origin and then slides away as the user
+           scrolls right, stranding the message off-screen exactly when they are
+           looking for it. `sticky left-0` pins it to the scrollport's left edge
+           instead, and `w-full` resolves against the container's VISIBLE width
+           (not the scrollable width), so the card stays centred in view at any
+           scroll offset. */
         <div
-          className="flex flex-1 p-4"
+          className="sticky left-0 flex w-full flex-1 p-4"
           style={{ minHeight: Math.min(skeletonRows * rowHeight, 420) }}
         >
           {empty}
