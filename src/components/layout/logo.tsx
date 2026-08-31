@@ -18,19 +18,31 @@
  * CLS. Both images declare intrinsic width and height, so the sidebar header
  * reserves their box before the bitmap decodes and the nav below never shifts.
  */
-export function CoinflowLogo({ compact = false }: { compact?: boolean }) {
-  if (compact) {
-    return (
-      <img
-        src="/coinflow-mark.png"
-        alt="Coinflow"
-        width={22}
-        height={22}
-        className="size-[22px] shrink-0 rounded-[6px]"
-      />
-    )
-  }
+/**
+ * Two marks, two components — not one component with a `compact` flag.
+ *
+ * The flag returned early into a completely different image with different
+ * intrinsic dimensions and a different theming strategy, so nothing but the
+ * name was shared. Naming each variant means a call site reads as the mark it
+ * actually renders, and neither variant can grow a branch belonging to the
+ * other.
+ */
 
+/** Square app icon. Carries its own navy tile, so it reads on either ground. */
+export function CoinflowMark() {
+  return (
+    <img
+      src="/coinflow-mark.png"
+      alt="Coinflow"
+      width={22}
+      height={22}
+      className="size-[22px] shrink-0 rounded-[6px]"
+    />
+  )
+}
+
+/** Full wordmark lockup, driven to white on dark by `--logo-filter`. */
+export function CoinflowLockup() {
   return (
     <img
       src="/coinflow-lockup.png"

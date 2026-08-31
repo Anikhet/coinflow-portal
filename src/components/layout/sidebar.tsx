@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { PanelLeft, Search, LogOut, Moon, Sun } from 'lucide-react'
 import { NAV_GROUPS, type NavItem } from '@/lib/nav'
 import { useUiStore } from '@/stores/ui-store'
-import { CoinflowLogo } from './logo'
+import { CoinflowLockup, CoinflowMark } from './logo'
 import { MerchantSwitcher } from './merchant-switcher'
 import { Tooltip } from '@/components/ui/tooltip'
 import { Kbd } from '@/components/ui/input'
@@ -163,11 +163,11 @@ export function Sidebar() {
               aria-expanded={false}
               className="grid size-8 place-items-center rounded-[8px] transition-colors hover:bg-surface"
             >
-              <CoinflowLogo compact />
+              <CoinflowMark />
             </button>
           </Tooltip>
         ) : (
-          <CoinflowLogo compact={false} />
+          <CoinflowLockup />
         )}
         {!collapsed && (
           <button
