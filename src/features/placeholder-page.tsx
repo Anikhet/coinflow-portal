@@ -1,15 +1,23 @@
 import type { LucideIcon } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { EmptyState } from '@/components/table/empty-state'
 import { Button } from '@/components/ui/button'
+import { resolvePlaceholderExits } from '@/lib/placeholder-actions'
 
 /**
  * Routes present in the navigation but out of scope for this prototype resolve
  * here rather than 404ing. A nav item that leads nowhere reads as a bug; one
  * that says "not built yet" reads as scope.
+ *
+ * The two exits are derived from the current route rather than hardcoded, so a
+ * dispute screen offers the payments the dispute is raised against and a
+ * compliance screen offers customer records — see `resolvePlaceholderExits`.
  */
 export function PlaceholderPage({ title, icon }: { title: string; icon: LucideIcon }) {
+  const { pathname } = useLocation()
+  const { description, primary, secondary } = resolvePlaceholderExits(pathname)
+
   return (
     <AppShell>
       <PageHeader title={title} />
@@ -21,18 +29,22 @@ export function PlaceholderPage({ title, icon }: { title: string; icon: LucideIc
           layout="page"
           icon={icon}
           title={`${title} is not built yet`}
-          description="This prototype covers Home, Purchases and Customers."
+          description={description}
           action={
             /* Never leave a screen without an exit: the user arrived here by
                clicking real navigation and should not have to use the back
-               button to get somewhere useful. */
-            <Button variant="primary" size="md" asChild>
-              <Link to="/">Go to Overview</Link>
+               button to get somewhere useful. The `brand` variant matches the
+               gradient mark above it — on a page with exactly one thing to do,
+               that action should look like the page's subject. */
+            <Button variant="brand" size="md" asChild>
+              {/* The destination's own nav icon, so the button shows the mark
+                  the user would otherwise be hunting for in the sidebar. */}
+              <Link to={primary.to}><primary.icon />{primary.label}</Link>
             </Button>
           }
           secondaryAction={
             <Button variant="secondary" size="md" asChild>
-              <Link to="/purchases">View purchases</Link>
+              <Link to={secondary.to}><secondary.icon />{secondary.label}</Link>
             </Button>
           }
         />

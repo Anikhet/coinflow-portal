@@ -15,6 +15,16 @@ const button = cva(
         primary: 'bg-brand text-brand-contrast hover:bg-brand-hover',
         secondary: 'bg-surface text-ink ring-1 ring-inset ring-border hover:bg-surface-hover',
         ghost: 'text-ink-muted hover:bg-surface-hover hover:text-ink',
+        /* The identity button: the same violet gradient and light source the
+           empty-state mark wears (`--control-brand`), so a page whose mark and
+           whose primary action are the only two coloured objects on it reads as
+           one designed surface rather than two unrelated blues. Reserved for
+           the single most important action on a page — `primary` stays the flat
+           workhorse, because a toolbar of gradients is noise. Hover brightens
+           rather than swapping colour, which works in both themes without a
+           second gradient definition. */
+        brand:
+          'bg-brand bg-[image:var(--control-brand)] text-brand-contrast shadow-[0_1px_2px_var(--brand-ring)] transition-[filter,box-shadow] hover:brightness-110 hover:shadow-[0_2px_6px_var(--brand-ring)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]',
         danger: 'bg-[var(--tone-critical-bg)] text-[var(--tone-critical-fg)] ring-1 ring-inset ring-[var(--tone-critical-ring)] hover:brightness-95',
       },
       size: {
