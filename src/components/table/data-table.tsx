@@ -149,7 +149,7 @@ export function DataTable<T>({
                     scope="col"
                     style={{ width: header.getSize() }}
                     className={cn(
-                      'h-9 border-b border-border bg-canvas px-3 text-left align-middle',
+                      'group/th relative h-8 border-b border-border bg-canvas px-3 text-left align-middle first:pl-4 last:pr-4',
                       'text-xs font-semibold uppercase tracking-[0.04em] text-ink-faint',
                       // Headers never wrap. A two-line header makes its row
                       // taller than the 36px the header is sized for, so the
@@ -164,6 +164,12 @@ export function DataTable<T>({
                       index === 0 && isScrolled && PINNED_EDGE,
                     )}
                   >
+                    {/* Flex row rather than inline siblings: the hint used
+                        `align-middle`, which centres against the x-height and
+                        so sat visibly low beside an UPPERCASE label. A shared
+                        flex baseline puts label, sort arrow and hint on one
+                        centre line whatever the casing. */}
+                    <span className="flex min-w-0 items-center gap-1">
                     {canSort ? (
                       <button
                         type="button"
@@ -180,12 +186,17 @@ export function DataTable<T>({
                         <span className="min-w-0 truncate">
                           {flexRender(header.column.columnDef.header, header.getContext())}
                         </span>
-                        {isSorted ? (
+                        {/* Only the ACTIVE arrow sits in the flow. The hover
+                            affordance is absolutely placed at the cell's
+                            trailing edge, because reserving a slot for it
+                            inline wedged 20px between a label and its info
+                            hint — so a sortable column's hint floated away
+                            from its label while a non-sortable one's sat
+                            snug. Out of flow, it still costs no layout shift. */}
+                        {isSorted && (
                           sortDir === 'asc'
                             ? <ArrowUp className="size-3 shrink-0" />
                             : <ArrowDown className="size-3 shrink-0" />
-                        ) : (
-                          <ChevronsUpDown className="size-3 shrink-0 opacity-0 transition-opacity group-hover/sort:opacity-60" />
                         )}
                       </button>
                     ) : (
@@ -196,7 +207,13 @@ export function DataTable<T>({
                         term={meta.term}
                         label={meta.label ?? header.column.id}
                         side="bottom"
-                        className="ml-1"
+                      />
+                    )}
+                    </span>
+                    {canSort && !isSorted && (
+                      <ChevronsUpDown
+                        aria-hidden
+                        className="pointer-events-none absolute right-2 top-1/2 size-3 -translate-y-1/2 opacity-0 transition-opacity group-hover/th:opacity-50"
                       />
                     )}
                   </th>
@@ -214,7 +231,7 @@ export function DataTable<T>({
                   <td
                     key={column.id}
                     className={cn(
-                      'border-b border-border bg-surface px-3',
+                      'border-b border-border bg-surface px-3 first:pl-4 last:pr-4',
                       columnIndex === 0 && 'sticky left-0 z-10',
                       columnIndex === 0 && isScrolled && PINNED_EDGE,
                     )}
@@ -262,7 +279,7 @@ export function DataTable<T>({
                       <td
                         key={cell.id}
                         className={cn(
-                          'max-w-0 truncate border-b border-border px-3 align-middle text-ink transition-colors',
+                          'max-w-0 truncate border-b border-border px-3 align-middle text-ink transition-colors first:pl-4 last:pr-4',
                               meta?.mono && 'font-mono text-sm',
                           cellIndex === 0 && 'sticky left-0 z-10',
                           cellIndex === 0 && isScrolled && PINNED_EDGE,

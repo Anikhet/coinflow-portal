@@ -92,7 +92,7 @@ export function HomePage() {
         actions={<DateRangePicker value={range} onChange={setRange} />}
       />
 
-      <div className="flex-1 space-y-6 overflow-y-auto p-8">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <KpiCard
             loading={overview.loading}

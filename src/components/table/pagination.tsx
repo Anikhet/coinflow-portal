@@ -48,7 +48,7 @@ export function Pagination({ pageSize, total, loading = false }: {
   return (
     <nav
       aria-label="Pagination"
-      className="flex h-12 shrink-0 items-center justify-between gap-4 border-t border-border bg-canvas px-8"
+      className="flex h-10 shrink-0 items-center justify-between gap-4 border-t border-border bg-canvas px-4"
     >
       {loading ? (
         <Skeleton className="h-3 w-28" />

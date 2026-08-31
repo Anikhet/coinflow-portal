@@ -31,7 +31,7 @@ export function InfoHint({ term, label, className, side = 'top' }: {
         // Stop the click reaching a sortable header or a clickable row.
         onClick={(event) => { event.preventDefault(); event.stopPropagation() }}
         className={cn(
-          'inline-grid size-3.5 shrink-0 place-items-center rounded-full align-middle',
+          'inline-grid size-3.5 shrink-0 place-items-center rounded-full',
           'text-ink-faint/70 transition-colors hover:text-ink-muted focus-visible:text-ink-muted',
           className,
         )}

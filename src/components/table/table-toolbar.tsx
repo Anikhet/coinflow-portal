@@ -1,11 +1,11 @@
-import { Check, Columns3, Download, Filter, Rows3, Search, X } from 'lucide-react'
+import { Columns3, Download, Filter, Rows3, Search, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Pill } from '@/components/ui/pill'
 import { Tooltip } from '@/components/ui/tooltip'
 import {
-  Dropdown, DropdownCheckboxItem, DropdownContent, DropdownItemIndicator,
+  Dropdown, DropdownCheckboxItem, DropdownContent,
   DropdownLabel, DropdownTrigger,
 } from '@/components/ui/dropdown'
 import { useUiStore } from '@/stores/ui-store'
@@ -91,14 +91,14 @@ export function TableToolbar({
   const hasActiveFilters = activeFilters.length > 0 || search.length > 0
 
   return (
-    <div className="shrink-0 border-b border-border bg-canvas px-8 py-4">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="shrink-0 border-b border-border bg-canvas px-4 py-2">
+      <div className="flex flex-wrap items-center gap-1.5">
         <Input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={searchPlaceholder}
           icon={<Search />}
-          className="w-[260px]"
+          className="min-w-[220px] max-w-[520px] flex-1"
           trailing={
             search ? (
               <button
@@ -158,9 +158,6 @@ export function TableToolbar({
                       <span className="grid size-5 shrink-0 place-items-center">{option.icon}</span>
                     )}
                     <span className="truncate">{option.label}</span>
-                    <DropdownItemIndicator className="ml-auto pl-2">
-                      <Check className="size-3.5 shrink-0 text-brand" />
-                    </DropdownItemIndicator>
                   </DropdownCheckboxItem>
                 )
               })}
@@ -171,7 +168,7 @@ export function TableToolbar({
 
         {extra}
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
           {resultCount != null && (
             <span className="text-sm tabular-nums text-ink-muted">
               {resultCount === totalCount
@@ -214,9 +211,6 @@ export function TableToolbar({
                       onSelect={(event) => event.preventDefault()}
                     >
                       <span className="truncate">{column.label}</span>
-                      <DropdownItemIndicator className="ml-auto pl-2">
-                        <Check className="size-3.5 shrink-0 text-brand" />
-                      </DropdownItemIndicator>
                     </DropdownCheckboxItem>
                   )
                 })}
@@ -235,7 +229,7 @@ export function TableToolbar({
       {/* Active filter pills. Reserved space is not needed — this row appears
           below the controls and pushes nothing above it. */}
       {hasActiveFilters && (
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
           {search && (
             <Pill tone="neutral" variant="ghost">
               <span className="text-ink-faint">search</span>
