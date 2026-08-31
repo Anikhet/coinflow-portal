@@ -11,7 +11,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { CopyButton } from '@/components/ui/copy-button'
 import { CardVisual } from '@/components/ui/card-visual'
 import { Callout, Fact, FactGrid, Row, Section } from '@/components/ui/detail'
-import { DrawerSkeleton, DrawerSkeletonHeading, DRAWER_HEADER_CLASS } from '@/components/ui/drawer-chrome'
+import { DrawerSkeleton, DrawerSkeletonHeading, DRAWER_HEADER_CLASS, HeaderField, HeaderFields } from '@/components/ui/drawer-chrome'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { useUiStore } from '@/stores/ui-store'
@@ -89,6 +89,10 @@ function PaymentDrawerContent({ payment, onViewCustomer }: {
   const timezone = useUiStore((state) => state.timezone)
   const status = paymentStatusTone(payment.status)
 
+  // All four wear lucide OUTLINE marks. The filled glyph set exists for status
+  // marks — a 12px tick or slash inside a pill, where a 1.5px stroke smudges —
+  // not for action affordances. One solid flag beside three outline icons read
+  // as an emphasis this command does not have; the tooltip names it instead.
   const actions = [
     { icon: Undo2, label: 'Refund transaction', disabled: payment.status !== 'settled' },
     { icon: Flag, label: 'Report as fraud', disabled: false },
@@ -134,17 +138,19 @@ function PaymentDrawerContent({ payment, onViewCustomer }: {
             </SheetTitle>
             <StatusPill descriptor={status} />
           </div>
-          {/* gap-3 between groups, gap-1 inside one: a 3:1 ratio is the
-              smallest that reads as grouping rather than as loose spacing. */}
-          <div className="group/row mt-1.5 flex items-center gap-3">
-            <span className="flex min-w-0 items-center gap-1">
-              <Truncated always title={payment.id} className="font-mono text-sm text-ink-faint">{truncateId(payment.id, 12, 8)}</Truncated>
+          <HeaderFields>
+            <HeaderField label="Payment ID">
+              <Truncated always title={payment.id} className="font-mono text-ink-faint">
+                {truncateId(payment.id, 12, 8)}
+              </Truncated>
               <CopyButton value={payment.id} label="Copy payment ID" />
-            </span>
-            <span className="shrink-0 text-sm text-ink-muted">
-              {formatDateTime(payment.createdAt, timezone)}
-            </span>
-          </div>
+            </HeaderField>
+            <HeaderField label="Received">
+              <Truncated className="text-ink-muted">
+                {formatDateTime(payment.createdAt, timezone)}
+              </Truncated>
+            </HeaderField>
+          </HeaderFields>
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5">

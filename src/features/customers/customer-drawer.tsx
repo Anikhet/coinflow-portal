@@ -7,7 +7,7 @@ import { VerificationTab } from './tabs/verification-tab'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { CopyButton } from '@/components/ui/copy-button'
-import { DRAWER_HEADER_CLASS, DrawerSkeleton, DrawerSkeletonHeading } from '@/components/ui/drawer-chrome'
+import { DRAWER_HEADER_CLASS, DrawerSkeleton, DrawerSkeletonHeading, HeaderField, HeaderFields } from '@/components/ui/drawer-chrome'
 import { Dropdown, DropdownContent, DropdownItem, DropdownTrigger } from '@/components/ui/dropdown'
 import { RecordSheet } from '@/components/ui/record-sheet'
 import { RecordStepper } from '@/components/ui/record-stepper'
@@ -21,7 +21,8 @@ import { blockedTone, kycTone } from '@/lib/tone-map'
 import { fetchCustomer } from '@/mocks/api'
 import { useDrawerStore } from '@/stores/drawer-store'
 import type { Customer } from '@/types'
-import { Ban, ChevronDown, Download, Flag, ShieldCheck, X } from 'lucide-react'
+import { ChevronDown, Download, X } from 'lucide-react'
+import { BanFilled, FlagFilled, LockOpenFilled, ShieldCheckFilled } from '@/components/icons/filled-glyphs'
 
 /**
  * CUSTOMER DRAWER
@@ -93,13 +94,18 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
             <StatusPill descriptor={kyc} />
             {customer.blocked && <StatusPill descriptor={blockedTone(true)} />}
           </div>
-          <div className="group/row mt-1 flex items-center gap-3">
-            <Truncated className="text-sm text-ink-muted">{customer.email}</Truncated>
-            <span className="flex shrink-0 items-center gap-1">
-              <Truncated always title={customer.id} className="font-mono text-sm text-ink-faint">{truncateId(customer.id, 8, 4)}</Truncated>
+          <HeaderFields>
+            <HeaderField label="Email">
+              <Truncated className="text-ink-muted">{customer.email}</Truncated>
+              <CopyButton value={customer.email} label="Copy email" />
+            </HeaderField>
+            <HeaderField label="Customer ID">
+              <Truncated always title={customer.id} className="font-mono text-ink-faint">
+                {truncateId(customer.id, 8, 4)}
+              </Truncated>
               <CopyButton value={customer.id} label="Copy customer ID" />
-            </span>
-          </div>
+            </HeaderField>
+          </HeaderFields>
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5">
@@ -116,12 +122,18 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
               </Button>
             </DropdownTrigger>
             <DropdownContent align="end">
-              <DropdownItem>
-                <Ban />
+              {/* Each mark is the one the registry already gives that state, so
+                  the row that blocks a customer wears the same ban glyph in the
+                  same critical red as the "Blocked" pill it will produce. The
+                  toned rows are the two with a consequence; verification is
+                  caution because it puts the record into review, not because it
+                  is dangerous. Export stays neutral — it changes nothing. */}
+              <DropdownItem tone={customer.blocked ? 'positive' : 'critical'}>
+                {customer.blocked ? <LockOpenFilled /> : <BanFilled />}
                 {customer.blocked ? 'Unblock customer' : 'Block customer'}
               </DropdownItem>
-              <DropdownItem><ShieldCheck />Request verification</DropdownItem>
-              <DropdownItem><Flag />Report as fraud</DropdownItem>
+              <DropdownItem tone="caution"><ShieldCheckFilled />Request verification</DropdownItem>
+              <DropdownItem tone="critical"><FlagFilled />Report as fraud</DropdownItem>
               <DropdownItem><Download />Export customer data</DropdownItem>
             </DropdownContent>
           </Dropdown>
