@@ -17,6 +17,7 @@ interface UiState {
   setTimezone: (timezone: Timezone) => void
   toggleSidebar: () => void
   setCommandOpen: (open: boolean) => void
+  toggleCommand: () => void
 }
 
 /**
@@ -45,6 +46,7 @@ export const useUiStore = create<UiState>()(
       setTimezone: (timezone) => set({ timezone }),
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       setCommandOpen: (commandOpen) => set({ commandOpen }),
+      toggleCommand: () => set((state) => ({ commandOpen: !state.commandOpen })),
     }),
     {
       name: 'coinflow-ui',

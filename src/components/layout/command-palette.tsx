@@ -35,17 +35,22 @@ const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((group) => group.items)
 export function CommandPalette() {
   const open = useUiStore((state) => state.commandOpen)
   const setOpen = useUiStore((state) => state.setCommandOpen)
+  const toggleOpen = useUiStore((state) => state.toggleCommand)
 
+  // Deliberately depends only on the stable store action, never on `open`.
+  // Reading `open` here would re-bind the listener on every toggle and, worse,
+  // capture the value as of the render that attached it — the classic stale
+  // closure. The store computes the next value from the current one instead.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        setOpen(!open)
+        toggleOpen()
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [open, setOpen])
+  }, [toggleOpen])
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
