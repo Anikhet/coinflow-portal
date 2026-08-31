@@ -16,22 +16,15 @@ const MethodChart = lazy(() =>
   import('./method-chart').then((module) => ({ default: module.MethodChart })),
 )
 
-export function LazyMethodChart({ points, series, metric, focused, onFocusChange }: {
+export function LazyMethodChart({ points, series, metric, selected }: {
   points: SeriesPoint[]
   series: MethodSeries[]
   metric?: 'amount' | 'count'
-  focused: string | null
-  onFocusChange: (key: string | null) => void
+  selected: string[]
 }) {
   return (
     <Suspense fallback={<MethodChartFallback />}>
-      <MethodChart
-        points={points}
-        series={series}
-        metric={metric}
-        focused={focused}
-        onFocusChange={onFocusChange}
-      />
+      <MethodChart points={points} series={series} metric={metric} selected={selected} />
     </Suspense>
   )
 }

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { LazyMethodChart, MethodChartFallback } from '@/components/charts/method-chart-lazy'
 import { Segmented } from '@/components/ui/segmented'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SeriesPicker } from './series-picker'
+import { TOTAL_KEY } from '@/components/charts/series'
 import { InfoHint } from '@/components/ui/info-hint'
 import type { GlossaryTerm } from '@/lib/glossary'
 import { formatCompactCurrency, formatCount } from '@/lib/format'
@@ -31,15 +33,24 @@ export function MethodChartCard({ title, term, description, data, loading }: {
   loading: boolean
 }) {
   const [metric, setMetric] = useState<Metric>('amount')
-  const [focused, setFocused] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string[]>([TOTAL_KEY])
   const active = data?.[metric]
 
-  // The headline follows the chart. When a method is isolated it states that
-  // method's total, not the grand total the plot is no longer showing.
-  const focusedEntry = focused ? active?.series.find((entry) => entry.key === focused) : undefined
-  const total = focused
-    ? focusedEntry?.total ?? 0
-    : active?.series.reduce((sum, entry) => sum + entry.total, 0) ?? 0
+  // The headline follows the selection: it states the total of exactly what the
+  // plot is drawing, not the grand total the plot may no longer be showing.
+  const grandTotal = active?.series.reduce((sum, entry) => sum + entry.total, 0) ?? 0
+  const total = selected.includes(TOTAL_KEY)
+    ? grandTotal
+    : (active?.series ?? [])
+        .filter((entry) => selected.includes(entry.key))
+        .reduce((sum, entry) => sum + entry.total, 0)
+
+  const headlineNote =
+    selected.length === 1 && selected[0] === TOTAL_KEY
+      ? undefined
+      : selected.length === 1
+        ? active?.series.find((entry) => entry.key === selected[0])?.label
+        : `${selected.length} series`
 
   return (
     <section className="flex flex-col rounded-[var(--radius-surface)] border border-border bg-surface p-5">
@@ -58,20 +69,26 @@ export function MethodChartCard({ title, term, description, data, loading }: {
             <p className="text-xl font-semibold tabular-nums text-ink">
               {metric === 'amount' ? formatCompactCurrency(total) : formatCount(total)}
             </p>
-            {focusedEntry && (
-              <p className="text-xs text-ink-faint">{focusedEntry.label}</p>
-            )}
+            {headlineNote && <p className="text-xs text-ink-faint">{headlineNote}</p>}
           </div>
         )}
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-2">
         <Segmented
           value={metric}
           onChange={setMetric}
           options={METRIC_OPTIONS}
           ariaLabel={`${title} metric`}
         />
+        <div className="ml-auto">
+          <SeriesPicker
+            series={active?.series ?? []}
+            selected={selected}
+            onChange={setSelected}
+            formatTotal={metric === 'amount' ? formatCompactCurrency : formatCount}
+          />
+        </div>
       </div>
 
       {loading || !active ? (
@@ -81,8 +98,7 @@ export function MethodChartCard({ title, term, description, data, loading }: {
           points={active.points}
           series={active.series}
           metric={metric}
-          focused={focused}
-          onFocusChange={setFocused}
+          selected={selected}
         />
       )}
     </section>

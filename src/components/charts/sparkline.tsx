@@ -1,3 +1,4 @@
+import { useId } from 'react'
 /**
  * Inline sparkline for KPI cards.
  *
@@ -10,6 +11,12 @@ export function Sparkline({ values, tone = 'brand' }: {
   values: number[]
   tone?: 'brand' | 'positive' | 'critical'
 }) {
+  // Hooks run before the early return: React identifies a hook by call order,
+  // so a component that bails out first renders one hook and, once data
+  // arrives, two — and the mismatch throws. The reserved 32px box is also what
+  // keeps the KPI card from resizing when a sparse series fills in.
+  const gradientId = `spark-${useId()}`
+
   if (values.length < 2) return <div className="h-8 w-full" />
 
   const max = Math.max(...values)
@@ -22,13 +29,14 @@ export function Sparkline({ values, tone = 'brand' }: {
     return `${x.toFixed(2)},${y.toFixed(2)}`
   })
 
+  // SVG ids are document-global, so a fixed id would collide across the KPI
+  // row — three cards each defining `spark-brand`. The first definition wins
+  // for all of them, so any per-card variation would silently not apply.
   const stroke = {
     brand: 'var(--brand)',
     positive: 'var(--tone-positive-dot)',
     critical: 'var(--tone-critical-dot)',
   }[tone]
-
-  const gradientId = `spark-${tone}`
 
   return (
     <svg viewBox="0 0 100 32" preserveAspectRatio="none" className="h-8 w-full" aria-hidden>
