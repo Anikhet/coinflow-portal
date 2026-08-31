@@ -1,8 +1,9 @@
 import { CircleDashed, Gavel, LoaderCircle, RotateCcw } from 'lucide-react'
 import type { ComponentType } from 'react'
 import {
-  BanFilled, CircleCheckFilled, CircleXFilled, LockFilled, LockOpenFilled,
-  OctagonXFilled, ShieldCheckFilled, ShieldOffFilled, ShieldXFilled, UnlockFilled,
+  BanFilled, CircleCheckFilled, CircleXFilled, ClockFilled, HandOffFilled,
+  LockFilled, LockOpenFilled, OctagonXFilled, ShieldCheckFilled,
+  ShieldOffFilled, ShieldXFilled, TrendingUpFilled, UnlockFilled, UserOffFilled,
 } from '@/components/icons/filled-glyphs'
 import type { Tone } from '@/types'
 import type {
