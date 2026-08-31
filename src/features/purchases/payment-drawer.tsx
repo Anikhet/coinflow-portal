@@ -1,9 +1,10 @@
 import {
-  ArrowUpRight, ExternalLink, Flag, ShieldCheck, ShieldOff, Undo2, User, X,
+  ArrowUpRight, ExternalLink, Flag, Landmark, ShieldCheck, ShieldOff, Undo2, User, X,
 } from 'lucide-react'
 import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Pill } from '@/components/ui/pill'
+import { StatusPill, AttributePill } from '@/components/ui/status-pill'
 import { Button } from '@/components/ui/button'
 import { Tooltip } from '@/components/ui/tooltip'
 import { CopyButton } from '@/components/ui/copy-button'
@@ -16,9 +17,10 @@ import { useDrawerStore } from '@/stores/drawer-store'
 import { useUiStore } from '@/stores/ui-store'
 import { useAsync } from '@/hooks/use-async'
 import { fetchPayment } from '@/mocks/api'
-import { paymentStatusTone } from '@/lib/tone-map'
+import { attemptOutcomeTone, paymentStatusTone } from '@/lib/tone-map'
 import { formatCurrency, formatDateTime, truncateId } from '@/lib/format'
-import { ProcessorGlyph } from '@/components/icons/method-icon'
+import { MethodGlyph, ProcessorGlyph } from '@/components/icons/method-icon'
+import { Avatar } from '@/components/ui/avatar'
 import { processorLabel, methodLabel } from '@/lib/method-labels'
 import { SolanaMark } from '@/components/icons/brand-marks'
 import type { Payment } from '@/types'
@@ -102,16 +104,16 @@ function PaymentDrawerContent({ payment, onViewCustomer }: {
       <header className={DRAWER_HEADER_CLASS}>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <SheetTitle className="text-[24px] font-semibold leading-none tracking-tight tabular-nums text-ink">
+            <SheetTitle className="text-2xl font-semibold leading-none tracking-tight tabular-nums text-ink">
               {formatCurrency(payment.subtotal)}
             </SheetTitle>
-            <Pill tone={status.tone} variant="solid" dot pulse={status.pulse}>{status.label}</Pill>
+            <StatusPill descriptor={status} />
           </div>
           <div className="group/row mt-1.5 flex items-center gap-1">
-            <span className="truncate font-mono text-[12px] text-ink-faint">{truncateId(payment.id, 12, 8)}</span>
+            <span className="truncate font-mono text-sm text-ink-faint">{truncateId(payment.id, 12, 8)}</span>
             <CopyButton value={payment.id} label="Copy payment ID" />
             <span className="mx-1 text-ink-faint">·</span>
-            <span className="shrink-0 text-[12px] text-ink-muted">
+            <span className="shrink-0 text-sm text-ink-muted">
               {formatDateTime(payment.createdAt, timezone)}
             </span>
           </div>
@@ -168,7 +170,7 @@ function SummaryTab({ payment }: { payment: Payment }) {
         </div>
       )}
 
-      <Section title="Risk posture">
+      <Section title="Risk posture" term="chargebackProtection">
         <div className="space-y-2">
           <Callout
             icon={protectionApproved ? <ShieldCheck /> : <ShieldOff />}
@@ -193,29 +195,57 @@ function SummaryTab({ payment }: { payment: Payment }) {
 
       <Section title="Payment details">
         <FactGrid>
-          <Fact label="Customer" value={payment.customerName} hint={payment.customerEmail} />
-          <Fact label="Issuer" value={payment.issuer} hint={`${payment.issuerCountry} · ${payment.fundingType}`} />
-          <Fact label="Method" value={methodLabel(payment.method)} hint={payment.transactionType} />
-          <Fact label="CVV response" value={payment.cvvLabel} badge={<Pill tone="neutral">{payment.cvvResponse}</Pill>} />
+          <Fact
+            label="Customer"
+            media={<Avatar name={payment.customerName} size={20} />}
+            value={payment.customerName}
+            hint={payment.customerEmail}
+          />
+          <Fact
+            label="Issuer"
+            // No issuer logos exist in this prototype, so the rail's own
+            // silhouette stands in — a generic bank mark, not a fake brand.
+            media={
+              <span className="grid size-5 place-items-center rounded-[4px] bg-surface-sunk text-ink-faint">
+                <Landmark className="size-3" />
+              </span>
+            }
+            value={payment.issuer}
+            hint={`${payment.issuerCountry} · ${payment.fundingType}`}
+          />
+          <Fact
+            label="Method"
+            media={<MethodGlyph method={payment.method} cardBrand={payment.cardBrand} />}
+            value={methodLabel(payment.method)}
+            hint={payment.transactionType}
+          />
+          <Fact label="CVV response" term="cvvResponse" value={payment.cvvLabel} badge={<Pill tone="neutral">{payment.cvvResponse}</Pill>} />
           <Fact
             label="Statement descriptor"
+            term="statementDescriptor"
             value={payment.statementDescriptor}
             hint="Shown on the customer's bank statement where the issuer supports custom descriptors."
           />
-          <Fact label="Merchant" value={payment.merchant} hint={`Disbursed: ${payment.disbursed ? 'yes' : 'not yet'}`} />
+          <Fact
+            label="Merchant"
+            media={<Avatar name={payment.merchant} size={20} />}
+            value={payment.merchant}
+            hint={`Disbursed: ${payment.disbursed ? 'yes' : 'not yet'}`}
+          />
         </FactGrid>
       </Section>
 
       {payment.chainTx && payment.chainWallet && (
         <Section
           title="Solana ledgering"
+          term="chain"
           // A button, not an anchor: this prototype has no real explorer URL to
           // navigate to, and an anchor that cancels its own default is a link
           // that lies about being a link.
           action={
             <button
               type="button"
-              className="inline-flex items-center gap-1 text-[12px] font-medium text-brand hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline"
             >
               Explorer <ArrowUpRight className="size-3" />
             </button>
@@ -224,7 +254,7 @@ function SummaryTab({ payment }: { payment: Payment }) {
           <div className="rounded-[var(--radius-control)] border border-border p-2.5">
             <div className="mb-2 flex items-center gap-2">
               <SolanaMark className="w-4" />
-              <span className="text-[12px] font-medium text-ink">Settled on Solana</span>
+              <span className="text-sm font-medium text-ink">Settled on Solana</span>
             </div>
             <div className="space-y-1">
               <ChainRow label="Wallet" value={payment.chainWallet} />
@@ -243,9 +273,9 @@ function ChainRow({ label, value }: { label: string; value: string }) {
     // hovering either row revealed both copy buttons at once, which points the
     // user at a control that is not the one under their cursor.
     <div className="group/row flex items-center justify-between gap-3">
-      <span className="shrink-0 text-[13px] text-ink-muted">{label}</span>
+      <span className="shrink-0 text-base text-ink-muted">{label}</span>
       <span className="flex min-w-0 items-center gap-1">
-        <span className="truncate font-mono text-[12px] text-ink">{truncateId(value, 10, 8)}</span>
+        <span className="truncate font-mono text-sm text-ink">{truncateId(value, 10, 8)}</span>
         <CopyButton value={value} label={`Copy ${label}`} />
       </span>
     </div>
@@ -259,27 +289,32 @@ function ChainRow({ label, value }: { label: string; value: string }) {
  * "fifththird → mvb" text so the outcome of each hop is legible.
  */
 function RoutingTab({ payment }: { payment: Payment }) {
-  const finalSucceeded = payment.attempts.at(-1)?.outcome === 'succeeded'
+  const attempts = payment.attempts
+  const failovers = attempts.filter((attempt) => attempt.outcome === 'failed').length
+  const finalSucceeded = attempts.at(-1)?.outcome === 'succeeded'
 
   return (
     <>
-      <Section title="Orchestration">
+      <Section title="Orchestration" term="orchestration">
+        {/*
+          Rule only. "Attempts: 1" and "Final result: Succeeded" used to sit
+          here as well, and on the common single-hop payment that produced the
+          same fact three times within 200px: a count of one, a green pill, and
+          then a chain of exactly one row carrying an identical green pill.
+          The chain below IS the attempt count and IS the final result — it is
+          the more informative rendering of both, because it also says WHICH
+          processor. Anything the chain already states has been removed rather
+          than restated above it.
+        */}
         <Row label="Rule" value={payment.orchestrationRule} mono />
-        <Row label="Attempts" value={String(payment.attempts.length)} />
-        <Row
-          label="Final result"
-          value={
-            <Pill tone={finalSucceeded ? 'positive' : 'critical'} variant="solid" dot>
-              {finalSucceeded ? 'Succeeded' : 'Failed'}
-            </Pill>
-          }
-        />
       </Section>
 
       <Section title="Processor chain">
         <ol className="space-y-1.5">
-          {payment.attempts.map((attempt, index) => {
-            const succeeded = attempt.outcome === 'succeeded'
+          {attempts.map((attempt, index) => {
+            const isLast = index === attempts.length - 1
+            const failed = attempt.outcome === 'failed'
+
             return (
               <li
                 // A routing chain is an ordered sequence and may legitimately hit
@@ -288,27 +323,55 @@ function RoutingTab({ payment }: { payment: Payment }) {
                 key={`${attempt.processor}-${attempt.outcome}-${index}`}
                 className="flex items-center gap-3 rounded-[var(--radius-control)] border border-border p-2.5"
               >
-                <span className="w-4 shrink-0 text-center font-mono text-[11px] text-ink-faint">{index + 1}</span>
+                <span className="w-4 shrink-0 text-center font-mono text-xs text-ink-faint">{index + 1}</span>
                 <ProcessorGlyph processor={attempt.processor} />
-                <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">
+                <span className="min-w-0 flex-1 truncate text-base font-medium text-ink">
                   {processorLabel(attempt.processor)}
                 </span>
-                <Pill tone={succeeded ? 'positive' : 'critical'} variant="ghost" dot>
-                  {succeeded ? 'Succeeded' : 'Failed over'}
-                </Pill>
+                {/*
+                  Only a hop that FAILED is badged. A green "Succeeded" on the
+                  one row of a one-row chain is the base rate wearing the colour
+                  reserved for exceptions — pill taxonomy rule 5. The outcome is
+                  still stated, once, in the sentence below.
+                */}
+                {failed && (
+                  <AttributePill descriptor={attemptOutcomeTone('failed', !isLast)} />
+                )}
               </li>
             )
           })}
         </ol>
-        {payment.attempts.length > 1 && (
-          <p className="mt-2 text-[12px] leading-snug text-ink-muted">
-            The first processor declined and the rule automatically retried on a fallback. The customer
-            experienced a single attempt.
-          </p>
-        )}
+
+        {/* One plain-language statement of the outcome, which is also the only
+            place the attempt count appears. */}
+        <p className="mt-2 text-sm leading-snug text-ink-muted">
+          {routingSummary(attempts.length, failovers, finalSucceeded)}
+        </p>
       </Section>
     </>
   )
+}
+
+/**
+ * Describes the routing outcome in a sentence.
+ *
+ * Kept as a function rather than nested ternaries in JSX because the four cases
+ * are genuinely different sentences, and because the failure case is the one an
+ * operator reads most carefully — it should be legible in the source too.
+ */
+function routingSummary(attempts: number, failovers: number, succeeded: boolean): string {
+  if (!succeeded) {
+    return attempts === 1
+      ? 'The processor declined and the rule had no fallback left to try.'
+      : `Declined on all ${attempts} processors the rule tried.`
+  }
+
+  if (failovers === 0) {
+    return 'Succeeded on the first processor the rule selected.'
+  }
+
+  const tries = failovers === 1 ? 'one processor' : `${failovers} processors`
+  return `Rescued after ${tries} declined. The rule retried automatically, so the customer experienced a single attempt.`
 }
 
 /**
@@ -336,7 +399,7 @@ function FeesTab({ payment }: { payment: Payment }) {
         />
       </Section>
 
-      <Section title="Fee breakdown">
+      <Section title="Fee breakdown" term="interchange">
         <div className="space-y-1">
           {payment.fees.map((fee) => {
             const isZero = fee.total === 0
@@ -351,19 +414,19 @@ function FeesTab({ payment }: { payment: Payment }) {
                 )}
               >
                 <div className="min-w-0">
-                  <p className="truncate text-[13px] text-ink">{fee.label}</p>
+                  <p className="truncate text-base text-ink">{fee.label}</p>
                   {splitWithCustomer && (
-                    <p className="text-[11px] text-ink-faint">
+                    <p className="text-xs text-ink-faint">
                       Merchant {formatCurrency(fee.paidByMerchant)} · Customer {formatCurrency(fee.paidByCustomer)}
                     </p>
                   )}
                 </div>
-                <span className="shrink-0 tabular-nums text-[13px] text-ink">{formatCurrency(fee.total)}</span>
+                <span className="shrink-0 tabular-nums text-base text-ink">{formatCurrency(fee.total)}</span>
               </div>
             )
           })}
         </div>
-        <p className="mt-3 text-[12px] leading-snug text-ink-faint">
+        <p className="mt-3 text-sm leading-snug text-ink-faint">
           Fees at $0.00 are shown dimmed rather than hidden, so the absence of a gas fee or a
           protection fee is verifiable rather than ambiguous.
         </p>

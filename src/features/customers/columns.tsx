@@ -1,10 +1,10 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import type { Customer } from '@/types'
 import { AmountCell, AttributeCell } from '@/components/table/cells'
+import { AttributePill } from '@/components/ui/status-pill'
 import { Avatar } from '@/components/ui/avatar'
 import { CopyButton } from '@/components/ui/copy-button'
 import { Tooltip } from '@/components/ui/tooltip'
-import { Pill } from '@/components/ui/pill'
 import {
   customerProtectionTone, blockedTone, threeDSProcessingTone,
   attemptLimitTone, verificationTone, fraudOverrideTone,
@@ -99,7 +99,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       header: 'Protection',
       size: 115,
       enableSorting: false,
-      meta: { label: 'Protection' },
+      meta: { label: 'Protection', term: 'chargebackProtection' },
       cell: ({ row }) => <AttributeCell descriptor={customerProtectionTone(row.original.protectionEnabled)} />,
     },
     {
@@ -108,7 +108,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       header: 'Blocked',
       size: 105,
       enableSorting: false,
-      meta: { label: 'Blocked' },
+      meta: { label: 'Blocked', term: 'blocked' },
       cell: ({ row }) => <AttributeCell descriptor={blockedTone(row.original.blocked)} />,
     },
     {
@@ -117,7 +117,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       header: '3DS Processing',
       size: 140,
       enableSorting: false,
-      meta: { label: '3DS Processing' },
+      meta: { label: '3DS Processing', term: 'threeDSProcessing' },
       cell: ({ row }) => <AttributeCell descriptor={threeDSProcessingTone(row.original.threeDSProcessing)} />,
     },
     {
@@ -126,7 +126,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       header: 'Attempt Limit',
       size: 130,
       enableSorting: false,
-      meta: { label: 'Attempt Limit' },
+      meta: { label: 'Attempt Limit', term: 'attemptLimit' },
       cell: ({ row }) => <AttributeCell descriptor={attemptLimitTone(row.original.attemptLimit)} />,
     },
     {
@@ -135,7 +135,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       header: 'Verification',
       size: 125,
       enableSorting: false,
-      meta: { label: 'Verification' },
+      meta: { label: 'Verification', term: 'verification' },
       cell: ({ row }) => <AttributeCell descriptor={verificationTone(row.original.verification)} />,
     },
     {
@@ -144,7 +144,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       header: 'Fraud Override',
       size: 140,
       enableSorting: false,
-      meta: { label: 'Fraud Override' },
+      meta: { label: 'Fraud Override', term: 'fraudOverride' },
       cell: ({ row }) => <AttributeCell descriptor={fraudOverrideTone(row.original.fraudOverride)} />,
     },
 
@@ -154,7 +154,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       accessorKey: 'kyc',
       header: 'KYC',
       size: 130,
-      meta: { label: 'KYC' },
+      meta: { label: 'KYC', term: 'kyc' },
       cell: ({ row }) => <AttributeCell descriptor={kycTone(row.original.kyc)} />,
     },
     {
@@ -180,16 +180,21 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       header: 'IPs',
       size: 80,
       enableSorting: false,
-      meta: { label: 'Distinct IPs' },
+      meta: { label: 'Distinct IPs', term: 'riskSignals' },
       cell: ({ row }) => {
         const count = row.original.ipLocations.length
         const tone = signalCountTone(count, 3)
+        // An ordinary count is plain text; only an elevated one becomes a pill,
+        // rendered through AttributePill so it matches the same chip in the
+        // drawer's Risk signals tab.
         if (tone === 'neutral') {
           return <span className="tabular-nums text-ink-muted">{count}</span>
         }
         return (
           <Tooltip content={`${count} distinct IP locations — unusual for a single customer`}>
-            <span className="inline-flex"><Pill tone={tone} variant="ghost">{count}</Pill></span>
+            <span className="inline-flex">
+              <AttributePill descriptor={{ tone, label: String(count) }} />
+            </span>
           </Tooltip>
         )
       },

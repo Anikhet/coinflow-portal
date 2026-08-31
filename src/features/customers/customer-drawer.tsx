@@ -3,6 +3,7 @@ import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabCount } from '@/components/ui/tabs'
 import { Avatar } from '@/components/ui/avatar'
 import { Pill } from '@/components/ui/pill'
+import { StatusPill, AttributePill } from '@/components/ui/status-pill'
 import { StatusCell } from '@/components/table/cells'
 import { Button } from '@/components/ui/button'
 import { Tooltip } from '@/components/ui/tooltip'
@@ -10,7 +11,7 @@ import { CopyButton } from '@/components/ui/copy-button'
 import { DrawerSkeleton, DRAWER_HEADER_CLASS } from '@/components/ui/drawer-chrome'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/table/empty-state'
-import { ControlValue, Fact, FactGrid, Section } from '@/components/ui/detail'
+import { Callout, ControlValue, Fact, FactGrid, Section } from '@/components/ui/detail'
 import { CardBrandGlyph } from '@/components/icons/method-icon'
 import { RecordUnavailable } from '@/components/ui/record-unavailable'
 import { useDrawerStore } from '@/stores/drawer-store'
@@ -18,8 +19,9 @@ import { useUiStore, type Timezone } from '@/stores/ui-store'
 import { useAsync } from '@/hooks/use-async'
 import { fetchCustomer } from '@/mocks/api'
 import {
-  activityTone, attemptLimitTone, customerExceptions, customerProtectionTone,
+  activityTone, attemptLimitTone, blockedTone, customerExceptions, customerProtectionTone,
   fraudOverrideTone, kycTone, signalCountTone, threeDSProcessingTone, verificationTone,
+  type ToneDescriptor,
 } from '@/lib/tone-map'
 import { formatCurrency, formatCount, formatDateOnly, formatTimeOnly, truncateId } from '@/lib/format'
 import type { Customer, CustomerActivity, SignalRow } from '@/types'
@@ -90,20 +92,16 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <SheetTitle className="truncate text-[17px] font-semibold leading-tight tracking-tight text-ink">
+            <SheetTitle className="truncate text-xl font-semibold leading-tight tracking-tight text-ink">
               {customer.name}
             </SheetTitle>
-            <StatusCell descriptor={kyc} />
-            {customer.blocked && (
-              <Pill tone="critical" variant="solid" icon={<Ban className="size-3 shrink-0" aria-hidden />}>
-                Blocked
-              </Pill>
-            )}
+            <StatusPill descriptor={kyc} />
+            {customer.blocked && <StatusPill descriptor={blockedTone(true)} />}
           </div>
           <div className="group/row mt-1 flex items-center gap-1.5">
-            <span className="truncate text-[12px] text-ink-muted">{customer.email}</span>
+            <span className="truncate text-sm text-ink-muted">{customer.email}</span>
             <span className="text-ink-faint">·</span>
-            <span className="shrink-0 font-mono text-[12px] text-ink-faint">{truncateId(customer.id, 8, 4)}</span>
+            <span className="shrink-0 font-mono text-sm text-ink-faint">{truncateId(customer.id, 8, 4)}</span>
             <CopyButton value={customer.id} label="Copy customer ID" />
           </div>
         </div>
@@ -151,12 +149,13 @@ function OverviewTab({ customer, exceptions }: {
         <FactGrid>
           <Fact
             label="Total volume"
-            value={<span className="text-[17px] tabular-nums">{formatCurrency(customer.totalVolume)}</span>}
+            value={<span className="text-xl tabular-nums">{formatCurrency(customer.totalVolume)}</span>}
             hint={`${formatCount(customer.paymentCount)} payments`}
           />
           <Fact
             label="Overridden volume"
-            value={<span className="text-[17px] tabular-nums">{formatCurrency(customer.overriddenVolume)}</span>}
+            term="overriddenVolume"
+            value={<span className="text-xl tabular-nums">{formatCurrency(customer.overriddenVolume)}</span>}
             hint={`${formatCount(customer.overriddenCount)} payments`}
           />
         </FactGrid>
@@ -164,14 +163,12 @@ function OverviewTab({ customer, exceptions }: {
 
       <Section title="Exceptions">
         {exceptions.length === 0 ? (
-          <div className="flex items-center gap-2.5 rounded-[var(--radius-control)] border border-border p-2.5">
-            <span className="grid size-7 shrink-0 place-items-center rounded-[6px] bg-[var(--tone-positive-bg)] text-[var(--tone-positive-fg)]">
-              <ShieldCheck className="size-3.5" />
-            </span>
-            <p className="text-[13px] text-ink-muted">
-              No exceptions. All controls are at their default posture.
-            </p>
-          </div>
+          <Callout
+            tone="positive"
+            icon={<ShieldCheck />}
+            title="No exceptions"
+            description="All controls are at their default posture."
+          />
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {exceptions.map((exception) => (
@@ -188,11 +185,11 @@ function OverviewTab({ customer, exceptions }: {
               and a struck-through hand there. The label text now comes from the
               descriptor rather than CONTROL_LABELS, which keeps one spelling
               per state instead of two that can drift apart. */}
-          <Fact label="Chargeback protection" value={<ControlValue descriptor={customerProtectionTone(customer.protectionEnabled)} />} />
-          <Fact label="3DS processing" value={<ControlValue descriptor={threeDSProcessingTone(customer.threeDSProcessing)} />} />
-          <Fact label="Attempt limit" value={<ControlValue descriptor={attemptLimitTone(customer.attemptLimit)} />} />
-          <Fact label="Verification" value={<ControlValue descriptor={verificationTone(customer.verification)} />} />
-          <Fact label="Fraud override" value={<ControlValue descriptor={fraudOverrideTone(customer.fraudOverride)} />} />
+          <Fact label="Chargeback protection" term="chargebackProtection" value={<ControlValue descriptor={customerProtectionTone(customer.protectionEnabled)} />} />
+          <Fact label="3DS processing" term="threeDSProcessing" value={<ControlValue descriptor={threeDSProcessingTone(customer.threeDSProcessing)} />} />
+          <Fact label="Attempt limit" term="attemptLimit" value={<ControlValue descriptor={attemptLimitTone(customer.attemptLimit)} />} />
+          <Fact label="Verification" term="verification" value={<ControlValue descriptor={verificationTone(customer.verification)} />} />
+          <Fact label="Fraud override" term="fraudOverride" value={<ControlValue descriptor={fraudOverrideTone(customer.fraudOverride)} />} />
           <Fact label="Member since" value={formatDateOnly(customer.createdAt, timezone)} hint={customer.merchant} />
         </FactGrid>
       </Section>
@@ -262,7 +259,7 @@ function ActivityTab({ activity }: { activity: CustomerActivity[] }) {
           {/* The heading is the only rule in the layout, and it stays visible
               while its own events scroll — a long history should never leave
               the reader looking at undated rows. */}
-          <h3 className="sticky top-0 z-10 border-b border-border bg-surface/95 px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-faint backdrop-blur">
+          <h3 className="sticky top-0 z-10 border-b border-border bg-surface/95 px-5 py-2 text-xs font-semibold uppercase tracking-[0.06em] text-ink-faint backdrop-blur">
             {date}
           </h3>
 
@@ -284,7 +281,7 @@ function ActivityRow({ event, timezone }: { event: CustomerActivity; timezone: T
 
   return (
     <li className="grid grid-cols-[60px_1fr_auto] items-baseline gap-3 border-b border-border px-5 py-2.5 last:border-0">
-      <span className="text-[12px] tabular-nums leading-5 text-ink-faint">
+      <span className="text-sm tabular-nums leading-5 text-ink-faint">
         {formatTimeOnly(event.at, timezone)}
       </span>
 
@@ -294,14 +291,14 @@ function ActivityRow({ event, timezone }: { event: CustomerActivity; timezone: T
               its own: only card events have one, so a dedicated column was
               empty on every payout and left a ragged gutter. */}
           {event.brand && <CardBrandGlyph brand={event.brand} />}
-          <span className="truncate text-[13px] font-medium capitalize leading-5 text-ink">
+          <span className="truncate text-base font-medium capitalize leading-5 text-ink">
             {event.kind.replace('-', ' ')}
           </span>
           {!isRoutine && <StatusCell descriptor={tone} />}
         </span>
 
         {(event.rail || event.responseCode || event.note) && (
-          <span className="mt-0.5 block truncate text-[12px] leading-4 text-ink-faint">
+          <span className="mt-0.5 block truncate text-sm leading-4 text-ink-faint">
             {[
               event.rail,
               event.responseCode && event.responseCode !== '00' && `code ${event.responseCode}`,
@@ -314,7 +311,7 @@ function ActivityRow({ event, timezone }: { event: CustomerActivity; timezone: T
       </span>
 
       {event.amount > 0 && (
-        <span className="w-[88px] shrink-0 text-[13px] tabular-nums leading-5 text-ink">
+        <span className="w-[88px] shrink-0 text-base tabular-nums leading-5 text-ink">
           {formatCurrency(event.amount)}
         </span>
       )}
@@ -348,15 +345,15 @@ function MethodsTab({ customer }: { customer: Customer }) {
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[13px] text-ink">••{card.last4}</span>
-                  <span className="font-mono text-[12px] text-ink-faint">{card.expiry}</span>
+                  <span className="font-mono text-base text-ink">••{card.last4}</span>
+                  <span className="font-mono text-sm text-ink-faint">{card.expiry}</span>
                   {isUnused && <Pill tone="neutral" variant="ghost">Unused</Pill>}
                 </div>
-                <p className="mt-0.5 text-[11px] text-ink-faint">
+                <p className="mt-0.5 text-xs text-ink-faint">
                   {card.paymentCount > 0 ? `${formatCount(card.paymentCount)} payments` : 'No payments'}
                   {' · Added '}{formatDateOnly(card.addedAt, timezone)}
                 </p>
-                <p className="mt-0.5 truncate text-[11px] text-ink-faint">{card.billingAddress}</p>
+                <p className="mt-0.5 truncate text-xs text-ink-faint">{card.billingAddress}</p>
               </div>
 
               {/* Deleting a card with payment history would orphan those
@@ -380,9 +377,9 @@ function MethodsTab({ customer }: { customer: Customer }) {
 function SignalsTab({ customer }: { customer: Customer }) {
   return (
     <>
-      <SignalTable icon={<User className="size-3.5" />} title="Names" rows={customer.names} threshold={1} />
-      <SignalTable icon={<MapPin className="size-3.5" />} title="Billing addresses" rows={customer.billingAddresses} threshold={2} />
-      <SignalTable icon={<Fingerprint className="size-3.5" />} title="IP locations" rows={customer.ipLocations} threshold={3} />
+      <SignalTable icon={User} title="Names" rows={customer.names} threshold={1} />
+      <SignalTable icon={MapPin} title="Billing addresses" rows={customer.billingAddresses} threshold={2} />
+      <SignalTable icon={Fingerprint} title="IP locations" rows={customer.ipLocations} threshold={3} />
     </>
   )
 }
@@ -393,7 +390,8 @@ function SignalsTab({ customer }: { customer: Customer }) {
  * suspicious — it is the *number of them* that is.
  */
 function SignalTable({ icon, title, rows, threshold }: {
-  icon: React.ReactNode
+  /** Component, not a node — so it can be handed straight to a ToneDescriptor. */
+  icon: ToneDescriptor['icon']
   title: string
   rows: SignalRow[]
   threshold: number
@@ -404,13 +402,11 @@ function SignalTable({ icon, title, rows, threshold }: {
     <Section
       title={title}
       action={
-        <Pill tone={tone} variant={tone === 'neutral' ? 'ghost' : 'solid'} icon={icon}>
-          {rows.length} distinct
-        </Pill>
+        <AttributePill descriptor={{ tone, label: `${rows.length} distinct`, icon }} />
       }
     >
       <div className="overflow-hidden rounded-[var(--radius-control)] border border-border">
-        <table className="w-full text-[12px]">
+        <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-surface-sunk">
               <th scope="col" className="px-2.5 py-1.5 text-left font-medium text-ink-faint">Value</th>
@@ -430,7 +426,7 @@ function SignalTable({ icon, title, rows, threshold }: {
         </table>
       </div>
       {tone !== 'neutral' && (
-        <p className="mt-2 text-[12px] leading-snug text-ink-muted">
+        <p className="mt-2 text-sm leading-snug text-ink-muted">
           {rows.length} distinct values is above the expected range for a single customer and may
           indicate account sharing or takeover.
         </p>

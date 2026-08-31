@@ -4,12 +4,11 @@ import { AmountCell, AttributeCell, IdCell, IdentityCell, StatusCell } from '@/c
 import { MethodGlyph, ProcessorGlyph } from '@/components/icons/method-icon'
 import { methodLabel, processorLabel } from '@/lib/method-labels'
 import { SolanaMark } from '@/components/icons/brand-marks'
-import { paymentStatusTone, protectionTone, threeDSTone } from '@/lib/tone-map'
+import { disbursedTone, paymentStatusTone, protectionTone, threeDSTone } from '@/lib/tone-map'
 import { formatTableTime, formatDateTime, truncateId } from '@/lib/format'
 import { Avatar } from '@/components/ui/avatar'
 import { Tooltip } from '@/components/ui/tooltip'
 import { CopyButton } from '@/components/ui/copy-button'
-import { Pill } from '@/components/ui/pill'
 import type { Timezone } from '@/stores/ui-store'
 
 /**
@@ -100,7 +99,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       header: 'Processor',
       size: 140,
       enableSorting: false,
-      meta: { label: 'Processor' },
+      meta: { label: 'Processor', term: 'processor' },
       cell: ({ row }) => (
         <IdentityCell
           glyph={<ProcessorGlyph processor={row.original.processor} />}
@@ -113,7 +112,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       accessorKey: 'subtotal',
       header: 'Subtotal',
       size: 110,
-      meta: { label: 'Subtotal' },
+      meta: { label: 'Subtotal', term: 'subtotal' },
       cell: ({ row }) => <AmountCell value={row.original.subtotal} />,
     },
     {
@@ -125,7 +124,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       cell: ({ row }) => (
         <span className="min-w-0 truncate">
           <span className="truncate font-medium text-ink">{row.original.customerName}</span>
-          <span className="ml-1.5 truncate text-[12px] text-ink-faint">{row.original.customerEmail}</span>
+          <span className="ml-1.5 truncate text-sm text-ink-faint">{row.original.customerEmail}</span>
         </span>
       ),
     },
@@ -143,7 +142,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       header: 'Code',
       size: 90,
       enableSorting: false,
-      meta: { label: 'Response code' },
+      meta: { label: 'Response code', term: 'responseCode' },
       cell: ({ row }) => {
         // An approval code carries no information — every settled payment has
         // the same one. Only surface a code when it explains a failure.
@@ -152,7 +151,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
         }
         return (
           <Tooltip content={row.original.responseLabel}>
-            <span className="font-mono text-[12px] text-[var(--tone-critical-fg)]">
+            <span className="font-mono text-sm text-[var(--tone-critical-fg)]">
               {row.original.responseCode}
             </span>
           </Tooltip>
@@ -165,13 +164,8 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       header: 'Disbursed',
       size: 105,
       enableSorting: false,
-      meta: { label: 'Disbursed' },
-      cell: ({ row }) =>
-        row.original.disbursed ? (
-          <Pill tone="neutral" variant="ghost">Sent</Pill>
-        ) : (
-          <span className="select-none text-ink-faint" aria-label="Not disbursed">—</span>
-        ),
+      meta: { label: 'Disbursed', term: 'disbursed' },
+      cell: ({ row }) => <AttributeCell descriptor={disbursedTone(row.original.disbursed)} />,
     },
     {
       id: 'protection',
@@ -179,7 +173,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       header: 'Protection',
       size: 120,
       enableSorting: false,
-      meta: { label: 'Protection' },
+      meta: { label: 'Protection', term: 'chargebackProtection' },
       cell: ({ row }) => <AttributeCell descriptor={protectionTone(row.original.protection)} />,
     },
     {
@@ -188,7 +182,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       header: '3D Secure',
       size: 135,
       enableSorting: false,
-      meta: { label: '3D Secure' },
+      meta: { label: '3D Secure', term: 'threeDSecure' },
       cell: ({ row }) => <AttributeCell descriptor={threeDSTone(row.original.threeDS)} />,
     },
     {
@@ -197,7 +191,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       header: 'Chain',
       size: 80,
       enableSorting: false,
-      meta: { label: 'Chain' },
+      meta: { label: 'Chain', term: 'chain' },
       cell: ({ row }) =>
         row.original.chainTx ? (
           <Tooltip content={`Settled on Solana · ${row.original.chainTx.slice(0, 16)}…`}>
