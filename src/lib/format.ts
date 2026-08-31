@@ -21,6 +21,31 @@ const USD_COMPACT = new Intl.NumberFormat('en-US', {
 const COUNT = new Intl.NumberFormat('en-US')
 
 export const formatCurrency = (value: number) => USD.format(value)
+
+const USD_WHOLE = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+})
+
+/**
+ * Formatter for ROLLED-UP figures — the headline on a KPI, chart or breakdown
+ * card.
+ *
+ * Precision follows magnitude rather than location. Cents are meaningful on a
+ * single $67.68 charge and pure noise on a $2,129,245.61 weekly total, where
+ * the ".61" is six characters of nothing that push the digits that matter
+ * further apart.
+ *
+ * Kept distinct from `formatCurrency`, which always shows cents because it
+ * renders an exact amount somebody was actually charged.
+ *
+ * The threshold is $10,000: below it a total is small enough that the cents
+ * could still be reconciled by eye; above it nobody is counting pennies off a
+ * dashboard.
+ */
+export const formatTotal = (value: number) =>
+  Math.abs(value) >= 10_000 ? USD_WHOLE.format(value) : USD.format(value)
 export const formatCompactCurrency = (value: number) => USD_COMPACT.format(value)
 export const formatCount = (value: number) => COUNT.format(value)
 

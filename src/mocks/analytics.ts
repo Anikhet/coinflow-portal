@@ -65,7 +65,10 @@ export async function fetchMethodSeries(days = 7): Promise<{ points: SeriesPoint
   const totals = new Map<string, number>()
 
   for (const payment of PAYMENTS) {
-    if (payment.status !== 'settled') continue
+    // Same window as everything else. Summing all time here produced a net
+    // settlement figure larger than the period's gross volume — arithmetically
+    // impossible, and the first thing a reviewer would catch.
+    if (payment.status !== 'settled' || !inPeriod(payment.createdAt, days)) continue
     const key = dayKey(+new Date(payment.createdAt))
     const bucket = buckets.get(key)
     if (!bucket) continue
@@ -86,26 +89,7 @@ export async function fetchMethodSeries(days = 7): Promise<{ points: SeriesPoint
   return { points, series }
 }
 
-/** Records per calendar day across the window, oldest first. */
-function dailyCounts(dates: string[], days: number): number[] {
-  const buckets = new Map<string, number>()
-  const start = periodStart(days)
-  for (let i = 0; i < days; i += 1) buckets.set(dayKey(start + i * DAY), 0)
-  for (const date of dates) {
-    const key = dayKey(+new Date(date))
-    if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1)
-  }
-  return [...buckets.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, count]) => count)
-}
 
-function sparkline(values: number[], buckets = 12) {
-  const size = Math.max(1, Math.ceil(values.length / buckets))
-  const out: number[] = []
-  for (let i = 0; i < values.length; i += size) {
-    out.push(values.slice(i, i + size).reduce((sum, value) => sum + value, 0))
-  }
-  return out
-}
 
 export async function fetchOverview(): Promise<OverviewMetrics> {
   await latency(220)
@@ -142,25 +126,89 @@ export async function fetchOverview(): Promise<OverviewMetrics> {
   const changePct = (current: number, previous: number) =>
     previous === 0 ? 0 : ((current - previous) / previous) * 100
 
+  /** Same length of window, immediately before the current one. */
+  const inPriorWindow = (iso: string) => {
+    const at = +new Date(iso)
+    return at >= priorStart && at < currentStart
+  }
+
+  // The payments and payouts deltas were hardcoded literals (12.4 and -2.8).
+  // They never moved with the data, so the arrow and the percentage beside a
+  // live figure were decoration. Both are now measured against the preceding
+  // window of the same length.
+  const priorPayments = PAYMENTS.filter(
+    (p) => p.status === 'settled' && inPriorWindow(p.createdAt),
+  )
+  const priorPaymentsTotal = priorPayments.reduce((sum, p) => sum + p.subtotal, 0)
+
+  // -- rate metrics --------------------------------------------------------
+  // An "attempt" excludes payments still in flight: a payment the issuer has
+  // not answered yet is neither an approval nor a decline, and counting it as
+  // a decline would make the rate sag every time traffic spikes.
+  const attempted = PAYMENTS.filter(
+    (p) => p.status !== 'initiated' && inPeriod(p.createdAt, DAYS),
+  )
+  const approved = attempted.filter((p) => p.status !== 'failed')
+
+  const priorAttempted = PAYMENTS.filter(
+    (p) => p.status !== 'initiated' && inPriorWindow(p.createdAt),
+  )
+  const priorApproved = priorAttempted.filter((p) => p.status !== 'failed')
+
+  const rate = (part: number, whole: number) => (whole === 0 ? 0 : (part / whole) * 100)
+
+  const approvalPct = rate(approved.length, attempted.length)
+  const priorApprovalPct = rate(priorApproved.length, priorAttempted.length)
+
+  // Disputes over settled-plus-disputed: a dispute can only arise on a payment
+  // that went through, so failures do not belong in the denominator.
+  const disputed = PAYMENTS.filter(
+    (p) => p.status === 'disputed' && inPeriod(p.createdAt, DAYS),
+  )
+  const disputeBase = settled.length + disputed.length
+
+  const priorDisputed = PAYMENTS.filter(
+    (p) => p.status === 'disputed' && inPriorWindow(p.createdAt),
+  )
+  const priorSettled = PAYMENTS.filter(
+    (p) => p.status === 'settled' && inPriorWindow(p.createdAt),
+  )
+
+  const chargebackPct = rate(disputed.length, disputeBase)
+  const priorChargebackPct = rate(priorDisputed.length, priorSettled.length + priorDisputed.length)
+
+  const priorPayouts = PAYOUTS.filter(
+    (p) => p.status === 'completed' && inPriorWindow(p.createdAt),
+  )
+  const priorPayoutsTotal = priorPayouts.reduce((sum, p) => sum + p.amount, 0)
+
   return {
     payments: {
       amount: paymentsTotal,
       count: settled.length,
-      deltaPct: 12.4,
-      spark: sparkline(amounts),
+      deltaPct: changePct(paymentsTotal, priorPaymentsTotal),
     },
     customers: {
       count: newCustomers.length,
       deltaPct: changePct(newCustomers.length, priorCustomers.length),
-      // Daily signup counts — a sparkline of new customers' payment volumes
-      // would be plotting a different quantity than the figure above it.
-      spark: dailyCounts(newCustomers.map((customer) => customer.createdAt), DAYS),
     },
     payouts: {
       amount: payoutsTotal,
       count: completedPayouts.length,
-      deltaPct: -2.8,
-      spark: sparkline(completedPayouts.map((payout) => payout.amount)),
+      deltaPct: changePct(payoutsTotal, priorPayoutsTotal),
+    },
+    approvalRate: {
+      pct: approvalPct,
+      deltaPct: approvalPct - priorApprovalPct,
+      approved: approved.length,
+      attempted: attempted.length,
+    },
+    chargebackRate: {
+      pct: chargebackPct,
+      deltaPct: chargebackPct - priorChargebackPct,
+      disputes: disputed.length,
+      /** Visa's monitoring programme entry point. Mastercard's is close to it. */
+      threshold: 0.9,
     },
   }
 }
@@ -298,15 +346,21 @@ export async function fetchPayoutsChart(days = 7): Promise<ChartData> {
  * mix drives interchange cost, funding mix drives auth rates and chargeback
  * exposure. Both are things a payments team acts on.
  */
-export async function fetchCardBreakdown(): Promise<{
+export async function fetchCardBreakdown(days = 7): Promise<{
   total: number
   byBrand: CardSlice[]
   byFunding: CardSlice[]
 }> {
   await latency(240)
 
+  // Scoped to the SAME window as the KPIs and charts. Without this the card
+  // breakdown summed all time while everything beside it summed seven days, so
+  // two figures on one screen described different periods with no way to tell.
   const cardPayments = PAYMENTS.filter(
-    (payment) => payment.status === 'settled' && payment.cardBrand !== null,
+    (payment) =>
+      payment.status === 'settled' &&
+      payment.cardBrand !== null &&
+      inPeriod(payment.createdAt, days),
   )
   const total = cardPayments.reduce((sum, payment) => sum + payment.subtotal, 0)
 
@@ -354,13 +408,16 @@ export async function fetchCardBreakdown(): Promise<{
  * withdrawals. Merchant settlement is net of fees, which is why it does not
  * equal gross payment volume.
  */
-export async function fetchMerchantPayouts(): Promise<{ total: number; rows: MerchantPayout[] }> {
+export async function fetchMerchantPayouts(days = 7): Promise<{ total: number; rows: MerchantPayout[] }> {
   await latency(240)
 
   const byMerchant = new Map<string, { amount: number; count: number }>()
 
   for (const payment of PAYMENTS) {
-    if (payment.status !== 'settled') continue
+    // Same window as everything else. Summing all time here produced a net
+    // settlement figure larger than the period's gross volume — arithmetically
+    // impossible, and the first thing a reviewer would catch.
+    if (payment.status !== 'settled' || !inPeriod(payment.createdAt, days)) continue
     const fees = payment.fees.reduce((sum, fee) => sum + fee.total, 0)
     const net = payment.subtotal - fees
     const entry = byMerchant.get(payment.merchant) ?? { amount: 0, count: 0 }

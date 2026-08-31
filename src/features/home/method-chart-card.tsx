@@ -6,7 +6,7 @@ import { SeriesPicker } from './series-picker'
 import { TOTAL_KEY } from '@/components/charts/series'
 import { InfoHint } from '@/components/ui/info-hint'
 import type { GlossaryTerm } from '@/lib/glossary'
-import { formatCompactCurrency, formatCount } from '@/lib/format'
+import { formatCompactCurrency, formatCount, formatTotal } from '@/lib/format'
 import type { ChartData, Metric } from '@/mocks/analytics'
 
 const METRIC_OPTIONS = [
@@ -62,16 +62,30 @@ export function MethodChartCard({ title, term, description, data, loading }: {
           </span>
           <p className="truncate text-sm text-ink-muted">{description}</p>
         </div>
-        {loading ? (
-          <Skeleton className="h-6 w-24" />
-        ) : (
-          <div className="shrink-0 text-right">
-            <p className="text-xl font-semibold tabular-nums text-ink">
-              {metric === 'amount' ? formatCompactCurrency(total) : formatCount(total)}
-            </p>
-            {headlineNote && <p className="text-xs text-ink-faint">{headlineNote}</p>}
-          </div>
-        )}
+        {/*
+          Fixed-height slot, deliberately empty in the default state.
+
+          Showing the total here repeated the KPI card directly above it
+          verbatim — the same figure twice in one quadrant, which reads as two
+          metrics rather than one. It earns its place only once a series is
+          selected, because that total is something the KPI cannot show. The
+          slot keeps its height either way so selecting a series does not
+          shift the chart.
+        */}
+        <div className="h-10 shrink-0 text-right">
+          {loading ? (
+            <Skeleton className="h-6 w-24" />
+          ) : (
+            headlineNote && (
+              <>
+                <p className="text-xl font-semibold tabular-nums text-ink">
+                  {metric === 'amount' ? formatTotal(total) : formatCount(total)}
+                </p>
+                <p className="text-xs text-ink-faint">{headlineNote}</p>
+              </>
+            )
+          )}
+        </div>
       </div>
 
       <div className="mb-4 flex items-center gap-2">
@@ -86,7 +100,7 @@ export function MethodChartCard({ title, term, description, data, loading }: {
             series={active?.series ?? []}
             selected={selected}
             onChange={setSelected}
-            formatTotal={metric === 'amount' ? formatCompactCurrency : formatCount}
+            formatValue={metric === 'amount' ? formatCompactCurrency : formatCount}
           />
         </div>
       </div>

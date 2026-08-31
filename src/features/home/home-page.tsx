@@ -13,16 +13,14 @@ import { Truncated } from '@/components/ui/truncated'
 import { useAsync } from '@/hooks/use-async'
 import { fetchPayments } from '@/mocks/api'
 import { fetchOverview, fetchPaymentsChart, fetchPayoutsChart, fetchCardBreakdown, fetchMerchantPayouts } from '@/mocks/analytics'
-import { formatCount, formatCurrency, formatRelative } from '@/lib/format'
+import { formatCount, formatCurrency, formatRelative, formatTotal } from '@/lib/format'
 import { paymentStatusTone } from '@/lib/tone-map'
 import { CardBrandGlyph, MethodGlyph } from '@/components/icons/method-icon'
 import { Avatar } from '@/components/ui/avatar'
 import { methodLabel } from '@/lib/method-labels'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { PaymentDrawer } from '@/features/purchases/payment-drawer'
-import {
-  ArrowDownToLine, CreditCard, Landmark, RotateCw, UserRound, WalletCards, type LucideIcon,
-} from 'lucide-react'
+import { CreditCard, Landmark, RotateCw, WalletCards, type LucideIcon } from 'lucide-react'
 
 /**
  * HOME
@@ -91,38 +89,65 @@ export function HomePage() {
       />
 
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {/* Five across. The row previously held three cards and a sparkline apiece;
+            dropping the sparklines — which redrew the chart below at a
+            twentieth the size — freed the height to add the two numbers a
+            payments dashboard is actually opened for. */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
           <KpiCard
             loading={overview.loading}
             label="Settled volume"
-            icon={CreditCard}
+            glyph="payments"
             term="settledVolume"
-            value={metrics ? formatCurrency(metrics.payments.amount) : ''}
+            value={metrics ? formatTotal(metrics.payments.amount) : ''}
             secondary={metrics ? `${formatCount(metrics.payments.count)} payments` : undefined}
             deltaPct={metrics?.payments.deltaPct}
-            spark={metrics?.payments.spark}
-            href="/purchases"
           />
           <KpiCard
             loading={overview.loading}
-            label="Payouts"
-            icon={ArrowDownToLine}
+            label="Approval rate"
+            glyph="authentication"
+            term="approvalRate"
+            value={metrics ? `${metrics.approvalRate.pct.toFixed(1)}%` : ''}
+            secondary={
+              metrics
+                ? `${formatCount(metrics.approvalRate.approved)} of ${formatCount(metrics.approvalRate.attempted)}`
+                : undefined
+            }
+            deltaPct={metrics?.approvalRate.deltaPct}
+            deltaUnit="points"
+          />
+          <KpiCard
+            loading={overview.loading}
+            label="Chargeback rate"
+            glyph="disputes"
+            term="chargebackRate"
+            value={metrics ? `${metrics.chargebackRate.pct.toFixed(2)}%` : ''}
+            secondary={
+              metrics ? `${formatCount(metrics.chargebackRate.disputes)} disputes` : undefined
+            }
+            deltaPct={metrics?.chargebackRate.deltaPct}
+            deltaUnit="points"
+            // More chargebacks is bad, so the delta's colouring inverts.
+            invertDelta
+          />
+          <KpiCard
+            loading={overview.loading}
+            label="Customer payouts"
+            glyph="liquidity"
             term="payouts"
-            value={metrics ? formatCurrency(metrics.payouts.amount) : ''}
+            value={metrics ? formatTotal(metrics.payouts.amount) : ''}
             secondary={metrics ? `${formatCount(metrics.payouts.count)} withdrawals` : undefined}
             deltaPct={metrics?.payouts.deltaPct}
-            spark={metrics?.payouts.spark}
           />
           <KpiCard
             loading={overview.loading}
             label="New customers"
-            icon={UserRound}
+            glyph="customers"
             term="customers"
             value={metrics ? formatCount(metrics.customers.count) : ''}
             secondary="in this period"
             deltaPct={metrics?.customers.deltaPct}
-            spark={metrics?.customers.spark}
-            href="/customers"
           />
         </div>
 
@@ -153,8 +178,13 @@ export function HomePage() {
           <BreakdownCard
             title="Card payments breakdown"
             term="cardBreakdown"
-            description="Settled card volume by brand and funding type"
+            description="All card-backed volume, including Apple Pay and Google Pay"
             total={cardBreakdown.data?.total ?? 0}
+            relation={
+              metrics && cardBreakdown.data
+                ? `${Math.round((cardBreakdown.data.total / metrics.payments.amount) * 100)}% of settled volume`
+                : undefined
+            }
             loading={cardBreakdown.loading}
             groups={
               cardBreakdown.data
@@ -184,6 +214,11 @@ export function HomePage() {
             term="merchantPayouts"
             description="Net settlement owed to each merchant, after fees"
             total={merchantPayouts.data?.total ?? 0}
+            relation={
+              metrics && merchantPayouts.data
+                ? `settled volume less ${formatTotal(metrics.payments.amount - merchantPayouts.data.total)} in fees`
+                : undefined
+            }
             loading={merchantPayouts.loading}
             groups={
               merchantPayouts.data

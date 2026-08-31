@@ -44,8 +44,15 @@ const METHOD_WEIGHTS: ReadonlyArray<readonly [PaymentMethod, number]> = [
   ['cashapp', 6], ['bank', 5], ['crypto', 4], ['pix', 2],
 ]
 
+/**
+ * Disputes are 0.6, not 2. At 2 the chargeback rate came out at 2.24% — roughly
+ * two and a half times Visa's 0.9% monitoring threshold, which would depict a
+ * merchant already in a compliance programme rather than a healthy one. 0.6
+ * lands the rate just under the threshold, where the metric is worth watching
+ * and the number on screen is one a real payments team would recognise.
+ */
 const STATUS_WEIGHTS: ReadonlyArray<readonly [PaymentStatus, number]> = [
-  ['settled', 82], ['failed', 9], ['initiated', 4], ['refunded', 3], ['disputed', 2],
+  ['settled', 83.4], ['failed', 9], ['initiated', 4], ['refunded', 3], ['disputed', 0.6],
 ]
 
 const PROCESSOR_WEIGHTS: ReadonlyArray<readonly [Processor, number]> = [
@@ -138,7 +145,7 @@ function buildPayment(random: Random, now: number, customerPool: Array<{ id: str
   const settlesOnChain = status === 'settled' && random.bool(0.82)
 
   // Spread across the last 7 days, front-loaded so the top of the table is fresh.
-  const minutesAgo = Math.round(random.float(0, 1) ** 1.15 * 7 * 24 * 60)
+  const minutesAgo = Math.round(random.float(0, 1) * 28 * 24 * 60)
   const createdAt = new Date(now - minutesAgo * 60_000).toISOString()
 
   const id = `${random.hex(8)}-${random.hex(4)}-${random.hex(4)}-${random.hex(4)}-${random.hex(12)}`
@@ -355,7 +362,7 @@ const CUSTOMER_POOL = CUSTOMERS.map((c) => ({ id: c.id, name: c.name, email: c.e
  * transaction cannot swing a daily bucket, which is what made the volume chart
  * read as noise rather than as a trend at lower counts.
  */
-export const PAYMENTS: Payment[] = Array.from({ length: 3200 }, () => buildPayment(random, NOW, CUSTOMER_POOL))
+export const PAYMENTS: Payment[] = Array.from({ length: 12_800 }, () => buildPayment(random, NOW, CUSTOMER_POOL))
   .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
 
 /**
@@ -377,7 +384,7 @@ const RAIL_SCALE: Record<PayoutRail, number> = {
 function buildPayout(random: Random, now: number): Payout {
   const rail = random.weighted(RAIL_WEIGHTS)
   const base = amountFor(random)
-  const minutesAgo = Math.round(random.float(0, 1) ** 1.15 * 7 * 24 * 60)
+  const minutesAgo = Math.round(random.float(0, 1) * 28 * 24 * 60)
 
   return {
     id: random.hex(16),
@@ -393,7 +400,7 @@ function buildPayout(random: Random, now: number): Payout {
  * Customer withdrawals. Roughly a third the count of inbound payments, which is
  * the ratio the original dashboard's headline numbers imply.
  */
-export const PAYOUTS: Payout[] = Array.from({ length: 1100 }, () => buildPayout(random, NOW))
+export const PAYOUTS: Payout[] = Array.from({ length: 4_400 }, () => buildPayout(random, NOW))
   .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
 
 export { NOW as DATASET_NOW }

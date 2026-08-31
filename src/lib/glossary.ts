@@ -25,6 +25,10 @@ export const GLOSSARY = {
     'Customers who signed up during this period. A returning customer who paid again is not counted here.',
 
   // -- payment attributes --------------------------------------------------
+  approvalRate:
+    'Share of attempted payments the issuing bank approved. The earliest warning that something is wrong — it moves within minutes of a processor or rules problem, while volume takes a day to show it.',
+  chargebackRate:
+    'Disputed payments as a share of settled ones. Card networks place a merchant into a monitoring programme above roughly 0.9%, which is why the number only means anything beside that limit.',
   chargebackProtection:
     'Cover that shifts liability for a chargeback from the merchant to Coinflow. When approved, a disputed payment costs the merchant nothing.',
   threeDSecure:

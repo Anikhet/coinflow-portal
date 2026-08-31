@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { InfoHint } from '@/components/ui/info-hint'
 import type { GlossaryTerm } from '@/lib/glossary'
-import { formatCompactCurrency, formatCount, formatCurrency } from '@/lib/format'
+import { formatCompactCurrency, formatCount, formatTotal } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { Truncated } from '@/components/ui/truncated'
 
@@ -42,6 +42,12 @@ export interface BreakdownRow {
 interface BreakdownCardProps {
   title: string
   term: GlossaryTerm
+  /**
+   * How this card's total relates to settled volume, e.g. "70% of settled
+   * volume". Both breakdowns are derived from the same headline figure, and
+   * without saying so they read as a fourth and fifth unrelated number.
+   */
+  relation?: string
   description: string
   total: number
   /** Optional grouping label above a set of rows, e.g. "By brand". */
@@ -53,7 +59,7 @@ interface BreakdownCardProps {
 }
 
 export function BreakdownCard({
-  title, term, description, total, groups, loading = false, unit = 'payments', action,
+  title, term, description, total, relation, groups, loading = false, unit = 'payments', action,
 }: BreakdownCardProps) {
   return (
     <section className="flex flex-col rounded-[var(--radius-surface)] border border-border bg-surface p-5">
@@ -68,9 +74,10 @@ export function BreakdownCard({
         {loading ? (
           <Skeleton className="h-6 w-28" />
         ) : (
-          <p className="shrink-0 text-xl font-semibold tabular-nums text-ink">
-            {formatCurrency(total)}
-          </p>
+          <div className="shrink-0 text-right">
+            <p className="text-xl font-semibold tabular-nums text-ink">{formatTotal(total)}</p>
+            {relation && <p className="mt-0.5 text-sm text-ink-faint">{relation}</p>}
+          </div>
         )}
       </div>
 

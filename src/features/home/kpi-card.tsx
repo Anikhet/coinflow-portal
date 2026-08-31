@@ -1,6 +1,6 @@
-import { ArrowUpRight, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { Sparkline } from '@/components/charts/sparkline'
+import { TrendingDown, TrendingUp } from 'lucide-react'
+import { GradientGlyph } from '@/components/icons/gradient-glyph'
+import type { EmptyGlyphName } from '@/components/icons/empty-glyphs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { InfoHint } from '@/components/ui/info-hint'
 import type { GlossaryTerm } from '@/lib/glossary'
@@ -11,61 +11,67 @@ import { cn } from '@/lib/cn'
  * KPI CARD
  * =============================================================================
  * The original cards showed a value and a date range only — a number with no
- * reference point, which cannot be acted on. Three additions make it a metric
+ * reference point, which cannot be acted on. Two additions make it a metric
  * rather than a readout:
  *
  *   - a period-over-period delta, so the number has direction
- *   - a sparkline, so the shape of the change is visible (a steady climb and a
- *     spike-then-crash produce the same delta but demand different responses)
  *   - a secondary count, so volume and transaction count are read together
  *
- * The card is a fixed 172px tall in both loading and loaded states. Deltas and
- * sparklines arrive asynchronously, and without a reserved box the whole KPI
- * row would jump on load.
+ * A sparkline used to sit here too. Once the KPI and the chart below it were
+ * fixed to share the same daily buckets it plotted exactly the series drawn
+ * further down the page, at a twentieth the size and with no axis or hover —
+ * strictly worse at the same job. Removing it freed the height that now
+ * carries approval rate and chargeback rate.
+ *
+ * The card is a fixed 128px in both loading and loaded states, because the
+ * value and delta arrive asynchronously and without a reserved box the whole
+ * strip would jump on load.
  *
  * Loading is per-slot, not per-card. The label and its glossary hint are static
  * props known at first paint, so skeletoning them would be pure theatre — the
- * user waits to be told what they are waiting for. Only the four asynchronous
- * slots (value, delta, secondary count, sparkline) become skeletons, and each
- * occupies the box its content will occupy, so nothing moves when data lands.
+ * user waits to be told what they are waiting for. Only the asynchronous slots
+ * become skeletons, each occupying the box its content will occupy.
  */
 
 interface KpiCardProps {
   label: string
-  /** Optional mark shown in front of the label, in a neutral chip. */
-  icon?: LucideIcon
+  /** Gradient glyph shown in front of the label. */
+  glyph?: EmptyGlyphName
   /** Glossary key for the "?" hint beside the label. */
   term?: GlossaryTerm
   value: string
   secondary?: string
   deltaPct?: number
-  spark?: number[]
+  /**
+   * Renders the delta as points rather than a percentage. A rate metric moves
+   * in percentage POINTS — "approval fell 1.2 points" is what a payments team
+   * says. Formatting that as "-1.3%" would state a different, much smaller
+   * quantity: a percentage of a percentage.
+   */
+  deltaUnit?: 'percent' | 'points'
   /** Inverts delta coloring for metrics where a decrease is good. */
   invertDelta?: boolean
-  href?: string
   loading?: boolean
 }
 
 export function KpiCard({
-  label, icon: Icon, term, value, secondary, deltaPct, spark, invertDelta = false, href, loading,
+  label, glyph, term, value, secondary, deltaPct, deltaUnit = 'percent', invertDelta = false, loading,
 }: KpiCardProps) {
-  // Brand-toned and unenclosed. The neutral chip is reserved for marks that
-  // identify a *row's subject* (a card brand, a funding type); here the glyph
-  // decorates the card's own title, so a container would make three headers
-  // read as three data rows.
-  //
-  // 16px at 1.75 stroke, not the 12px the reference marks use. Those are solid
-  // filled glyphs drawn on a 12px grid, so they hold their mass when small;
-  // lucide draws on a 24px grid with 2px strokes and 1px interior gaps, which
-  // at 12px close up into an illegible smudge — a credit card becomes a
-  // featureless rectangle. Filling the box and thinning the stroke matches the
-  // reference's optical weight, which is the thing worth copying, rather than
-  // its pixel count, which is a property of its own icon grid.
+  // The same gradient glyph the empty states use, so one mark vocabulary runs
+  // across the product rather than lucide outlines here and filled glyphs
+  // there. Solid shapes on a 12px grid hold their mass at this size where a
+  // 2px-stroke outline would close up into a smudge.
   //
   // Rendered in both states so the label row keeps its height and the text
   // starts at the same x whether or not the data has arrived.
-  const mark = Icon && (
-    <Icon className="size-4 shrink-0 text-brand" strokeWidth={1.75} />
+  // Boxed at a fixed 16px square. Glyph paths differ in aspect ratio, and the
+  // taller ones (the dispute scales) rendered past the declared size and
+  // stretched the label row — which pushed that one card's figure 9px below
+  // its neighbours and broke the strip's shared baseline.
+  const mark = glyph && (
+    <span className="grid size-5 shrink-0 place-items-center overflow-hidden">
+      <GradientGlyph name={glyph} size={20} />
+    </span>
   )
 
   const isPositive = (deltaPct ?? 0) >= 0
@@ -74,24 +80,25 @@ export function KpiCard({
   return (
     <div
       className={cn(
-        'group/card flex h-[172px] flex-col rounded-[var(--radius-surface)] border border-border bg-surface p-5 transition-colors',
+        'group/card flex h-[128px] flex-col rounded-[var(--radius-surface)] border border-border bg-surface p-5 transition-colors',
         !loading && 'hover:border-border-strong',
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5">
+      {/* Fixed height. A longer label squeezed the "View all" link onto a
+          second line, growing this row to 29px and dropping that one card's
+          figure below the rest of the strip. */}
+      <div className="flex h-6 items-center justify-between gap-2">
+        {/* Fixed height and no wrapping. "Chargeback rate" wrapped to two lines
+            at five-across, which pushed that card's figure a line below its
+            neighbours and broke the row's shared baseline — the thing that
+            makes a KPI strip scannable in one pass. */}
+        <span className="flex h-6 items-center gap-2">
           {mark}
-          <span className="text-sm font-medium text-ink-muted">{label}</span>
+          <span className="truncate whitespace-nowrap text-base font-semibold text-ink">
+            {label}
+          </span>
           {term && <InfoHint term={term} label={label} />}
         </span>
-        {href && !loading && (
-          <Link
-            to={href}
-            className="inline-flex items-center gap-0.5 text-xs font-medium text-brand opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100"
-          >
-            View all <ArrowUpRight className="size-3" />
-          </Link>
-        )}
       </div>
 
       {loading ? (
@@ -112,7 +119,9 @@ export function KpiCard({
             )}
           >
             {isPositive ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-            {formatPercent(deltaPct)}
+            {deltaUnit === 'points'
+              ? `${deltaPct >= 0 ? '+' : ''}${deltaPct.toFixed(2)} pts`
+              : formatPercent(deltaPct)}
           </span>
         )}
         {!loading && secondary && (
@@ -120,12 +129,6 @@ export function KpiCard({
         )}
       </div>
 
-      <div className="mt-auto">
-        {/* Always brand-toned. Direction is communicated by the delta chip;
-            coloring the sparkline too double-encodes it and makes a routine
-            -2.8% move read as an incident. */}
-        {loading ? <Skeleton className="h-8 w-full" /> : spark && <Sparkline values={spark} />}
-      </div>
     </div>
   )
 }

@@ -20,11 +20,12 @@ import { SeriesGlyph } from '@/components/charts/series-glyph'
  * mode, so there is one mental model: everything in this list is a line you can
  * turn on or off, and the chart is whatever you checked.
  */
-export function SeriesPicker({ series, selected, onChange, formatTotal }: {
+export function SeriesPicker({ series, selected, onChange, formatValue }: {
   series: MethodSeries[]
   selected: string[]
   onChange: (next: string[]) => void
-  formatTotal: (value: number) => string
+  /** Compact formatter for the per-series totals listed beside each option. */
+  formatValue: (value: number) => string
 }) {
   const grandTotal = series.reduce((sum, entry) => sum + entry.total, 0)
   const options = [{ key: TOTAL_KEY, label: 'Total', total: grandTotal }, ...series]
@@ -76,7 +77,7 @@ export function SeriesPicker({ series, selected, onChange, formatTotal }: {
             <SeriesGlyph seriesKey={option.key} />
             <span className="flex-1 truncate">{option.label}</span>
             <span className="shrink-0 tabular-nums text-xs text-ink-faint">
-              {formatTotal(option.total)}
+              {formatValue(option.total)}
             </span>
           </DropdownCheckboxItem>
         ))}
