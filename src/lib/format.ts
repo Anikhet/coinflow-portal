@@ -23,6 +23,14 @@ const COUNT = new Intl.NumberFormat('en-US')
 export const formatCurrency = (value: number) => USD.format(value)
 export const formatCompactCurrency = (value: number) => USD_COMPACT.format(value)
 export const formatCount = (value: number) => COUNT.format(value)
+
+const COUNT_COMPACT = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
+
+/** Compact counts for chart axes, where a full thousands separator will not fit. */
+export const formatCompactCount = (value: number) => COUNT_COMPACT.format(value)
 export const formatPercent = (value: number, digits = 1) =>
   `${value >= 0 ? '+' : ''}${value.toFixed(digits)}%`
 

@@ -41,10 +41,10 @@ export function PageHeader({ title, description, actions }: {
   actions?: ReactNode
 }) {
   return (
-    <header className="z-20 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-canvas px-6">
+    <header className="z-20 flex h-16 shrink-0 items-center gap-4 border-b border-border bg-canvas px-8">
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-[15px] font-semibold leading-tight tracking-tight text-ink">{title}</h1>
-        {description && <p className="truncate text-[12px] leading-tight text-ink-muted">{description}</p>}
+        <h1 className="truncate text-lg font-semibold leading-tight tracking-tight text-ink">{title}</h1>
+        {description && <p className="truncate text-sm leading-tight text-ink-muted">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </header>
