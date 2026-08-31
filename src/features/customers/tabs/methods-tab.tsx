@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Section } from '@/components/ui/detail'
 import { Pill } from '@/components/ui/pill'
 import { Tooltip } from '@/components/ui/tooltip'
+import { Truncated } from '@/components/ui/truncated'
 import { cn } from '@/lib/cn'
 import { formatCount, formatDateOnly } from '@/lib/format'
 import { useUiStore } from '@/stores/ui-store'
@@ -46,7 +47,7 @@ export function MethodsTab({ customer }: { customer: Customer }) {
                   {card.paymentCount > 0 ? `${formatCount(card.paymentCount)} payments` : 'No payments'}
                   {' · Added '}{formatDateOnly(card.addedAt, timezone)}
                 </p>
-                <p className="mt-0.5 truncate text-xs text-ink-faint">{card.billingAddress}</p>
+                <Truncated className="mt-0.5 block text-xs text-ink-faint">{card.billingAddress}</Truncated>
               </div>
 
               {/* Deleting a card with payment history would orphan those

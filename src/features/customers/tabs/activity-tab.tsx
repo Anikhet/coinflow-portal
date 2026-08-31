@@ -1,6 +1,7 @@
 import { CardBrandGlyph } from '@/components/icons/method-icon'
 import { StatusCell } from '@/components/table/cells'
 import { EmptyState } from '@/components/table/empty-state'
+import { Truncated } from '@/components/ui/truncated'
 import { formatCurrency, formatDateOnly, formatTimeOnly } from '@/lib/format'
 import { activityTone } from '@/lib/tone-map'
 import { useUiStore } from '@/stores/ui-store'
@@ -81,7 +82,7 @@ function ActivityRow({ event, timezone }: { event: CustomerActivity; timezone: T
         </span>
 
         {(event.rail || event.responseCode || event.note) && (
-          <span className="mt-0.5 block truncate text-sm leading-4 text-ink-faint">
+          <Truncated className="mt-0.5 block text-sm leading-4 text-ink-faint">
             {[
               event.rail,
               event.responseCode && event.responseCode !== '00' && `code ${event.responseCode}`,
@@ -89,7 +90,7 @@ function ActivityRow({ event, timezone }: { event: CustomerActivity; timezone: T
             ]
               .filter(Boolean)
               .join(' · ')}
-          </span>
+          </Truncated>
         )}
       </span>
 

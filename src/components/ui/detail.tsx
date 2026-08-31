@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { ToneDescriptor } from '@/lib/tone-map'
 import { TONE_TEXT } from '@/lib/tone-classes'
 import { cn } from '@/lib/cn'
+import { Truncated } from '@/components/ui/truncated'
 import { InfoHint } from './info-hint'
 import type { GlossaryTerm } from '@/lib/glossary'
 
@@ -41,9 +42,9 @@ export function Row({ label, value, mono = false }: {
   return (
     <div className="flex min-h-8 items-center justify-between gap-4 border-b border-border py-1.5 last:border-0">
       <span className="shrink-0 text-base text-ink-muted">{label}</span>
-      <span className={cn('min-w-0 truncate text-right text-base text-ink', mono && 'font-mono text-sm')}>
+      <Truncated className={cn('text-right text-base text-ink', mono && 'font-mono text-sm')}>
         {value}
-      </span>
+      </Truncated>
     </div>
   )
 }

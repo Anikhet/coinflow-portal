@@ -1,4 +1,5 @@
 import { X } from 'lucide-react'
+import { Truncated } from '@/components/ui/truncated'
 
 /**
  * FILTER CHIP
@@ -46,7 +47,7 @@ export function FilterChip({ field, value, onRemove }: {
         <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.06em] text-ink-faint">
           {field}
         </span>
-        <span className="min-w-0 max-w-[200px] truncate text-sm text-ink">{value}</span>
+        <Truncated className="max-w-[200px] text-sm text-ink">{value}</Truncated>
       </span>
       <button
         type="button"

@@ -1,6 +1,6 @@
 import { CopyButton } from '@/components/ui/copy-button'
+import { Truncated } from '@/components/ui/truncated'
 import { StatusPill, AttributePill } from '@/components/ui/status-pill'
-import { Tooltip } from '@/components/ui/tooltip'
 import { formatCurrency, truncateId } from '@/lib/format'
 import type { ToneDescriptor } from '@/lib/tone-map'
 import { cn } from '@/lib/cn'
@@ -17,11 +17,9 @@ import type { ReactNode } from 'react'
 export function IdCell({ value, display }: { value: string; display?: string }) {
   return (
     <span className="flex items-center gap-1">
-      <Tooltip content={value}>
-        <span className="truncate font-mono text-sm text-ink-muted">
-          {display ?? truncateId(value)}
-        </span>
-      </Tooltip>
+      <Truncated always title={value} className="font-mono text-sm text-ink-muted">
+        {display ?? truncateId(value)}
+      </Truncated>
       <CopyButton value={value} label="Copy ID" />
     </span>
   )
@@ -68,7 +66,7 @@ export function IdentityCell({ glyph, label, sublabel }: {
     // would sit a pixel off the processor column beside it.
     <span className="flex h-6 min-w-0 items-center gap-1.5">
       {glyph}
-      <span className="truncate text-sm text-ink">{label}</span>
+      <Truncated className="text-sm text-ink">{label}</Truncated>
       {sublabel && <span className="shrink-0 font-mono text-xs text-ink-faint">{sublabel}</span>}
     </span>
   )

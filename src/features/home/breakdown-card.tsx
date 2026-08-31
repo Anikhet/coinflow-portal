@@ -4,6 +4,7 @@ import { InfoHint } from '@/components/ui/info-hint'
 import type { GlossaryTerm } from '@/lib/glossary'
 import { formatCompactCurrency, formatCount, formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { Truncated } from '@/components/ui/truncated'
 
 /**
  * BREAKDOWN CARD
@@ -110,7 +111,7 @@ export function BreakdownCard({
                             {row.media}
                           </span>
                         )}
-                        <span className="min-w-0 truncate text-base text-ink">{row.label}</span>
+                        <Truncated className="text-base text-ink">{row.label}</Truncated>
                       </span>
                       <span className="flex shrink-0 items-baseline gap-2">
                         <span className="text-xs tabular-nums text-ink-faint">

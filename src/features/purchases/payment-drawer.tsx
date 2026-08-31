@@ -18,6 +18,7 @@ import { useUiStore } from '@/stores/ui-store'
 import { fetchPayment } from '@/mocks/api'
 import { attemptOutcomeTone, paymentStatusTone, protectionTone } from '@/lib/tone-map'
 import { formatCurrency, formatDateTime, truncateId } from '@/lib/format'
+import { Truncated } from '@/components/ui/truncated'
 import { MethodGlyph, ProcessorGlyph } from '@/components/icons/method-icon'
 import { Avatar } from '@/components/ui/avatar'
 import { IssuerMark } from '@/components/ui/issuer-mark'
@@ -137,7 +138,7 @@ function PaymentDrawerContent({ payment, onViewCustomer }: {
               smallest that reads as grouping rather than as loose spacing. */}
           <div className="group/row mt-1.5 flex items-center gap-3">
             <span className="flex min-w-0 items-center gap-1">
-              <span className="truncate font-mono text-sm text-ink-faint">{truncateId(payment.id, 12, 8)}</span>
+              <Truncated always title={payment.id} className="font-mono text-sm text-ink-faint">{truncateId(payment.id, 12, 8)}</Truncated>
               <CopyButton value={payment.id} label="Copy payment ID" />
             </span>
             <span className="shrink-0 text-sm text-ink-muted">
@@ -316,7 +317,7 @@ function ChainRow({ label, value }: { label: string; value: string }) {
     <div className="group/row flex items-center justify-between gap-3">
       <span className="shrink-0 text-base text-ink-muted">{label}</span>
       <span className="flex min-w-0 items-center gap-1">
-        <span className="truncate font-mono text-sm text-ink">{truncateId(value, 10, 8)}</span>
+        <Truncated always title={value} className="font-mono text-sm text-ink">{truncateId(value, 10, 8)}</Truncated>
         <CopyButton value={value} label={`Copy ${label}`} />
       </span>
     </div>
@@ -366,9 +367,9 @@ function RoutingTab({ payment }: { payment: Payment }) {
               >
                 <span className="w-4 shrink-0 text-center font-mono text-xs text-ink-faint">{index + 1}</span>
                 <ProcessorGlyph processor={attempt.processor} />
-                <span className="min-w-0 flex-1 truncate text-base font-medium text-ink">
+                <Truncated className="flex-1 text-base font-medium text-ink">
                   {processorLabel(attempt.processor)}
-                </span>
+                </Truncated>
                 {/*
                   Only a hop that FAILED is badged. A green "Succeeded" on the
                   one row of a one-row chain is the base rate wearing the colour
@@ -455,7 +456,7 @@ function FeesTab({ payment }: { payment: Payment }) {
                 )}
               >
                 <div className="min-w-0">
-                  <p className="truncate text-base text-ink">{fee.label}</p>
+                  <Truncated className="block text-base text-ink">{fee.label}</Truncated>
                   {splitWithCustomer && (
                     <p className="text-xs text-ink-faint">
                       Merchant {formatCurrency(fee.paidByMerchant)} · Customer {formatCurrency(fee.paidByCustomer)}

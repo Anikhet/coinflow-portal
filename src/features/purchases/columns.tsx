@@ -9,6 +9,7 @@ import { formatTableTime, formatDateTime, truncateId } from '@/lib/format'
 import { Avatar } from '@/components/ui/avatar'
 import { Tooltip } from '@/components/ui/tooltip'
 import { CopyButton } from '@/components/ui/copy-button'
+import { Truncated } from '@/components/ui/truncated'
 import type { Timezone } from '@/stores/ui-store'
 
 /**
@@ -64,7 +65,7 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       cell: ({ row }) => (
         <span className="flex min-w-0 items-center gap-1.5">
           <Avatar name={row.original.merchant} size={18} />
-          <span className="truncate text-ink">{row.original.merchant}</span>
+          <Truncated className="text-ink">{row.original.merchant}</Truncated>
           <CopyButton value={row.original.merchant} label="Copy merchant" />
         </span>
       ),
@@ -122,10 +123,13 @@ export function buildPaymentColumns(timezone: Timezone): ColumnDef<Payment, unkn
       size: 220,
       meta: { label: 'Customer' },
       cell: ({ row }) => (
-        <span className="min-w-0 truncate">
-          <span className="truncate font-medium text-ink">{row.original.customerName}</span>
-          <span className="ml-1.5 truncate text-sm text-ink-faint">{row.original.customerEmail}</span>
-        </span>
+        /* Name and email share one line and one ellipsis, so the tooltip has
+           to carry BOTH — showing only the clipped email would hide which
+           half was cut. */
+        <Truncated title={`${row.original.customerName} · ${row.original.customerEmail}`}>
+          <span className="font-medium text-ink">{row.original.customerName}</span>
+          <span className="ml-1.5 text-sm text-ink-faint">{row.original.customerEmail}</span>
+        </Truncated>
       ),
     },
     {

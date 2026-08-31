@@ -4,6 +4,7 @@ import { AmountCell, AttributeCell } from '@/components/table/cells'
 import { AttributePill } from '@/components/ui/status-pill'
 import { Avatar } from '@/components/ui/avatar'
 import { CopyButton } from '@/components/ui/copy-button'
+import { Truncated } from '@/components/ui/truncated'
 import { Tooltip } from '@/components/ui/tooltip'
 import {
   customerProtectionTone, blockedTone, threeDSProcessingTone,
@@ -60,7 +61,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       meta: { label: 'Merchant' },
       cell: ({ row }) => (
         <span className="flex items-center gap-1">
-          <span className="truncate text-ink">{row.original.merchant}</span>
+          <Truncated className="text-ink">{row.original.merchant}</Truncated>
           <CopyButton value={row.original.merchant} label="Copy merchant" />
         </span>
       ),
@@ -74,7 +75,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       cell: ({ row }) => (
         <span className="flex min-w-0 items-center gap-2">
           <Avatar name={row.original.name} size={24} className="rounded-full" />
-          <span className="truncate font-medium text-ink">{row.original.name}</span>
+          <Truncated className="font-medium text-ink">{row.original.name}</Truncated>
         </span>
       ),
     },
@@ -86,9 +87,7 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       meta: { label: 'Email' },
       cell: ({ row }) => (
         <span className="flex items-center gap-1">
-          <Tooltip content={row.original.email}>
-            <span className="truncate text-ink-muted">{row.original.email}</span>
-          </Tooltip>
+          <Truncated className="text-ink-muted">{row.original.email}</Truncated>
           <CopyButton value={row.original.email} label="Copy email" />
         </span>
       ),
