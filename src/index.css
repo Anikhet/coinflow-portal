@@ -349,7 +349,53 @@
   .animate-pulse-dot { animation: ledger-pulse 1.6s ease-in-out infinite; }
 }
 
-@keyframes sheet-slide {
-  from { transform: translateX(16px); opacity: 0; }
-  to   { transform: none; opacity: 1; }
+/* -- drawer transitions -----------------------------------------------------
+   The panel travels its own full width, so it reads as a surface arriving from
+   off-screen rather than a card materialising in place. Transform and opacity
+   only: the drawer is `position: fixed`, but animating width or right would
+   still force layout on every frame.
+
+   Exit is shorter than entry (200ms vs 300ms) and accelerates rather than
+   decelerates. Entry decelerates because the panel is arriving somewhere and
+   should settle; exit accelerates because the user has already decided to
+   dismiss it, and waiting out a leisurely departure reads as lag.
+
+   The exit curve is a moderate accelerate, not a steep one. A steeper ease-in
+   (0.5, 0, 0.75, 0) covered only 80 of 600px in the first two thirds of its
+   own duration, which reads as the drawer hanging and then snapping away —
+   worse than no animation. Radix keeps the node mounted while a
+   `[data-state=closed]` animation runs, which is what makes an exit possible
+   at all. */
+
+@keyframes sheet-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes sheet-out {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.sheet-panel[data-state="open"]   { animation: sheet-in 0.30s cubic-bezier(0.16, 1, 0.3, 1); }
+.sheet-panel[data-state="closed"] { animation: sheet-out 0.20s cubic-bezier(0.4, 0, 1, 1); }
+.sheet-overlay[data-state="open"]   { animation: overlay-in 0.30s ease-out; }
+.sheet-overlay[data-state="closed"] { animation: overlay-out 0.18s ease-in; }
+
+/* A drawer sliding the full width of the viewport edge is exactly the motion
+   that triggers vestibular symptoms. Reduced-motion keeps the state change
+   legible with a short fade and no travel. */
+@media (prefers-reduced-motion: reduce) {
+  .sheet-panel[data-state="open"]   { animation: overlay-in 0.12s ease-out; }
+  .sheet-panel[data-state="closed"] { animation: overlay-out 0.12s ease-in; }
 }

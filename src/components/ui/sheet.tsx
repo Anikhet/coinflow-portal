@@ -10,8 +10,11 @@ import { cn } from '@/lib/cn'
  * tabbed with record paging — which forced operators to learn the product
  * twice. One shell, one mental model.
  *
- * Enter/exit animates transform + opacity only, never width, so opening the
- * drawer cannot reflow the table behind it.
+ * Enter and exit both animate (see `.sheet-panel` in index.css): the panel
+ * slides its full width in and back out, so it reads as a surface arriving from
+ * and returning to the edge rather than one that blinks out of existence when
+ * dismissed. Transform and opacity only, never width, so the table behind it
+ * never reflows.
  */
 
 interface SheetProps {
@@ -29,19 +32,16 @@ export function Sheet({ open, onOpenChange, children, size = 'md', label }: Shee
       <Dialog.Portal>
         <Dialog.Overlay
           className={cn(
-            'fixed inset-0 z-40 bg-black/25 backdrop-blur-[2px]',
-            'data-[state=open]:animate-in data-[state=open]:fade-in',
+            'sheet-overlay fixed inset-0 z-40 bg-black/25 backdrop-blur-[2px]',
           )}
-          style={{ animation: 'ledger-in 0.2s ease-out' }}
         />
         <Dialog.Content
           aria-label={label}
           className={cn(
-            'fixed inset-y-0 right-0 z-50 flex flex-col bg-surface shadow-2xl',
+            'sheet-panel fixed inset-y-0 right-0 z-50 flex flex-col bg-surface shadow-2xl',
             'border-l border-border outline-none',
             size === 'lg' ? 'w-full max-w-[680px]' : 'w-full max-w-[600px]',
           )}
-          style={{ animation: 'sheet-slide 0.28s cubic-bezier(0.16, 1, 0.3, 1)' }}
         >
           {children}
         </Dialog.Content>
