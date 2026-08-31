@@ -35,7 +35,7 @@ export function AppShell({ children }: { children: ReactNode }) {
  * Page header. Height is fixed so the sticky table header below it can be
  * offset by a constant, and so switching pages never nudges content vertically.
  *
- * Title and description share one baseline, and the horizontal gutter is the
+ * Title and description share one baseline on a single line, and the gutter is the
  * same 16px used by the toolbar, the paginator and the outer table cells, so
  * every band of chrome starts on one vertical rule.
  */
@@ -45,14 +45,11 @@ export function PageHeader({ title, description, actions }: {
   actions?: ReactNode
 }) {
   return (
-    <header className="z-20 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-canvas px-4">
-      <div className="flex min-w-0 flex-1 items-baseline gap-2">
-        <h1 className="shrink-0 text-base font-semibold leading-none tracking-tight text-ink">{title}</h1>
-        {/* Description shares the title's baseline instead of stacking under
-            it. Two lines forced a 64px band for text carrying almost no
-            information; on one line the chrome costs 48px. */}
+    <header className="z-20 flex h-14 shrink-0 items-center gap-3 border-b border-border bg-canvas px-4">
+      <div className="flex min-w-0 flex-1 items-baseline gap-2.5">
+        <h1 className="shrink-0 text-lg font-semibold tracking-tight text-ink">{title}</h1>
         {description && (
-          <p className="truncate text-sm leading-none text-ink-muted">{description}</p>
+          <p className="truncate text-sm text-ink-muted">{description}</p>
         )}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
