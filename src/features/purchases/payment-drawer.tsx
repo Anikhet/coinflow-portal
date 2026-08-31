@@ -1,7 +1,8 @@
 import {
   ArrowUpRight, ExternalLink, Flag, Undo2, User, X,
 } from 'lucide-react'
-import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
+import { SheetClose, SheetTitle } from '@/components/ui/sheet'
+import { RecordSheet } from '@/components/ui/record-sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Pill } from '@/components/ui/pill'
 import { StatusPill, AttributePill } from '@/components/ui/status-pill'
@@ -10,12 +11,10 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { CopyButton } from '@/components/ui/copy-button'
 import { CardVisual } from '@/components/ui/card-visual'
 import { Callout, Fact, FactGrid, Row, Section } from '@/components/ui/detail'
-import { DrawerSkeleton, DRAWER_HEADER_CLASS } from '@/components/ui/drawer-chrome'
+import { DrawerSkeleton, DrawerSkeletonHeading, DRAWER_HEADER_CLASS } from '@/components/ui/drawer-chrome'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RecordUnavailable } from '@/components/ui/record-unavailable'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { useUiStore } from '@/stores/ui-store'
-import { useAsync } from '@/hooks/use-async'
 import { fetchPayment } from '@/mocks/api'
 import { attemptOutcomeTone, paymentStatusTone, protectionTone } from '@/lib/tone-map'
 import { formatCurrency, formatDateTime, truncateId } from '@/lib/format'
@@ -50,30 +49,29 @@ import { cn } from '@/lib/cn'
 
 export function PaymentDrawer() {
   const paymentId = useDrawerStore((state) => state.paymentId)
-  const closeAll = useDrawerStore((state) => state.closeAll)
   const openCustomer = useDrawerStore((state) => state.openCustomer)
 
-  const { data: payment, loading, error, reload } = useAsync(
-    () => (paymentId ? fetchPayment(paymentId) : Promise.resolve(null)),
-    [paymentId],
-  )
-
   return (
-    <Sheet open={paymentId != null} onOpenChange={(open) => !open && closeAll()} label="Payment detail">
-      {loading ? (
-        <PaymentDrawerSkeleton />
-      ) : !payment ? (
-        <RecordUnavailable entity="payment" error={error} onRetry={reload} />
-      ) : (
-        <PaymentDrawerContent payment={payment} onViewCustomer={() => openCustomer(payment.customerId)} />
+    <RecordSheet
+      recordId={paymentId}
+      entity="payment"
+      label="Payment detail"
+      fetchRecord={fetchPayment}
+      skeleton={<PaymentDrawerSkeleton />}
+    >
+      {(payment) => (
+        <PaymentDrawerContent
+          payment={payment}
+          onViewCustomer={() => openCustomer(payment.customerId)}
+        />
       )}
-    </Sheet>
+    </RecordSheet>
   )
 }
 
 function PaymentDrawerSkeleton() {
   return (
-    <DrawerSkeleton>
+    <DrawerSkeleton header={<DrawerSkeletonHeading titleClassName="h-7 w-32" />}>
       {/* Card art is pinned to the real ISO/IEC 7810 ratio, so it reserves the
           exact box the rendered card will occupy. */}
       <Skeleton className="w-full rounded-[14px]" style={{ aspectRatio: '1.586' }} />

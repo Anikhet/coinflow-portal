@@ -7,21 +7,20 @@ import { VerificationTab } from './tabs/verification-tab'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { CopyButton } from '@/components/ui/copy-button'
-import { DRAWER_HEADER_CLASS, DrawerSkeleton } from '@/components/ui/drawer-chrome'
+import { DRAWER_HEADER_CLASS, DrawerSkeleton, DrawerSkeletonHeading } from '@/components/ui/drawer-chrome'
 import { Dropdown, DropdownContent, DropdownItem, DropdownTrigger } from '@/components/ui/dropdown'
-import { RecordUnavailable } from '@/components/ui/record-unavailable'
-import { Sheet, SheetClose, SheetTitle } from '@/components/ui/sheet'
+import { RecordSheet } from '@/components/ui/record-sheet'
+import { RecordStepper } from '@/components/ui/record-stepper'
+import { SheetClose, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusPill } from '@/components/ui/status-pill'
 import { TabCount, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Tooltip } from '@/components/ui/tooltip'
-import { useAsync } from '@/hooks/use-async'
 import { truncateId } from '@/lib/format'
 import { blockedTone, customerExceptions, kycTone } from '@/lib/tone-map'
 import { fetchCustomer } from '@/mocks/api'
 import { useDrawerStore } from '@/stores/drawer-store'
 import type { Customer } from '@/types'
-import { Ban, ChevronDown, ChevronLeft, ChevronRight, Download, Flag, ShieldCheck, X } from 'lucide-react'
+import { Ban, ChevronDown, Download, Flag, ShieldCheck, X } from 'lucide-react'
 
 /**
  * CUSTOMER DRAWER
@@ -38,34 +37,31 @@ import { Ban, ChevronDown, ChevronLeft, ChevronRight, Download, Flag, ShieldChec
 
 export function CustomerDrawer() {
   const customerId = useDrawerStore((state) => state.customerId)
-  const closeAll = useDrawerStore((state) => state.closeAll)
-
-  const { data: customer, loading, error, reload } = useAsync(
-    () => (customerId ? fetchCustomer(customerId) : Promise.resolve(null)),
-    [customerId],
-  )
 
   return (
-    <Sheet
-      open={customerId != null}
-      onOpenChange={(open) => !open && closeAll()}
-      size="lg"
+    <RecordSheet
+      recordId={customerId}
+      entity="customer"
       label="Customer detail"
+      size="lg"
+      fetchRecord={fetchCustomer}
+      skeleton={<CustomerDrawerSkeleton />}
     >
-      {loading ? (
-        <CustomerDrawerSkeleton />
-      ) : !customer ? (
-        <RecordUnavailable entity="customer" error={error} onRetry={reload} />
-      ) : (
-        <CustomerDrawerContent customer={customer} />
-      )}
-    </Sheet>
+      {(customer) => <CustomerDrawerContent customer={customer} />}
+    </RecordSheet>
   )
 }
 
 function CustomerDrawerSkeleton() {
   return (
-    <DrawerSkeleton avatar>
+    <DrawerSkeleton
+      header={
+        <>
+          <Skeleton className="size-10 shrink-0 rounded-full" />
+          <DrawerSkeletonHeading titleClassName="h-5 w-40" />
+        </>
+      }
+    >
       {/* Two 87px fact cards — the measured height of the Overview tab's
           lifetime grid, not a rounded guess. */}
       <div className="grid grid-cols-2 gap-2">
@@ -78,14 +74,6 @@ function CustomerDrawerSkeleton() {
 }
 
 function CustomerDrawerContent({ customer }: { customer: Customer }) {
-  const recordIds = useDrawerStore((state) => state.recordIds)
-  const step = useDrawerStore((state) => state.step)
-  const index = recordIds.indexOf(customer.id)
-  const hasPrevious = index > 0
-  const hasNext = index !== -1 && index < recordIds.length - 1
-  const onPrevious = () => step(-1)
-  const onNext = () => step(1)
-
   const kyc = kycTone(customer.kyc)
   const exceptions = customerExceptions(customer)
 
@@ -115,36 +103,10 @@ function CustomerDrawerContent({ customer }: { customer: Customer }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5">
-          {/* Step through records without returning to the table — production
-              has this, and triaging a risk queue is exactly the case it serves.
-              Disabled at the ends rather than hidden, so the control does not
-              appear and disappear as you page. */}
-          <Tooltip content="Previous customer">
-            <span>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Previous customer"
-                disabled={!hasPrevious}
-                onClick={onPrevious}
-              >
-                <ChevronLeft />
-              </Button>
-            </span>
-          </Tooltip>
-          <Tooltip content="Next customer">
-            <span>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Next customer"
-                disabled={!hasNext}
-                onClick={onNext}
-              >
-                <ChevronRight />
-              </Button>
-            </span>
-          </Tooltip>
+          {/* Step through records without returning to the table —
+              production has this, and triaging a risk queue is exactly the
+              case it serves. */}
+          <RecordStepper recordId={customer.id} entity="customer" />
 
           <Dropdown>
             <DropdownTrigger asChild>

@@ -30,21 +30,25 @@ const DRAWER_TABS_HEIGHT = 41
  * Loading state for a drawer. Renders the exact chrome boxes the loaded drawer
  * will occupy, so resolving the record swaps content in without moving
  * anything.
+ *
+ * The header is a SLOT rather than a shape selected by an `avatar` flag. The
+ * two drawers lead with genuinely different things — a round avatar beside a
+ * short name, versus a tall amount with no mark — and a boolean that swaps both
+ * the mark and the title's dimensions is two components wearing one name. What
+ * must stay shared is the CHROME (the 88px header box, the 41px tab strip),
+ * and that is what this frame owns; what goes inside the header is the caller's
+ * business.
  */
-export function DrawerSkeleton({ avatar = false, children }: {
-  /** Customer drawer leads with a round avatar; payment drawer leads with text. */
-  avatar?: boolean
+export function DrawerSkeleton({ header, children }: {
+  /** Placeholders for this drawer's own header content. */
+  header: ReactNode
   /** Body placeholders, sized by the caller to match that drawer's first tab. */
   children: ReactNode
 }) {
   return (
     <div className="flex h-full flex-col">
       <div className={DRAWER_HEADER_CLASS}>
-        {avatar && <Skeleton className="size-10 shrink-0 rounded-full" />}
-        <div className="flex-1 space-y-2">
-          <Skeleton className={avatar ? 'h-5 w-40' : 'h-7 w-32'} />
-          <Skeleton className="h-3 w-56" />
-        </div>
+        {header}
         <Skeleton className="size-8 shrink-0 rounded-[8px]" />
       </div>
 
@@ -59,6 +63,16 @@ export function DrawerSkeleton({ avatar = false, children }: {
       </div>
 
       <div className="flex-1 space-y-3 p-5">{children}</div>
+    </div>
+  )
+}
+
+/** Title-and-subtitle placeholder stack, shared by both drawer headers. */
+export function DrawerSkeletonHeading({ titleClassName }: { titleClassName: string }) {
+  return (
+    <div className="flex-1 space-y-2">
+      <Skeleton className={titleClassName} />
+      <Skeleton className="h-3 w-56" />
     </div>
   )
 }

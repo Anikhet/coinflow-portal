@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Store, TriangleAlert } from 'lucide-react'
 import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { DataTable } from '@/components/table/data-table'
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { fetchCustomers, listFilterOptions } from '@/mocks/api'
 import { useAsync } from '@/hooks/use-async'
 import { useDebounced } from '@/hooks/use-debounced'
+import { usePublishedRecordIds } from '@/hooks/use-published-record-ids'
 import { useUiStore } from '@/stores/ui-store'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { TableViewProvider, useTableView } from '@/stores/table-view-context'
@@ -55,8 +56,6 @@ function CustomersView() {
   const merchants = filters.merchant ?? []
   const merchantKey = merchants.join(',')
 
-  const setRecordIds = useDrawerStore((state) => state.setRecordIds)
-
   const { data, loading, error, reload } = useAsync(
     () => fetchCustomers({
       search: debouncedSearch,
@@ -70,13 +69,7 @@ function CustomersView() {
     [debouncedSearch, merchantKey, riskOnly, sortBy, sortDir, page, pageSize],
   )
 
-  // Publish the page's row ids so the drawer's prev/next steps through exactly
-  // what the operator is looking at — the current filter and sort, not the
-  // whole corpus.
-  const rowIds = data?.rows.map((customer) => customer.id).join(',') ?? ''
-  useEffect(() => {
-    setRecordIds(rowIds ? rowIds.split(',') : [])
-  }, [rowIds, setRecordIds])
+  usePublishedRecordIds(data?.rows.map((customer) => customer.id).join(',') ?? '')
 
   const columns = useMemo(() => buildCustomerColumns(timezone), [timezone])
   const options = useMemo(() => listFilterOptions(), [])
