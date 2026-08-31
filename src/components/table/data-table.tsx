@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useUiStore, ROW_HEIGHT } from '@/stores/ui-store'
 import { useTableView } from '@/stores/table-view-context'
 import { Skeleton } from '@/components/ui/skeleton'
+import { InfoHint } from '@/components/ui/info-hint'
 import { cn } from '@/lib/cn'
 import type { ReactNode } from 'react'
 
@@ -119,7 +120,7 @@ export function DataTable<T>({
     >
       <table
         style={{ minWidth: minTableWidth }}
-        className="w-full border-separate border-spacing-0 text-[13px]"
+        className="w-full border-separate border-spacing-0 text-base"
       >
         {/*
           LAYERING
@@ -140,6 +141,7 @@ export function DataTable<T>({
               {headerGroup.headers.map((header, index) => {
                 const canSort = header.column.columnDef.enableSorting !== false
                 const isSorted = sortBy === header.column.id
+                const meta = header.column.columnDef.meta
 
                 return (
                   <th
@@ -148,7 +150,7 @@ export function DataTable<T>({
                     style={{ width: header.getSize() }}
                     className={cn(
                       'h-9 border-b border-border bg-canvas px-3 text-left align-middle',
-                      'text-[11px] font-semibold uppercase tracking-[0.04em] text-ink-faint',
+                      'text-xs font-semibold uppercase tracking-[0.04em] text-ink-faint',
                       // Headers never wrap. A two-line header makes its row
                       // taller than the 36px the header is sized for, so the
                       // sticky offset stops matching and the whole header band
@@ -188,6 +190,14 @@ export function DataTable<T>({
                       </button>
                     ) : (
                       flexRender(header.column.columnDef.header, header.getContext())
+                    )}
+                    {meta?.term && (
+                      <InfoHint
+                        term={meta.term}
+                        label={meta.label ?? header.column.id}
+                        side="bottom"
+                        className="ml-1"
+                      />
                     )}
                   </th>
                 )
@@ -253,7 +263,7 @@ export function DataTable<T>({
                         key={cell.id}
                         className={cn(
                           'max-w-0 truncate border-b border-border px-3 align-middle text-ink transition-colors',
-                              meta?.mono && 'font-mono text-[12px]',
+                              meta?.mono && 'font-mono text-sm',
                           cellIndex === 0 && 'sticky left-0 z-10',
                           cellIndex === 0 && isScrolled && PINNED_EDGE,
                         )}

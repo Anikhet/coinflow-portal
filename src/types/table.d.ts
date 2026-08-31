@@ -11,5 +11,10 @@ declare module '@tanstack/react-table' {
     mono?: boolean
     /** Human label for the column-visibility menu. */
     label?: string
+    /**
+     * Glossary key. When present the header renders an info hint — used for
+     * columns whose name is payments jargon rather than plain English.
+     */
+    term?: import('@/lib/glossary').GlossaryTerm
   }
 }
