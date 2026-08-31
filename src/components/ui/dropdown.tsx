@@ -105,8 +105,6 @@ export function DropdownCheckboxItem({ className, children, ...props }: Componen
   )
 }
 
-export const DropdownItemIndicator = DropdownPrimitive.ItemIndicator
-
 export function DropdownLabel({ className, ...props }: ComponentProps<typeof DropdownPrimitive.Label>) {
   return (
     <DropdownPrimitive.Label

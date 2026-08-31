@@ -1,5 +1,4 @@
 import { CopyButton } from '@/components/ui/copy-button'
-import { Pill } from '@/components/ui/pill'
 import { StatusPill, AttributePill } from '@/components/ui/status-pill'
 import { Tooltip } from '@/components/ui/tooltip'
 import { formatCurrency, truncateId } from '@/lib/format'
@@ -107,46 +106,4 @@ export function AttributeCell({ descriptor }: { descriptor: ToneDescriptor }) {
   // network actively refused. Nothing in the column told the operator which of
   // the two needed them. Now a refusal is tinted and the facts stay quiet.
   return <AttributePill descriptor={descriptor} />
-}
-
-/** Most severe first, so the one surfaced pill is always the worst one. */
-const SEVERITY_RANK = { critical: 0, caution: 1, info: 2, positive: 3, neutral: 4 } as const
-
-/**
- * Collapses many exception pills into a bounded display.
- *
- * A row can carry up to ten exceptions; rendering all of them would make the
- * row taller than its neighbours and break the fixed-height rule. Showing the
- * two most severe plus an overflow count keeps every row identical in height
- * while preserving the signal, with the full list on hover.
- */
-export function ExceptionsCell({ items }: { items: ToneDescriptor[] }) {
-  if (items.length === 0) {
-    return (
-      <span className="select-none text-ink-faint" title="No exceptions" aria-label="No exceptions">
-        <span aria-hidden>—</span>
-      </span>
-    )
-  }
-
-  // toSorted leaves the caller's array untouched; the ranking is module scope
-  // (SEVERITY_RANK) so it is not rebuilt for every rendered row.
-  const sorted = items.toSorted((a, b) => SEVERITY_RANK[a.tone] - SEVERITY_RANK[b.tone])
-  const [first, ...rest] = sorted
-
-  return (
-    <span className="flex items-center gap-1">
-      {/* The surfaced exception is an attribute like any other, so it renders
-          through the shared AttributePill rather than restating the severity
-          rule here — the drawer's exception chips use the same call. */}
-      <AttributePill descriptor={first} />
-      {rest.length > 0 && (
-        <Tooltip content={rest.map((item) => item.label).join(' · ')}>
-          <Pill tone="neutral" size="sm" className="cursor-default text-ink-faint">
-            +{rest.length}
-          </Pill>
-        </Tooltip>
-      )}
-    </span>
-  )
 }

@@ -162,20 +162,51 @@ export function activityTone(status: CustomerActivity['status']): ToneDescriptor
  * array — the row stays quiet — and only genuine exceptions surface. This is
  * the table-level expression of pill taxonomy rule 5.
  */
-export function customerExceptions(customer: Customer): ToneDescriptor[] {
-  const out: ToneDescriptor[] = []
+/**
+ * Exception wording, per control.
+ *
+ * The exceptions list needs a label that stands alone in a row of chips — a
+ * bare "Off" or "Not found" says nothing once it is lifted out of its column —
+ * so only the WORDING is restated here. The tone and the glyph still come from
+ * the control's own mapper below, which is what stops the two from drifting.
+ * They already had: this list drew fraud-override exceptions with a shield
+ * while the column beside it drew the same states with a tick and an octagon.
+ */
+const EXCEPTION_LABELS = {
+  protection: 'Unprotected',
+  threeDSProcessing: { degraded: '3DS degraded', off: '3DS off' },
+  attemptLimit: { restricted: 'Attempts restricted', elevated: 'Attempts elevated' },
+  verification: { 'not-found': 'Unverified' },
+  fraudOverride: { allow: 'Fraud allow', deny: 'Fraud deny' },
+} as const
 
-  // Glyphs reuse the same vocabulary as the columns they summarise: shields for
-  // protection, padlocks for 3DS, the gavel for disputes.
-  if (customer.blocked) out.push({ tone: 'critical', label: 'Blocked', icon: BanFilled })
-  if (!customer.protectionEnabled) out.push({ tone: 'caution', label: 'Unprotected', icon: ShieldOffFilled })
-  if (customer.threeDSProcessing === 'degraded') out.push({ tone: 'caution', label: '3DS degraded', icon: LockOpenFilled })
-  if (customer.threeDSProcessing === 'off') out.push({ tone: 'critical', label: '3DS off', icon: UnlockFilled })
-  if (customer.attemptLimit === 'restricted') out.push({ tone: 'caution', label: 'Attempts restricted', icon: HandOffFilled })
-  if (customer.attemptLimit === 'elevated') out.push({ tone: 'info', label: 'Attempts elevated', icon: TrendingUpFilled })
-  if (customer.verification === 'not-found') out.push({ tone: 'caution', label: 'Unverified', icon: UserOffFilled })
-  if (customer.fraudOverride === 'allow') out.push({ tone: 'info', label: 'Fraud allow', icon: ShieldCheckFilled })
-  if (customer.fraudOverride === 'deny') out.push({ tone: 'critical', label: 'Fraud deny', icon: ShieldXFilled })
+/** Restates a descriptor's label while keeping its tone and glyph intact. */
+function relabel(descriptor: ToneDescriptor, label: string | undefined): ToneDescriptor {
+  return label ? { ...descriptor, label } : descriptor
+}
+
+export function customerExceptions(customer: Customer): ToneDescriptor[] {
+  const { threeDSProcessing, attemptLimit, verification, fraudOverride } = customer
+
+  // Every candidate is produced by the same mapper that renders that control's
+  // own column, so a chip here and the cell it summarises can never disagree
+  // about colour or glyph. `isDefault` — already the registry's word for "this
+  // value is the boring one" — is exactly the test for whether something is an
+  // exception, so the filter needs no second list of which states count.
+  const candidates: ToneDescriptor[] = [
+    blockedTone(customer.blocked),
+    relabel(customerProtectionTone(customer.protectionEnabled), EXCEPTION_LABELS.protection),
+    relabel(threeDSProcessingTone(threeDSProcessing), EXCEPTION_LABELS.threeDSProcessing[threeDSProcessing as 'degraded' | 'off']),
+    relabel(attemptLimitTone(attemptLimit), EXCEPTION_LABELS.attemptLimit[attemptLimit as 'restricted' | 'elevated']),
+    relabel(verificationTone(verification), EXCEPTION_LABELS.verification[verification as 'not-found']),
+    relabel(fraudOverrideTone(fraudOverride), EXCEPTION_LABELS.fraudOverride[fraudOverride as 'allow' | 'deny']),
+  ]
+
+  const out = candidates.filter((descriptor) => !descriptor.isDefault)
+
+  // Disputes are a count, not a control, so there is no column mapper to
+  // borrow from — but the gavel and the critical tone are the same ones
+  // disputeStatusTone and the Chargebacks nav item use.
   if (customer.disputeCount > 0) {
     out.push({
       tone: 'critical',
@@ -312,33 +343,3 @@ export function signalCountTone(count: number, threshold: number): Tone {
   if (count > threshold) return 'caution'
   return 'neutral'
 }
-
-/**
- * Human labels for the customer control enums.
- *
- * The raw union values ('not-found', 'degraded') are storage identifiers, not
- * copy. Rendering them directly leaks the data model into the interface and
- * produces lowercase, hyphenated text next to properly written labels.
- */
-export const CONTROL_LABELS = {
-  threeDSProcessing: {
-    functional: 'Functional',
-    degraded: 'Degraded',
-    off: 'Off',
-  },
-  attemptLimit: {
-    standard: 'Standard',
-    restricted: 'Restricted',
-    elevated: 'Elevated',
-  },
-  verification: {
-    enforced: 'Enforced',
-    'not-found': 'Not found',
-    standard: 'Standard',
-  },
-  fraudOverride: {
-    standard: 'Standard',
-    allow: 'Always allow',
-    deny: 'Always deny',
-  },
-} as const
