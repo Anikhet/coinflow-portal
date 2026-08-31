@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { CircleDot, CreditCard, Route } from 'lucide-react'
+import { CircleDashed, CreditCard, Route } from 'lucide-react'
 import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { DataTable } from '@/components/table/data-table'
 import { TableToolbar, type FilterGroup } from '@/components/table/table-toolbar'
@@ -18,8 +18,8 @@ import { PaymentDrawer } from './payment-drawer'
 import { MethodGlyph, ProcessorGlyph } from '@/components/icons/method-icon'
 import { methodLabel, processorLabel } from '@/lib/method-labels'
 import { paymentStatusTone } from '@/lib/tone-map'
+import { StatusPill } from '@/components/ui/status-pill'
 import type { PaymentMethod, Processor, PaymentStatus } from '@/types/payment'
-import { TONE_TEXT } from '@/lib/tone-classes'
 import { cn } from '@/lib/cn'
 
 export function PurchasesPage() {
@@ -80,18 +80,27 @@ function PurchasesView() {
       {
         id: 'status',
         label: 'Status',
-        // A filled dot: the same mark the status column's own pills carry, so
-        // the control that picks a state wears the shape the state is drawn as.
-        icon: CircleDot,
-        // The menu and the table read from the same registry, so a status
-        // carries the identical glyph and wording in the filter that picks it
-        // and in the rows it returns.
+        // A dashed ring. Every status mark in the registry is circle-family —
+        // tick, cross, slash, clock, all set in a round body — so the control
+        // that picks a state stays in that family without wearing any one
+        // state's mark. CircleDot was the wrong kind of specific: a solid dot
+        // in a ring is the radio-button and record-button silhouette, so it
+        // read as "one option, selected" rather than "which state?". Breaking
+        // the ring says the slot is unfilled and waiting to be chosen.
+        icon: CircleDashed,
+        // Each row IS the pill the Status column draws — same component, same
+        // descriptor, straight from the registry. The menu previously rendered
+        // the descriptor's glyph beside plain grey text, which meant the
+        // control that picks "Settled" and the cell that reports it were two
+        // different objects for one meaning. Showing the pill makes the menu a
+        // legend for the column as well as a filter on it.
         options: options.statuses.map((status) => {
-          const { label, icon: Icon, tone } = paymentStatusTone(status as PaymentStatus)
+          const descriptor = paymentStatusTone(status as PaymentStatus)
           return {
             value: status,
-            label,
-            icon: Icon ? <Icon className={cn('size-3.5 shrink-0', TONE_TEXT[tone])} aria-hidden /> : undefined,
+            // Text, for the active-filter chips and the accessible name.
+            label: descriptor.label,
+            display: <StatusPill descriptor={descriptor} />,
           }
         }),
       },

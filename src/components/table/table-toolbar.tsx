@@ -38,8 +38,24 @@ export interface ColumnOption {
 
 export interface FilterOption {
   value: string
+  /** Plain text. Always required — the active-filter chips read this. */
   label: string
   icon?: ReactNode
+  /**
+   * Renders in place of the icon+label pair when the facet's values already
+   * have a canonical rendering elsewhere in the app.
+   *
+   * Status is the case that forced it. The menu drew a bare 14px glyph beside
+   * grey text while the column it filters draws the same value as a solid
+   * tinted pill, so the reader had to map "small green tick" onto "green
+   * SETTLED pill" themselves — two appearances for one meaning, which is the
+   * failure status-pill.tsx exists to prevent. Handing the row a StatusPill
+   * makes the thing you pick identical to the thing you get back.
+   *
+   * `label` stays required regardless: the chips below the toolbar and the
+   * accessible name are text, not pills.
+   */
+  display?: ReactNode
 }
 
 /**
@@ -185,14 +201,17 @@ export function TableToolbar({
                     }
                     onSelect={(event) => event.preventDefault()}
                   >
-                    {/* Fixed 20px slot: status filters supply 14px lucide
-                        glyphs while method/processor filters supply 20px brand
-                        marks, so without it the labels start at a different x
-                        in each menu. */}
-                    {option.icon && (
-                      <span className="grid size-5 shrink-0 place-items-center">{option.icon}</span>
+                    {option.display ?? (
+                      <>
+                        {/* Fixed 20px slot: method/processor filters supply
+                            20px brand marks and anything narrower would start
+                            its label at a different x. */}
+                        {option.icon && (
+                          <span className="grid size-5 shrink-0 place-items-center">{option.icon}</span>
+                        )}
+                        <span className="truncate">{option.label}</span>
+                      </>
                     )}
-                    <span className="truncate">{option.label}</span>
                   </DropdownCheckboxItem>
                 )
               })}
