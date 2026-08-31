@@ -134,8 +134,29 @@
      arbitrary value in the component, for the same reason the ramps are: a
      component is the wrong place to author a colour. Order matters — the glow
      is listed first because CSS paints the first background-image on top. */
+  /* The same light, re-aimed for a control. A button is wide and short, so the
+     circular chip highlight would sit as a visible blob in its middle; this
+     ellipse is anchored to the top-left corner and stretched past the right
+     edge, so the face reads as one lit surface instead of a spotlit dot. */
+  --gradient-glow-control: radial-gradient(120% 180% at 15% -20%, var(--gradient-sheen), transparent 62%);
+
+  /* -- glyph gradient -------------------------------------------------------
+     Stops for an empty-state glyph painted directly, with no container behind
+     it: saturated at the top, falling away to a light tint at the baseline, so
+     a large mark carries weight where the eye lands first and releases toward
+     the copy beneath it.
+
+     Declared as its own pair rather than reusing --brand → --brand-hover: that
+     ramp runs dark-to-darker, which on a 84px glyph reads as one flat colour.
+     The spread here is what makes the gradient visible at all. */
+  --glyph-from:        oklch(0.36 0.130 276);
+  --glyph-to:          oklch(0.66 0.105 276);
+  --glyph-critical-from: oklch(0.48 0.180 21);
+  --glyph-critical-to:   oklch(0.72 0.145 21);
+
   --mark-brand:        var(--gradient-glow), var(--gradient-brand);
   --mark-critical:     var(--gradient-glow), var(--gradient-critical);
+  --control-brand:     var(--gradient-glow-control), var(--gradient-brand);
 
   /* -- tones -------------------------------------------------------------- */
   --tone-positive-fg:   oklch(0.47 0.115 158);
@@ -165,25 +186,23 @@
   --tone-neutral-dot:   oklch(0.64 0.010 285);
 
   /* -- chart series -------------------------------------------------------
-     ONE HUE, STEPPED BY LIGHTNESS — not a categorical palette.
+     A categorical palette: one distinct hue per series, rendered as gradient
+     fills in the shadcn area-chart style.
 
-     A stacked chart shows one quantity split up, not independent series. Giving
-     each band its own hue implies a distinction that is not there, and at six
-     bands the rainbow becomes the loudest thing on the page — it competes with
-     the status colours that are supposed to be the only meaningful colour in
-     the product. This is the same argument the breakdown bars already follow.
-
-     Ordered dark-to-light, so the largest band (drawn first, at the base of the
-     stack) carries the most weight and the long tail fades out. Because every
-     step shares the brand hue, rank is readable from lightness alone. */
-  --chart-1: oklch(0.40 0.170 285);
-  --chart-2: oklch(0.49 0.170 285);
-  --chart-3: oklch(0.58 0.155 285);
-  --chart-4: oklch(0.66 0.130 285);
-  --chart-5: oklch(0.74 0.100 285);
-  --chart-6: oklch(0.81 0.070 285);
-  --chart-7: oklch(0.87 0.045 285);
-  --chart-8: oklch(0.92 0.028 285);
+     Hues are spaced around the wheel for separation rather than run through a
+     single ramp. The SAME nine hues are used in both themes — only lightness
+     and chroma change — so a series never changes colour when the theme does,
+     which would otherwise break the reader's association between a legend
+     swatch and a band. */
+  --chart-1: oklch(0.52 0.155 230);
+  --chart-2: oklch(0.55 0.150 145);
+  --chart-3: oklch(0.50 0.195 305);
+  --chart-4: oklch(0.62 0.150 55);
+  --chart-5: oklch(0.56 0.105 200);
+  --chart-6: oklch(0.55 0.190 355);
+  --chart-7: oklch(0.60 0.140 105);
+  --chart-8: oklch(0.50 0.160 330);
+  --chart-9: oklch(0.57 0.115 175);
   --chart-grid: oklch(0.92 0.004 285);
   /* -- identity avatars ----------------------------------------------------
      A merchant chip's HUE comes from its name (see lib/avatar.ts); the
@@ -218,6 +237,10 @@
     --brand:          oklch(0.88 0.095 163);
     --brand-hover:    oklch(0.93 0.085 163);
     --brand-soft:     oklch(0.30 0.055 276);
+    --glyph-from:     oklch(0.90 0.095 163);
+    --glyph-to:       oklch(0.62 0.095 163);
+    --glyph-critical-from: oklch(0.82 0.140 21);
+    --glyph-critical-to:   oklch(0.60 0.160 21);
     --brand-ring:     oklch(0.88 0.095 163 / 0.40);
     --brand-contrast: oklch(0.22 0.050 276);
     /* The dark-mode chip is MINT (L 0.88), not navy. A white highlight at 0.20
@@ -256,16 +279,21 @@
     --tone-neutral-ring:  oklch(0.755 0.010 285 / 0.20);
     --tone-neutral-dot:   oklch(0.62 0.010 285);
 
-    /* Same ramp inverted: on midnight the base band is the lightest, so the
-       stack still reads heaviest at the bottom. */
-    --chart-1: oklch(0.80 0.145 285);
-    --chart-2: oklch(0.72 0.155 285);
-    --chart-3: oklch(0.64 0.155 285);
-    --chart-4: oklch(0.56 0.145 285);
-    --chart-5: oklch(0.49 0.130 285);
-    --chart-6: oklch(0.43 0.110 285);
-    --chart-7: oklch(0.38 0.085 285);
-    --chart-8: oklch(0.34 0.065 285);
+    /* Same hues, re-stepped for midnight — NOT the light ramp inverted. Each
+       step is lifted and de-saturated just enough to clear 3:1 against the dark
+       card while staying inside the lightness band where hues remain separable;
+       flipping the light values instead would push half the palette into a
+       muddy near-black where blue, violet and plum converge. Re-validated
+       against the dark surface, same checks as above. */
+    --chart-1: oklch(0.62 0.120 230);
+    --chart-2: oklch(0.66 0.160 145);
+    --chart-3: oklch(0.60 0.190 305);
+    --chart-4: oklch(0.66 0.160 55);
+    --chart-5: oklch(0.66 0.105 200);
+    --chart-6: oklch(0.55 0.190 355);
+    --chart-7: oklch(0.66 0.140 105);
+    --chart-8: oklch(0.58 0.150 330);
+    --chart-9: oklch(0.67 0.115 175);
     --chart-grid: oklch(0.278 0.011 285);
     /* Inverted for midnight: deep tint carrying light text. */
     --avatar-bg-l: 0.315;
@@ -292,6 +320,10 @@
   --brand:          oklch(0.88 0.095 163);
   --brand-hover:    oklch(0.93 0.085 163);
   --brand-soft:     oklch(0.30 0.055 276);
+  --glyph-from:     oklch(0.90 0.095 163);
+  --glyph-to:       oklch(0.62 0.095 163);
+  --glyph-critical-from: oklch(0.82 0.140 21);
+  --glyph-critical-to:   oklch(0.60 0.160 21);
   --brand-ring:     oklch(0.88 0.095 163 / 0.40);
   --brand-contrast: oklch(0.22 0.050 276);
   --accent:         oklch(0.910 0.091 163);
@@ -324,14 +356,15 @@
   --tone-neutral-ring:  oklch(0.755 0.010 285 / 0.20);
   --tone-neutral-dot:   oklch(0.62 0.010 285);
 
-  --chart-1: oklch(0.80 0.145 285);
-  --chart-2: oklch(0.72 0.155 285);
-  --chart-3: oklch(0.64 0.155 285);
-  --chart-4: oklch(0.56 0.145 285);
-  --chart-5: oklch(0.49 0.130 285);
-  --chart-6: oklch(0.43 0.110 285);
-  --chart-7: oklch(0.38 0.085 285);
-  --chart-8: oklch(0.34 0.065 285);
+  --chart-1: oklch(0.62 0.120 230);
+  --chart-2: oklch(0.66 0.160 145);
+  --chart-3: oklch(0.60 0.190 305);
+  --chart-4: oklch(0.66 0.160 55);
+  --chart-5: oklch(0.66 0.105 200);
+  --chart-6: oklch(0.55 0.190 355);
+  --chart-7: oklch(0.66 0.140 105);
+  --chart-8: oklch(0.58 0.150 330);
+  --chart-9: oklch(0.67 0.115 175);
   --chart-grid: oklch(0.278 0.011 285);
   /* Inverted for midnight: deep tint carrying light text. */
   --avatar-bg-l: 0.315;
@@ -378,6 +411,43 @@
   /* Currency and IDs must never reflow when digits change width. */
   .tnum { font-variant-numeric: tabular-nums; }
 
+  /* POINTER AFFORDANCE
+     -------------------------------------------------------------------------
+     Browsers give <button> a default arrow cursor, so without this rule the
+     only controls that look clickable are the ones that happen to be anchors.
+     Declared once, on the roles that actually take a click, rather than as a
+     `cursor-pointer` utility repeated on every control — a control that forgets
+     the utility is invisible in review, whereas this cannot be forgotten.
+
+     Selected by ROLE, not by tag alone: an icon-only tooltip trigger, a menu
+     item and a clickable table row are all divs or buttons carrying a role, and
+     every one of them needs the same affordance.
+
+     `:where()` keeps the whole rule at zero specificity, so any Tailwind cursor
+     utility (`cursor-default`, `cursor-not-allowed`) still overrides it without
+     needing `!important`. */
+  :where(
+    button, summary, label[for], select,
+    a[href], [role="button"], [role="link"], [role="tab"],
+    [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"],
+    [role="option"], [role="switch"],
+    input[type="checkbox"], input[type="radio"], input[type="file"]
+  ) {
+    cursor: pointer;
+  }
+
+  /* An inert control must not promise a click it will not honour. */
+  :where(button, select, input):disabled,
+  :where([aria-disabled="true"]) {
+    cursor: not-allowed;
+  }
+
+  /* Text entry keeps its I-beam — the rule above would otherwise catch a
+     <label for> wrapping an input and hand the field a pointer. */
+  :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea) {
+    cursor: auto;
+  }
+
   :focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
@@ -407,6 +477,21 @@
     50%      { opacity: 0.35; }
   }
   .animate-pulse-dot { animation: ledger-pulse 1.6s ease-in-out infinite; }
+
+  /* Tab panels get a slower, softer entry than `animate-in-up`. A tab switch
+     replaces a whole panel of content, so the eye needs longer to re-acquire
+     it than a single row arriving does — 0.36s decelerating reads as the panel
+     settling, where 0.24s reads as a flicker. Transform/opacity only, and the
+     travel is small (6px) so nothing appears to jump. */
+  @keyframes tab-panel-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .animate-tab-panel { animation: tab-panel-in 0.36s cubic-bezier(0.16, 1, 0.3, 1) both; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-tab-panel { animation: overlay-in 0.12s ease-out; }
 }
 
 /* -- drawer transitions -----------------------------------------------------
