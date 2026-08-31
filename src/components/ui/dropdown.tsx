@@ -2,6 +2,8 @@ import * as DropdownPrimitive from '@radix-ui/react-dropdown-menu'
 import { Check } from 'lucide-react'
 import type { ComponentProps } from 'react'
 import { cn } from '@/lib/cn'
+import { TONE_GLYPH } from '@/lib/tone-classes'
+import type { Tone } from '@/types'
 
 export const Dropdown = DropdownPrimitive.Root
 export const DropdownTrigger = DropdownPrimitive.Trigger
@@ -45,13 +47,29 @@ export function DropdownContent({ className, align = 'start', ...props }: Compon
   )
 }
 
-export function DropdownItem({ className, ...props }: ComponentProps<typeof DropdownPrimitive.Item>) {
+/**
+ * A menu row.
+ *
+ * `tone` colours the row's glyph through the same five-tone set the pills and
+ * the filter menu use. An action that BLOCKS someone and an action that exports
+ * a CSV are not peers, and rendering both marks in ink-faint made the menu a
+ * flat list where the consequential row had to be found by reading.
+ *
+ * Deliberately opt-in, and deliberately not the default: colour in this app
+ * means a semantic state, so spending it on every row would spend it on
+ * nothing. Rows without a real consequence stay `neutral` — that restraint is
+ * what leaves the red row legible.
+ */
+export function DropdownItem({ className, tone = 'neutral', ...props }: ComponentProps<typeof DropdownPrimitive.Item> & {
+  tone?: Tone
+}) {
   return (
     <DropdownPrimitive.Item
       className={cn(
         'flex cursor-pointer select-none items-center gap-2 rounded-[6px] px-2 py-1.5',
         'text-base text-ink outline-none transition-colors',
-        'data-[highlighted]:bg-surface-hover [&_svg]:size-3.5 [&_svg]:text-ink-faint',
+        'data-[highlighted]:bg-surface-hover [&_svg]:size-3.5',
+        TONE_GLYPH[tone],
         className,
       )}
       {...props}

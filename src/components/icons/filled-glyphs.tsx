@@ -201,6 +201,29 @@ export function UserOffFilled(props: GlyphProps) {
 }
 
 /**
+ * A flag — "Report as fraud".
+ *
+ * Built as two layers for the same reason `TrendingUpFilled` is: the banner has
+ * an interior and is filled, the pole is a line with no interior and is stroked
+ * at solid weight. Filling a 2px-wide rectangle to make the pole "consistent"
+ * would produce a hairline that vanishes at 12px next to the banner's mass.
+ *
+ * The banner's trailing edge is cut straight rather than swallow-tailed. The
+ * notch is the detail lucide's outline can afford and a 14px solid cannot — at
+ * this size it closes up into a nick that reads as a rendering artefact.
+ */
+export function FlagFilled(props: GlyphProps) {
+  return (
+    <FilledGlyph
+      body="M5.2 3.6c1.3-.8 2.8-1.2 4.4-1.2 3 0 5.2 2 8.1 2 1 0 1.9-.2 2.6-.7v8.9c-.7.4-1.6.7-2.6.7-2.9 0-5.1-2-8.1-2-1.6 0-3.1.4-4.4 1.2z"
+      overlay="M4.7 21.6V2.6"
+      overlayWidth={2.4}
+      {...props}
+    />
+  )
+}
+
+/**
  * Rising trend. The shaft is stroked at solid weight rather than filled,
  * because a line has no interior to fill — what makes it read as "solid" beside
  * the other glyphs is weight, not area. The arrowhead is a real filled

@@ -1,4 +1,5 @@
 import { Toaster as SonnerToaster } from 'sonner'
+import { CircleCheckFilled, CircleXFilled } from '@/components/icons/filled-glyphs'
 import { useUiStore } from '@/stores/ui-store'
 
 /**
@@ -13,8 +14,9 @@ import { useUiStore } from '@/stores/ui-store'
  *  - Type carries the hierarchy instead of colour: a small uppercase label with
  *    open tracking over the value set in mono. Success and failure differ only
  *    by a 2px rule on the left edge, so the card itself never changes weight.
- *  - Iconography is dropped entirely (`icons={{}}`); a checkmark would be a
- *    second, redundant signal next to the word "copied".
+ *  - The glyphs are the app's own filled marks, NOT Sonner's defaults, so a
+ *    success in a toast is the same disc-and-tick the status pills use. Tone
+ *    colour lives on the glyph and the left rule only; the card stays neutral.
  *  - Bottom-right, where the eye already goes for confirmation of an action
  *    and where nothing in the shell lives — the left edge belongs to the nav.
  *
@@ -31,18 +33,21 @@ export function Toaster() {
       duration={2400}
       offset={24}
       gap={8}
-      icons={{}}
+      icons={{ success: <CircleCheckFilled aria-hidden />, error: <CircleXFilled aria-hidden /> }}
       toastOptions={{
         unstyled: true,
         classNames: {
           toast: [
-            'flex w-[var(--width)] flex-col gap-1 border border-border bg-surface p-3',
+            'grid w-[var(--width)] grid-cols-[auto_1fr] items-start gap-x-2.5',
+            'border border-border bg-surface p-3',
             'rounded-[var(--radius-surface)] border-l-2 border-l-ink shadow-lg',
           ].join(' '),
+          icon: 'mt-px [&_svg]:size-4',
+          content: 'flex min-w-0 flex-col gap-1',
           title: 'text-xs font-medium uppercase tracking-[0.08em] text-ink',
           description: 'font-mono text-xs text-ink-faint break-all',
-          success: 'border-l-[var(--tone-positive-fg)]',
-          error: 'border-l-[var(--tone-critical-fg)]',
+          success: 'border-l-[var(--tone-positive-fg)] [&_[data-icon]]:text-[var(--tone-positive-fg)]',
+          error: 'border-l-[var(--tone-critical-fg)] [&_[data-icon]]:text-[var(--tone-critical-fg)]',
         },
       }}
     />
