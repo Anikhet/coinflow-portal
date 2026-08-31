@@ -80,6 +80,19 @@ export function BanFilled(props: GlyphProps) {
   return <FilledGlyph body={DISC} mark="M7.4 7.4 16.6 16.6" {...props} />
 }
 
+/* -- octagon: refusal ------------------------------------------------------
+   The stop-sign silhouette. Reserved for states where something was actively
+   REFUSED — a declined protection claim, a failed authentication — as opposed
+   to merely absent. Its outline is distinguishable from a disc at a glance
+   even before the knocked-out mark resolves, which is what makes a refusal
+   readable at 12px in a column of otherwise round glyphs. */
+
+const OCTAGON = 'M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2z'
+
+export function OctagonXFilled(props: GlyphProps) {
+  return <FilledGlyph body={OCTAGON} mark="M15 9l-6 6M9 9l6 6" {...props} />
+}
+
 /* -- shields: chargeback protection ---------------------------------------- */
 
 const SHIELD = 'M12 2.1 4.5 5.05v6.6c0 5 3.3 8.1 7.5 10.1 4.2-2 7.5-5.1 7.5-10.1v-6.6z'
@@ -126,4 +139,49 @@ export function LockOpenFilled(props: GlyphProps) {
  */
 export function UnlockFilled(props: GlyphProps) {
   return <FilledGlyph body={LOCK_CASE} mark={KEYHOLE} markWidth={2.2} overlay="M16.4 10.4V7.2a4.4 4.4 0 0 0-8.6-1.3" {...props} />
+}
+
+/* -- clocks and people: customer attributes -------------------------------- */
+
+export function ClockFilled(props: GlyphProps) {
+  return <FilledGlyph body={DISC} mark="M12 6.9v5.4l3.4 2" markWidth={2.2} {...props} />
+}
+
+/**
+ * A raised palm, struck through — "Attempts restricted".
+ *
+ * The plain lucide hand was ambiguous at 12px: an open palm on its own reads as
+ * "stop" OR as "wave" OR as a generic hand-shaped blob. The slash resolves it to
+ * one meaning, and matches the slash already used for a disabled shield and a
+ * disabled 3DS lock, so "struck through" means the same thing in every column.
+ */
+const HAND = 'M6.1 10.9c0-.7.6-1.3 1.3-1.3s1.3.6 1.3 1.3V6.2a1.3 1.3 0 0 1 2.6 0v4.2V4.7a1.3 1.3 0 0 1 2.6 0v5.7V6.6a1.3 1.3 0 0 1 2.6 0v7.7c0 3.9-2.4 6.6-6 6.6s-4.4-2-4.4-2z'
+
+export function HandOffFilled(props: GlyphProps) {
+  return <FilledGlyph body={HAND} mark="M5 5 19.4 19" markWidth={2.6} {...props} />
+}
+
+/**
+ * A person, struck through — verification not found / unverified. Same slash
+ * vocabulary again.
+ */
+const PERSON = 'M12 3.9a3.8 3.8 0 1 1 0 7.6 3.8 3.8 0 0 1 0-7.6zM4.4 20.2a7.6 7.6 0 0 1 15.2 0 1.3 1.3 0 0 1-1.3 1.3H5.7a1.3 1.3 0 0 1-1.3-1.3z'
+
+export function UserOffFilled(props: GlyphProps) {
+  return <FilledGlyph body={PERSON} mark="M5 5 19 19" markWidth={2.6} {...props} />
+}
+
+/**
+ * Rising trend. The shaft is stroked at solid weight rather than filled,
+ * because a line has no interior to fill — what makes it read as "solid" beside
+ * the other glyphs is weight, not area. The arrowhead is a real filled
+ * triangle, which is where the eye lands.
+ */
+export function TrendingUpFilled({ className, ...rest }: GlyphProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} {...rest}>
+      <path d="M3.4 17.6 9.6 11.4l3.4 3.4 4.6-4.6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M21.2 5.2v6.1l-6.1-6.1z" fill="currentColor" />
+    </svg>
+  )
 }

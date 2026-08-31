@@ -1,46 +1,54 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import type { Customer } from '@/types'
-import { AmountCell, ExceptionsCell, StatusCell } from '@/components/table/cells'
-import { customerExceptions, kycTone, signalCountTone } from '@/lib/tone-map'
-import { formatDateOnly, formatCount } from '@/lib/format'
+import { AmountCell, AttributeCell } from '@/components/table/cells'
+import { Avatar } from '@/components/ui/avatar'
+import { CopyButton } from '@/components/ui/copy-button'
 import { Tooltip } from '@/components/ui/tooltip'
 import { Pill } from '@/components/ui/pill'
+import {
+  customerProtectionTone, blockedTone, threeDSProcessingTone,
+  attemptLimitTone, verificationTone, fraudOverrideTone,
+  kycTone, signalCountTone,
+} from '@/lib/tone-map'
+import { formatCount, formatDateTime } from '@/lib/format'
 import type { Timezone } from '@/stores/ui-store'
 
 /**
  * CUSTOMERS COLUMNS
  * =============================================================================
- * The original rendered six adjacent columns — Protection, Blocked, 3DS
- * Processing, Attempt Limit, Verification, Fraud Override — each a green pill
- * reading "Enabled" / "Functional" / "Standard" on virtually every row. Six
- * columns of screen width spent restating that nothing is wrong.
+ * The ten production columns, in the original order with the original labels,
+ * all visible by default. Customer and Email stay SEPARATE columns as they are
+ * today rather than being merged into one identity cell.
  *
- * Those six collapse into ONE "Exceptions" column that is empty for a normal
- * customer and lists only genuine deviations otherwise. The information is not
- * lost — it is in the drawer, and it is filterable — but the table now reads at
- * a glance because ink is spent exclusively on the abnormal.
+ * What changes is the encoding, not the column set. The original rendered six
+ * adjacent attribute columns — Protection, Blocked, 3DS Processing, Attempt
+ * Limit, Verification, Fraud Override — as green pills reading "Enabled",
+ * "Functional", "Standard" on virtually every row. Six columns of screen width
+ * spent confirming that nothing is wrong.
  *
- * The width freed up buys columns that were missing and matter far more for
- * triage: lifetime volume, payment count, and distinct-IP count.
+ * Here each of those mappers marks its MAJORITY value as the default, which
+ * renders a muted em-dash instead of a pill. A normal customer is a row of
+ * dashes; a customer with a real problem is the only thing carrying colour on
+ * screen. Same columns, same data, same place — the eye just has somewhere to
+ * land now.
+ *
+ * The extra columns this redesign adds (lifetime volume, payment count,
+ * distinct IPs, KYC) are defined but hidden by default, available from the
+ * column menu. They are genuinely useful for triage, but they are additions —
+ * so they should be opt-in rather than silently changing the default view.
  */
 
 export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, unknown>[] {
   return [
     {
-      id: 'name',
-      accessorKey: 'name',
-      header: 'Customer',
-      size: 230,
-      meta: { label: 'Customer' },
+      id: 'createdAt',
+      accessorKey: 'createdAt',
+      header: 'Created at',
+      size: 150,
+      meta: { label: 'Created at' },
       cell: ({ row }) => (
-        <span className="flex min-w-0 items-center gap-2">
-          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-surface-sunk text-[10px] font-semibold text-ink-muted">
-            {row.original.name.split(' ').map((part) => part[0]).join('').slice(0, 2)}
-          </span>
-          <span className="min-w-0 truncate">
-            <span className="block truncate text-[13px] font-medium leading-tight text-ink">{row.original.name}</span>
-            <span className="block truncate text-[11px] leading-tight text-ink-faint">{row.original.email}</span>
-          </span>
+        <span className="truncate tabular-nums text-ink-muted">
+          {formatDateTime(row.original.createdAt, timezone)}
         </span>
       ),
     },
@@ -48,9 +56,106 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       id: 'merchant',
       accessorKey: 'merchant',
       header: 'Merchant',
-      size: 130,
+      size: 150,
       meta: { label: 'Merchant' },
-      cell: ({ row }) => <span className="truncate text-ink-muted">{row.original.merchant}</span>,
+      cell: ({ row }) => (
+        <span className="flex items-center gap-1">
+          <span className="truncate text-ink">{row.original.merchant}</span>
+          <CopyButton value={row.original.merchant} label="Copy merchant" />
+        </span>
+      ),
+    },
+    {
+      id: 'name',
+      accessorKey: 'name',
+      header: 'Customer',
+      size: 180,
+      meta: { label: 'Customer' },
+      cell: ({ row }) => (
+        <span className="flex min-w-0 items-center gap-2">
+          <Avatar name={row.original.name} size={24} className="rounded-full" />
+          <span className="truncate font-medium text-ink">{row.original.name}</span>
+        </span>
+      ),
+    },
+    {
+      id: 'email',
+      accessorKey: 'email',
+      header: 'Email',
+      size: 220,
+      meta: { label: 'Email' },
+      cell: ({ row }) => (
+        <span className="flex items-center gap-1">
+          <Tooltip content={row.original.email}>
+            <span className="truncate text-ink-muted">{row.original.email}</span>
+          </Tooltip>
+          <CopyButton value={row.original.email} label="Copy email" />
+        </span>
+      ),
+    },
+    {
+      id: 'protection',
+      accessorKey: 'protectionEnabled',
+      header: 'Protection',
+      size: 115,
+      enableSorting: false,
+      meta: { label: 'Protection' },
+      cell: ({ row }) => <AttributeCell descriptor={customerProtectionTone(row.original.protectionEnabled)} />,
+    },
+    {
+      id: 'blocked',
+      accessorKey: 'blocked',
+      header: 'Blocked',
+      size: 105,
+      enableSorting: false,
+      meta: { label: 'Blocked' },
+      cell: ({ row }) => <AttributeCell descriptor={blockedTone(row.original.blocked)} />,
+    },
+    {
+      id: 'threeDSProcessing',
+      accessorKey: 'threeDSProcessing',
+      header: '3DS Processing',
+      size: 140,
+      enableSorting: false,
+      meta: { label: '3DS Processing' },
+      cell: ({ row }) => <AttributeCell descriptor={threeDSProcessingTone(row.original.threeDSProcessing)} />,
+    },
+    {
+      id: 'attemptLimit',
+      accessorKey: 'attemptLimit',
+      header: 'Attempt Limit',
+      size: 130,
+      enableSorting: false,
+      meta: { label: 'Attempt Limit' },
+      cell: ({ row }) => <AttributeCell descriptor={attemptLimitTone(row.original.attemptLimit)} />,
+    },
+    {
+      id: 'verification',
+      accessorKey: 'verification',
+      header: 'Verification',
+      size: 125,
+      enableSorting: false,
+      meta: { label: 'Verification' },
+      cell: ({ row }) => <AttributeCell descriptor={verificationTone(row.original.verification)} />,
+    },
+    {
+      id: 'fraudOverride',
+      accessorKey: 'fraudOverride',
+      header: 'Fraud Override',
+      size: 140,
+      enableSorting: false,
+      meta: { label: 'Fraud Override' },
+      cell: ({ row }) => <AttributeCell descriptor={fraudOverrideTone(row.original.fraudOverride)} />,
+    },
+
+    // -- additions, hidden by default -------------------------------------
+    {
+      id: 'kyc',
+      accessorKey: 'kyc',
+      header: 'KYC',
+      size: 130,
+      meta: { label: 'KYC' },
+      cell: ({ row }) => <AttributeCell descriptor={kycTone(row.original.kyc)} />,
     },
     {
       id: 'totalVolume',
@@ -71,22 +176,6 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       ),
     },
     {
-      id: 'kyc',
-      accessorKey: 'kyc',
-      header: 'KYC',
-      size: 150,
-      meta: { label: 'KYC' },
-      cell: ({ row }) => <StatusCell descriptor={kycTone(row.original.kyc)} />,
-    },
-    {
-      id: 'exceptions',
-      header: 'Exceptions',
-      size: 220,
-      enableSorting: false,
-      meta: { label: 'Exceptions' },
-      cell: ({ row }) => <ExceptionsCell items={customerExceptions(row.original)} />,
-    },
-    {
       id: 'ipLocations',
       header: 'IPs',
       size: 80,
@@ -105,15 +194,16 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
         )
       },
     },
-    {
-      id: 'createdAt',
-      accessorKey: 'createdAt',
-      header: 'Created',
-      size: 120,
-      meta: { label: 'Created' },
-      cell: ({ row }) => (
-        <span className="truncate text-ink-muted">{formatDateOnly(row.original.createdAt, timezone)}</span>
-      ),
-    },
   ]
+}
+
+/**
+ * The redesign's additional columns start hidden, so the default view is the
+ * production column set exactly. They remain one click away in the column menu.
+ */
+export const DEFAULT_HIDDEN_CUSTOMER_COLUMNS = {
+  kyc: false,
+  totalVolume: false,
+  paymentCount: false,
+  ipLocations: false,
 }

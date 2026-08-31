@@ -6,6 +6,7 @@ import { TableToolbar, type FilterGroup } from '@/components/table/table-toolbar
 import { toColumnOptions } from '@/components/table/column-options'
 import { Pagination } from '@/components/table/pagination'
 import { TableEmpty } from '@/components/table/table-empty'
+import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { fetchCustomers, listFilterOptions, CUSTOMER_TOTAL } from '@/mocks/api'
 import { useAsync } from '@/hooks/use-async'
@@ -13,7 +14,7 @@ import { useDebounced } from '@/hooks/use-debounced'
 import { useUiStore } from '@/stores/ui-store'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { TableViewProvider, useTableView } from '@/stores/table-view-context'
-import { buildCustomerColumns } from './columns'
+import { buildCustomerColumns, DEFAULT_HIDDEN_CUSTOMER_COLUMNS } from './columns'
 import { CustomerDrawer } from './customer-drawer'
 
 const PAGE_SIZE = 25
@@ -21,7 +22,13 @@ const RISK_TOGGLE = 'riskOnly'
 
 export function CustomersPage() {
   return (
-    <TableViewProvider init={{ sortBy: 'createdAt', sortDir: 'desc' }}>
+    <TableViewProvider
+      init={{
+        sortBy: 'createdAt',
+        sortDir: 'desc',
+        columnVisibility: DEFAULT_HIDDEN_CUSTOMER_COLUMNS,
+      }}
+    >
       <CustomersView />
     </TableViewProvider>
   )
@@ -68,7 +75,14 @@ function CustomersView() {
       {
         id: 'merchant',
         label: 'Merchant',
-        options: options.merchants.map((merchant) => ({ value: merchant, label: merchant })),
+        // The same name-derived chip the sidebar switcher uses, so a merchant
+        // is the same colour and the same two letters in the scope switcher,
+        // this menu, and the rows it filters to.
+        options: options.merchants.map((merchant) => ({
+          value: merchant,
+          label: merchant,
+          icon: <Avatar name={merchant} size={20} />,
+        })),
       },
     ],
     [options],

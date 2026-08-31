@@ -1,11 +1,8 @@
-import {
-  CircleDashed, Clock, Gavel, Hand, LoaderCircle, RotateCcw,
-  TrendingUp, UserSearch,
-} from 'lucide-react'
+import { CircleDashed, Gavel, LoaderCircle, RotateCcw } from 'lucide-react'
 import type { ComponentType } from 'react'
 import {
   BanFilled, CircleCheckFilled, CircleXFilled, LockFilled, LockOpenFilled,
-  ShieldCheckFilled, ShieldOffFilled, ShieldXFilled, UnlockFilled,
+  OctagonXFilled, ShieldCheckFilled, ShieldOffFilled, ShieldXFilled, UnlockFilled,
 } from '@/components/icons/filled-glyphs'
 import type { Tone } from '@/types'
 import type {
@@ -75,7 +72,11 @@ export function protectionTone(state: ProtectionState): ToneDescriptor {
     // keeping one column to one family means the glyph identifies the COLUMN
     // as fast as the state.
     case 'approved': return { tone: 'neutral', label: 'Protected', isDefault: true, icon: ShieldCheckFilled }
-    case 'declined': return { tone: 'critical', label: 'Declined', icon: ShieldXFilled }
+    // A refusal gets the stop-sign, not another shield: at 12px the shield
+    // family's silhouettes differ only by their knocked-out mark, so "claim
+    // refused" and "no cover bought" were telling themselves apart on a 2px
+    // detail. The octagon separates them by OUTLINE, before colour or mark.
+    case 'declined': return { tone: 'critical', label: 'Declined', icon: OctagonXFilled }
     case 'standard': return { tone: 'neutral', label: 'None', icon: ShieldOffFilled }
   }
 }
@@ -99,7 +100,11 @@ export function threeDSTone(state: ThreeDSState): ToneDescriptor {
     // glyph at all.
     case 'authenticated': return { tone: 'info', label: 'Authenticated', icon: LockFilled }
     case 'attempted':     return { tone: 'caution', label: 'Attempted', icon: LockOpenFilled }
-    case 'failed':        return { tone: 'critical', label: 'Failed', icon: BanFilled }
+    // Same octagon as a declined protection claim. Sharing it across the two
+    // columns is right here — both mean "actively refused", and one mark for
+    // one meaning is the point. What must never be shared is one mark for two
+    // DIFFERENT meanings.
+    case 'failed':        return { tone: 'critical', label: 'Failed', icon: OctagonXFilled }
     case 'standard':      return { tone: 'neutral', label: 'Not enrolled', isDefault: true, icon: LockOpenFilled }
   }
 }
@@ -123,7 +128,7 @@ export function activityTone(status: CustomerActivity['status']): ToneDescriptor
   switch (status) {
     case 'settled':   return { tone: 'positive', label: 'Settled', icon: CircleCheckFilled }
     case 'completed': return { tone: 'positive', label: 'Completed', icon: CircleCheckFilled }
-    case 'pending':   return { tone: 'caution', label: 'Pending', pulse: true, icon: Clock }
+    case 'pending':   return { tone: 'caution', label: 'Pending', pulse: true, icon: ClockFilled }
     case 'failed':    return { tone: 'critical', label: 'Failed', icon: CircleXFilled }
     case 'opened':    return { tone: 'critical', label: 'Dispute opened', icon: Gavel }
   }
@@ -147,9 +152,9 @@ export function customerExceptions(customer: Customer): ToneDescriptor[] {
   if (!customer.protectionEnabled) out.push({ tone: 'caution', label: 'Unprotected', icon: ShieldOffFilled })
   if (customer.threeDSProcessing === 'degraded') out.push({ tone: 'caution', label: '3DS degraded', icon: LockOpenFilled })
   if (customer.threeDSProcessing === 'off') out.push({ tone: 'critical', label: '3DS off', icon: UnlockFilled })
-  if (customer.attemptLimit === 'restricted') out.push({ tone: 'caution', label: 'Attempts restricted', icon: Hand })
-  if (customer.attemptLimit === 'elevated') out.push({ tone: 'info', label: 'Attempts elevated', icon: TrendingUp })
-  if (customer.verification === 'not-found') out.push({ tone: 'caution', label: 'Unverified', icon: UserSearch })
+  if (customer.attemptLimit === 'restricted') out.push({ tone: 'caution', label: 'Attempts restricted', icon: HandOffFilled })
+  if (customer.attemptLimit === 'elevated') out.push({ tone: 'info', label: 'Attempts elevated', icon: TrendingUpFilled })
+  if (customer.verification === 'not-found') out.push({ tone: 'caution', label: 'Unverified', icon: UserOffFilled })
   if (customer.fraudOverride === 'allow') out.push({ tone: 'info', label: 'Fraud allow', icon: ShieldCheckFilled })
   if (customer.fraudOverride === 'deny') out.push({ tone: 'critical', label: 'Fraud deny', icon: ShieldXFilled })
   if (customer.disputeCount > 0) {
@@ -169,6 +174,62 @@ export function customerExceptions(customer: Customer): ToneDescriptor[] {
  * the base rates differ — several IPs is common (mobile/travel), several names
  * on one account is not.
  */
+/**
+ * CUSTOMER CONTROL COLUMNS
+ * -----------------------------------------------------------------------------
+ * One mapper per attribute column on the Customers table.
+ *
+ * Each marks its MAJORITY value as the default, so a customer operating
+ * normally renders six em-dashes rather than six near-identical green pills.
+ * This is the same rule the payments table uses, applied to the columns where
+ * the original was densest: the information is all still there, in the same
+ * columns, but ink is spent only where something deviates.
+ */
+
+export function customerProtectionTone(enabled: boolean): ToneDescriptor {
+  return enabled
+    ? { tone: 'neutral', label: 'Enabled', isDefault: true, icon: ShieldCheckFilled }
+    : { tone: 'caution', label: 'Disabled', icon: ShieldOffFilled }
+}
+
+export function blockedTone(blocked: boolean): ToneDescriptor {
+  return blocked
+    ? { tone: 'critical', label: 'Blocked', icon: BanFilled }
+    : { tone: 'neutral', label: 'Not blocked', isDefault: true }
+}
+
+export function threeDSProcessingTone(state: Customer['threeDSProcessing']): ToneDescriptor {
+  switch (state) {
+    case 'functional': return { tone: 'neutral', label: 'Functional', isDefault: true, icon: LockFilled }
+    case 'degraded':   return { tone: 'caution', label: 'Degraded', icon: LockOpenFilled }
+    case 'off':        return { tone: 'critical', label: 'Off', icon: UnlockFilled }
+  }
+}
+
+export function attemptLimitTone(limit: Customer['attemptLimit']): ToneDescriptor {
+  switch (limit) {
+    case 'standard':   return { tone: 'neutral', label: 'Standard', isDefault: true }
+    case 'restricted': return { tone: 'caution', label: 'Restricted', icon: HandOffFilled }
+    case 'elevated':   return { tone: 'info', label: 'Elevated', icon: TrendingUpFilled }
+  }
+}
+
+export function verificationTone(state: Customer['verification']): ToneDescriptor {
+  switch (state) {
+    case 'enforced':  return { tone: 'neutral', label: 'Enforced', isDefault: true, icon: ShieldCheckFilled }
+    case 'not-found': return { tone: 'caution', label: 'Not found', icon: UserOffFilled }
+    case 'standard':  return { tone: 'neutral', label: 'Standard', isDefault: true }
+  }
+}
+
+export function fraudOverrideTone(override: Customer['fraudOverride']): ToneDescriptor {
+  switch (override) {
+    case 'standard': return { tone: 'neutral', label: 'Standard', isDefault: true }
+    case 'allow':    return { tone: 'info', label: 'Always allow', icon: CircleCheckFilled }
+    case 'deny':     return { tone: 'critical', label: 'Always deny', icon: OctagonXFilled }
+  }
+}
+
 export function signalCountTone(count: number, threshold: number): Tone {
   if (count > threshold * 2) return 'critical'
   if (count > threshold) return 'caution'
