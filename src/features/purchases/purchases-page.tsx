@@ -1,11 +1,12 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+import { CircleDot, CreditCard, Route } from 'lucide-react'
 import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { DataTable } from '@/components/table/data-table'
 import { TableToolbar, type FilterGroup } from '@/components/table/table-toolbar'
 import { toColumnOptions } from '@/components/table/column-options'
 import { Pagination } from '@/components/table/pagination'
 import { TableEmpty } from '@/components/table/table-empty'
-import { fetchPayments, listFilterOptions, PAYMENT_TOTAL } from '@/mocks/api'
+import { fetchPayments, listFilterOptions } from '@/mocks/api'
 import { useAsync } from '@/hooks/use-async'
 import { useDebounced } from '@/hooks/use-debounced'
 import { useUiStore } from '@/stores/ui-store'
@@ -19,8 +20,6 @@ import { paymentStatusTone } from '@/lib/tone-map'
 import type { PaymentMethod, Processor, PaymentStatus } from '@/types/payment'
 import { TONE_TEXT } from '@/lib/tone-classes'
 import { cn } from '@/lib/cn'
-
-const PAGE_SIZE = 25
 
 export function PurchasesPage() {
   return (
@@ -45,6 +44,7 @@ function PurchasesView() {
   const sortBy = useTableView((state) => state.sortBy)
   const sortDir = useTableView((state) => state.sortDir)
   const page = useTableView((state) => state.page)
+  const pageSize = useTableView((state) => state.pageSize)
 
   const debouncedSearch = useDebounced(search)
 
@@ -58,15 +58,25 @@ function PurchasesView() {
   const methodKey = methods.join(',')
   const processorKey = processors.join(',')
 
+  const setRecordIds = useDrawerStore((state) => state.setRecordIds)
+
   const { data, loading, error, reload } = useAsync(
     () => fetchPayments({
       search: debouncedSearch,
       statuses, methods, processors,
       sortBy: sortBy as never, sortDir,
-      page, pageSize: PAGE_SIZE,
+      page, pageSize,
     }),
-    [debouncedSearch, statusKey, methodKey, processorKey, sortBy, sortDir, page],
+    [debouncedSearch, statusKey, methodKey, processorKey, sortBy, sortDir, page, pageSize],
   )
+
+  // Publish the page's row ids so the drawer's prev/next steps through exactly
+  // what the operator is looking at — the current filter and sort, not the
+  // whole corpus.
+  const rowIds = data?.rows.map((payment) => payment.id).join(',') ?? ''
+  useEffect(() => {
+    setRecordIds(rowIds ? rowIds.split(',') : [])
+  }, [rowIds, setRecordIds])
 
   const columns = useMemo(() => buildPaymentColumns(timezone), [timezone])
   const options = useMemo(() => listFilterOptions(), [])
@@ -77,6 +87,9 @@ function PurchasesView() {
       {
         id: 'status',
         label: 'Status',
+        // A filled dot: the same mark the status column's own pills carry, so
+        // the control that picks a state wears the shape the state is drawn as.
+        icon: CircleDot,
         // The menu and the table read from the same registry, so a status
         // carries the identical glyph and wording in the filter that picks it
         // and in the rows it returns.
@@ -92,6 +105,9 @@ function PurchasesView() {
       {
         id: 'method',
         label: 'Method',
+        // The instrument itself. Cards are the plurality of methods here and
+        // the menu's own rows are card and wallet marks.
+        icon: CreditCard,
         options: options.methods.map((method) => ({
           value: method,
           label: methodLabel(method as PaymentMethod),
@@ -101,6 +117,10 @@ function PurchasesView() {
       {
         id: 'processor',
         label: 'Processor',
+        // Routing, not a CPU. A processor is WHERE a payment was sent, and a
+        // chip icon would illustrate the word rather than the thing — the
+        // failure lib/nav.ts calls out with Droplets for "Liquidity".
+        icon: Route,
         options: options.processors.map((processor) => ({
           value: processor,
           label: processorLabel(processor as Processor),
@@ -124,14 +144,13 @@ function PurchasesView() {
         filters={filterGroups}
         columns={columnOptions}
         resultCount={data?.total}
-        totalCount={PAYMENT_TOTAL}
       />
 
       <DataTable
         data={data?.rows ?? []}
         columns={columns}
         loading={loading}
-        skeletonRows={PAGE_SIZE}
+        skeletonRows={pageSize}
         getRowId={(payment) => payment.id}
         onRowClick={(payment) => openPayment(payment.id)}
         activeRowId={activePaymentId}
@@ -139,14 +158,13 @@ function PurchasesView() {
           <TableEmpty
             entity="payments"
             glyph="payments"
-            totalCount={PAYMENT_TOTAL}
             error={error}
             onRetry={reload}
           />
         }
       />
 
-      <Pagination pageSize={PAGE_SIZE} total={data?.total ?? 0} loading={loading} />
+      <Pagination total={data?.total ?? 0} loading={loading} />
 
       <PaymentDrawer />
     </AppShell>

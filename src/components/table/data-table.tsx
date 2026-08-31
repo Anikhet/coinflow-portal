@@ -111,7 +111,11 @@ export function DataTable<T>({
 
   return (
     <div
-      className="relative flex-1 overflow-auto"
+      // flex-col so the empty block below the table can claim the leftover
+      // height as a flex item. As a plain block it could only be sized by a
+      // fixed min-height, which is why the empty state used to sit as a small
+      // card marooned in the middle of a tall white void.
+      className="relative flex flex-1 flex-col overflow-auto"
       onScroll={(event) => {
         const scrolled = event.currentTarget.scrollLeft > 0
         // Guard the write so a vertical scroll does not re-render every row.
@@ -120,7 +124,9 @@ export function DataTable<T>({
     >
       <table
         style={{ minWidth: minTableWidth }}
-        className="w-full border-separate border-spacing-0 text-base"
+        // shrink-0: as a flex item the table would otherwise compress
+        // vertically to make room for the empty block's flex-1.
+        className="w-full shrink-0 border-separate border-spacing-0 text-base"
       >
         {/*
           LAYERING
@@ -296,12 +302,19 @@ export function DataTable<T>({
       </table>
 
       {showEmpty && (
-        /* Reserve roughly the height a full page of rows would occupy (capped so
-           a tall page size does not strand the message off-screen). The message
-           lands where the rows were, and nothing below the table moves when the
-           result set flips between empty and populated. */
+        /* The empty state takes the whole region the rows would have occupied:
+           `flex-1` claims every remaining pixel below the header, inset by the
+           same 16px gutter every other band of chrome uses.
+
+           The min-height is still declared as a FLOOR. When the table sits in a
+           short container there is no leftover height for flex-1 to hand out,
+           and without it the message would collapse against the header — so
+           this reserves roughly the height a full page of rows would occupy
+           (capped, so a tall page size cannot strand the message off-screen).
+           Between the two, nothing below the table moves when the result set
+           flips between empty and populated. */
         <div
-          className="flex items-center justify-center p-6"
+          className="flex flex-1 p-4"
           style={{ minHeight: Math.min(skeletonRows * rowHeight, 420) }}
         >
           {empty}

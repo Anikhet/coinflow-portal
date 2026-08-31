@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla'
 import type { VisibilityState } from '@tanstack/react-table'
+import { DEFAULT_PAGE_SIZE } from '@/lib/pagination'
 
 export type SortDirection = 'asc' | 'desc'
 
@@ -10,6 +11,8 @@ export interface TableViewState {
   sortBy: string
   sortDir: SortDirection
   page: number
+  /** Rows fetched and rendered per page; chosen by the operator in the paginator. */
+  pageSize: number
   columnVisibility: VisibilityState
   /** Page-specific boolean toggles (e.g. "exceptions only"). */
   toggles: Record<string, boolean>
@@ -19,12 +22,15 @@ export interface TableViewState {
   clearFilters: () => void
   toggleSort: (columnId: string) => void
   setPage: (page: number) => void
+  setPageSize: (pageSize: number) => void
   setColumnVisibility: (visibility: VisibilityState) => void
   setToggle: (key: string, value: boolean) => void
 }
 
 export interface TableViewInit {
   sortBy: string
+  /** Starting rows-per-page. Defaults to 25. */
+  pageSize?: number
   sortDir?: SortDirection
   columnVisibility?: VisibilityState
   toggles?: Record<string, boolean>
@@ -60,6 +66,7 @@ export function createTableViewStore(init: TableViewInit) {
     sortBy: init.sortBy,
     sortDir: init.sortDir ?? 'desc',
     page: 1,
+    pageSize: init.pageSize ?? DEFAULT_PAGE_SIZE,
     columnVisibility: init.columnVisibility ?? {},
     toggles: init.toggles ?? {},
 
@@ -78,6 +85,11 @@ export function createTableViewStore(init: TableViewInit) {
       ),
 
     setPage: (page) => set({ page }),
+
+    // Resizing the page changes which rows page 3 contains, so the old page
+    // number points at a different — possibly non-existent — slice. Same
+    // invariant as the filters above: reset to 1 here, not at the call site.
+    setPageSize: (pageSize) => set({ pageSize, page: 1 }),
 
     setColumnVisibility: (columnVisibility) => set({ columnVisibility }),
 

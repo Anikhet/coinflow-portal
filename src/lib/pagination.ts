@@ -7,6 +7,20 @@ export type PageItem = number | 'ellipsis'
 export const PAGE_SLOT_COUNT = 7
 
 /**
+ * Rows-per-page choices offered in the paginator.
+ *
+ * Four steps, each roughly doubling: 10 for a glanceable slice, 25 as the
+ * default (about one screenful on a laptop, so the first page needs no
+ * scrolling), then 50 and 100 for scanning or exporting. Fewer, well-spaced
+ * options beat a fine-grained list nobody reads — the choice is "small screen /
+ * normal / scanning", not an exact row count.
+ */
+export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
+
+/** The option the tables start on. */
+export const DEFAULT_PAGE_SIZE = 25
+
+/**
  * Builds the page-number slots for a paginator.
  *
  * Guarantees a CONSTANT number of items — exactly `slots`, or `pageCount` when

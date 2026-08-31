@@ -34,12 +34,11 @@ export interface TableEmptyProps {
   /** Mark for the no-data case; the filtered and error cases have their own. */
   glyph: EmptyGlyphName
   /** Unfiltered row count for the scope. Distinguishes "no results" from "no data". */
-  totalCount: number
   error?: Error | null
   onRetry?: () => void
 }
 
-export function TableEmpty({ entity, glyph, totalCount, error, onRetry }: TableEmptyProps) {
+export function TableEmpty({ entity, glyph, error, onRetry }: TableEmptyProps) {
   const search = useTableView((state) => state.search)
   const filters = useTableView((state) => state.filters)
   const toggles = useTableView((state) => state.toggles)
@@ -52,6 +51,7 @@ export function TableEmpty({ entity, glyph, totalCount, error, onRetry }: TableE
   if (error) {
     return (
       <EmptyState
+        layout="page"
         glyph="error"
         tone="critical"
         title={`Could not load ${entity}`}
@@ -71,9 +71,9 @@ export function TableEmpty({ entity, glyph, totalCount, error, onRetry }: TableE
   if (criteria.length > 0) {
     return (
       <EmptyState
+        layout="page"
         glyph="noMatch"
         title={`No ${entity} match these filters`}
-        description={`All ${totalCount.toLocaleString()} ${entity} were excluded.`}
         detail={<CriteriaList criteria={criteria} />}
         action={
           <Button variant="primary" size="md" onClick={clearFilters}>
@@ -87,6 +87,7 @@ export function TableEmpty({ entity, glyph, totalCount, error, onRetry }: TableE
 
   return (
     <EmptyState
+      layout="page"
       glyph={glyph}
       title={`No ${entity} yet`}
       description={`New ${entity} appear here as they are processed.`}

@@ -66,7 +66,13 @@ export interface EmptyStateProps {
   /** Which mark to draw — a STATE name, not a picture. See empty-glyphs.tsx. */
   glyph: EmptyGlyphName
   title: string
-  description: string
+  /**
+   * Optional: some empty states say everything in the title. The
+   * filtered-to-nothing state, for instance, follows its title with the actual
+   * criteria chips — a sentence restating the corpus size in between just
+   * pushes the useful part further from the heading.
+   */
+  description?: string
   /** Optional short summary of what produced this state (active filters, etc). */
   detail?: ReactNode
   action?: ReactNode
@@ -98,12 +104,18 @@ export function EmptyState({
         layout === 'page' ? 'flex-1 self-stretch' : 'mx-auto max-w-[420px]',
       )}
     >
-      {/* Inner measure: the card may be 1200px wide, the prose never is. */}
-      <div className="flex w-full max-w-[420px] flex-col items-center">
+      {/* Inner measure: the card may be 1200px wide, the prose never is. The
+          page layout gets a wider measure (680px) because its descriptions are
+          one sentence written to sit on ONE line — at 420px they broke into a
+          two-line ragged block that reads as a paragraph of bad news rather
+          than a caption. The nested card keeps the tighter 420px. */}
+      <div className={cn('flex w-full flex-col items-center', layout === 'page' ? 'max-w-[680px]' : 'max-w-[420px]')}>
         <EmptyStateMark glyph={glyph} tone={tone} size={layout === 'page' ? 'page' : 'contained'} />
 
         <p className="text-lg font-medium text-ink">{title}</p>
-        <p className="mt-1 text-base leading-relaxed text-ink-muted">{description}</p>
+        {description && (
+          <p className="mt-1 text-base leading-relaxed text-balance text-ink-muted">{description}</p>
+        )}
 
         {detail && <div className="mt-3">{detail}</div>}
 

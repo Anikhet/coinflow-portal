@@ -1,8 +1,12 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dropdown, DropdownContent, DropdownLabel, DropdownRadioGroup,
+  DropdownRadioItem, DropdownTrigger,
+} from '@/components/ui/dropdown'
 import { useTableView } from '@/stores/table-view-context'
-import { buildPageItems, PAGE_SLOT_COUNT } from '@/lib/pagination'
+import { buildPageItems, PAGE_SIZE_OPTIONS, PAGE_SLOT_COUNT } from '@/lib/pagination'
 import { cn } from '@/lib/cn'
 
 /**
@@ -17,11 +21,12 @@ import { cn } from '@/lib/cn'
  * changes as you page. A paginator that reflows when "9" becomes "10" slides
  * the Next button out from under the cursor between clicks.
  *
- * Reads `page` from the table view store; `total` and `pageSize` stay props
- * because they describe the fetched result, not the user's view state.
+ * Reads `page` and `pageSize` from the table view store — page size is a view
+ * preference the operator sets here and the page's fetch reads back, so it
+ * belongs in the store rather than travelling down as a prop. `total` stays a
+ * prop because it describes the fetched result, not the user's view state.
  */
-export function Pagination({ pageSize, total, loading = false }: {
-  pageSize: number
+export function Pagination({ total, loading = false }: {
   total: number
   /**
    * While loading, `total` is 0 — which would render "0–0 of 0" and a single
@@ -33,6 +38,8 @@ export function Pagination({ pageSize, total, loading = false }: {
 }) {
   const page = useTableView((state) => state.page)
   const setPage = useTableView((state) => state.setPage)
+  const pageSize = useTableView((state) => state.pageSize)
+  const setPageSize = useTableView((state) => state.setPageSize)
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize))
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1
@@ -50,13 +57,42 @@ export function Pagination({ pageSize, total, loading = false }: {
       aria-label="Pagination"
       className="flex h-10 shrink-0 items-center justify-between gap-4 border-t border-border bg-canvas px-4"
     >
-      {loading ? (
-        <Skeleton className="h-3 w-28" />
-      ) : (
-        <p className="shrink-0 text-sm tabular-nums text-ink-muted">
-          {from.toLocaleString()}–{to.toLocaleString()} of {total.toLocaleString()}
-        </p>
-      )}
+      <div className="flex shrink-0 items-center gap-3">
+        {/* The size control sits beside the range it governs — "25 rows" next
+            to "1–25 of 4,812" makes the relationship legible without a label
+            explaining it. It stays mounted while loading (its value is view
+            state, not fetched data) so the row's geometry never changes. */}
+        <Dropdown>
+          <DropdownTrigger asChild>
+            <Button variant="ghost" size="sm" aria-label={`Rows per page: ${pageSize}`}>
+              <span className="tabular-nums">{pageSize}</span>
+              rows
+              <ChevronsUpDown className="text-ink-faint" />
+            </Button>
+          </DropdownTrigger>
+          <DropdownContent align="start" side="top" className="w-40">
+            <DropdownLabel>Rows per page</DropdownLabel>
+            <DropdownRadioGroup
+              value={String(pageSize)}
+              onValueChange={(value) => setPageSize(Number(value))}
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <DropdownRadioItem key={size} value={String(size)}>
+                  <span className="tabular-nums">{size}</span>
+                </DropdownRadioItem>
+              ))}
+            </DropdownRadioGroup>
+          </DropdownContent>
+        </Dropdown>
+
+        {loading ? (
+          <Skeleton className="h-3 w-28" />
+        ) : (
+          <p className="text-sm tabular-nums text-ink-muted">
+            {from.toLocaleString()}–{to.toLocaleString()} of {total.toLocaleString()}
+          </p>
+        )}
+      </div>
 
       <div className="flex items-center gap-1">
         <Button
