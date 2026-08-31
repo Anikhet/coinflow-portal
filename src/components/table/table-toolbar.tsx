@@ -132,7 +132,7 @@ export function TableToolbar({
                 )}
               </Button>
             </DropdownTrigger>
-            <DropdownContent align="start" className="max-h-[320px] overflow-y-auto">
+            <DropdownContent className="max-h-[320px] overflow-y-auto">
               <DropdownLabel>{group.label}</DropdownLabel>
               {group.options.map((option) => {
                 const checked = selectedSet.has(option.value)
@@ -150,9 +150,6 @@ export function TableToolbar({
                     }
                     onSelect={(event) => event.preventDefault()}
                   >
-                    <DropdownItemIndicator className="absolute left-2">
-                      <Check className="size-3.5 text-brand" />
-                    </DropdownItemIndicator>
                     {/* Fixed 20px slot: status filters supply 14px lucide
                         glyphs while method/processor filters supply 20px brand
                         marks, so without it the labels start at a different x
@@ -161,6 +158,9 @@ export function TableToolbar({
                       <span className="grid size-5 shrink-0 place-items-center">{option.icon}</span>
                     )}
                     <span className="truncate">{option.label}</span>
+                    <DropdownItemIndicator className="ml-auto pl-2">
+                      <Check className="size-3.5 shrink-0 text-brand" />
+                    </DropdownItemIndicator>
                   </DropdownCheckboxItem>
                 )
               })}
@@ -213,10 +213,10 @@ export function TableToolbar({
                       }
                       onSelect={(event) => event.preventDefault()}
                     >
-                      <DropdownItemIndicator className="absolute left-2">
-                        <Check className="size-3.5 text-brand" />
-                      </DropdownItemIndicator>
                       <span className="truncate">{column.label}</span>
+                      <DropdownItemIndicator className="ml-auto pl-2">
+                        <Check className="size-3.5 shrink-0 text-brand" />
+                      </DropdownItemIndicator>
                     </DropdownCheckboxItem>
                   )
                 })}

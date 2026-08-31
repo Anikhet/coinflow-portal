@@ -46,7 +46,7 @@ export function MerchantSwitcher({ collapsed }: { collapsed: boolean }) {
         )}
       </DropdownTrigger>
 
-      <DropdownContent align="start" className="w-[232px]">
+      <DropdownContent className="w-[232px]">
         <DropdownLabel>Switch scope</DropdownLabel>
         {MERCHANTS.map((merchant) => (
           <DropdownItem key={merchant.id} onSelect={() => setActiveId(merchant.id)}>
