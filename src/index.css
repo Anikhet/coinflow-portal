@@ -91,6 +91,20 @@
   --gradient-critical: linear-gradient(145deg, var(--tone-critical-dot), var(--tone-critical-fg));
   /* Inset highlight on a gradient chip — a light source, not a colour. */
   --gradient-sheen:    oklch(1 0 0 / 0.20);
+  /* The same light source expressed as a wash across the chip's face. A 145deg
+     linear ramp alone reads as a flat printed swatch; a radial highlight offset
+     to the upper-left gives the disc a direction to be lit from, which is what
+     makes it read as an object sitting on the card rather than a hole cut in
+     it. Positioned to agree with the 145deg sweep — both travel top-left to
+     bottom-right — so the two layers describe ONE light, not two. */
+  --gradient-glow:     radial-gradient(circle at 30% 22%, var(--gradient-sheen), transparent 62%);
+
+  /* The composed chip fills. Authored here rather than as a comma-joined
+     arbitrary value in the component, for the same reason the ramps are: a
+     component is the wrong place to author a colour. Order matters — the glow
+     is listed first because CSS paints the first background-image on top. */
+  --mark-brand:        var(--gradient-glow), var(--gradient-brand);
+  --mark-critical:     var(--gradient-glow), var(--gradient-critical);
 
   /* -- tones -------------------------------------------------------------- */
   --tone-positive-fg:   oklch(0.47 0.115 158);
@@ -168,6 +182,12 @@
     --brand-soft:     oklch(0.30 0.055 276);
     --brand-ring:     oklch(0.88 0.095 163 / 0.40);
     --brand-contrast: oklch(0.22 0.050 276);
+    /* The dark-mode chip is MINT (L 0.88), not navy. A white highlight at 0.20
+       over a colour that light is invisible, so the light source has to be
+       pushed harder to travel the same perceptual distance. Overriding the
+       sheen rather than the glow keeps one definition of "the highlight" — the
+       inset ring and the wash stay in agreement automatically. */
+    --gradient-sheen: oklch(1 0 0 / 0.45);
     --accent:         oklch(0.910 0.091 163);
     --accent-strong:  oklch(0.80 0.120 163);
     --accent-contrast: oklch(0.22 0.050 276);

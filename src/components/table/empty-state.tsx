@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { EmptyStateMark } from './empty-state-mark'
 
 export type EmptyStateTone = 'neutral' | 'critical'
 
@@ -46,7 +47,9 @@ export type EmptyStateTone = 'neutral' | 'critical'
  *
  * BRAND GRADIENT MARK
  *   The icon sits in a chip filled with the Coinflow violet gradient
- *   (`--brand` → `--brand-hover`) over a soft `--brand-ring` glow. Violet is
+ *   (`--brand` → `--brand-hover`), haloed by two hairline rings and lit by a
+ *   radial highlight — see `EmptyStateMark` for why it is drawn that way and
+ *   how it scales between the two layouts. Violet is
  *   this system's identity colour and is deliberately excluded from the status
  *   tone set (see index.css), so using it here cannot be mistaken for a
  *   severity signal the way a green or amber mark would be — an empty table is
@@ -96,19 +99,7 @@ export function EmptyState({
     >
       {/* Inner measure: the card may be 1200px wide, the prose never is. */}
       <div className="flex w-full max-w-[420px] flex-col items-center">
-        <span
-          className={cn(
-            'mb-3.5 grid size-11 shrink-0 place-items-center rounded-full',
-            // Inset highlight reads as a light source on the gradient and keeps
-            // the chip from looking flat against the card.
-            'ring-1 ring-inset ring-[var(--gradient-sheen)]',
-            tone === 'critical'
-              ? 'bg-[image:var(--gradient-critical)] text-tone-critical-contrast shadow-[0_4px_12px_var(--tone-critical-ring)]'
-              : 'bg-[image:var(--gradient-brand)] text-brand-contrast shadow-[0_4px_12px_var(--brand-ring)]',
-          )}
-        >
-          <Icon className="size-5" aria-hidden strokeWidth={1.75} />
-        </span>
+        <EmptyStateMark icon={Icon} tone={tone} size={layout === 'page' ? 'page' : 'contained'} />
 
         <p className="text-[14px] font-medium text-ink">{title}</p>
         <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">{description}</p>
