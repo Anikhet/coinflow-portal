@@ -1,7 +1,8 @@
 import type { EmptyGlyphName } from '@/components/icons/empty-glyphs'
+import { ShieldCheckOutline } from '@/components/icons/outline-glyphs'
 import {
-  House, Wallet, CreditCard, Users, Gavel, Unlink, ClipboardList,
-  ChartColumnBig, Gauge, BookCheck, ShieldCheck, FileSearch, BanknoteX,
+  House, Wallet, CreditCard, Users, Gavel, Unlink2, ClipboardList,
+  ChartColumnBig, Gauge, BookCheck, FileSearch, BanknoteX,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -33,7 +34,8 @@ import {
  *                     both file this under "Disputes"; the gavel is the settled
  *                     convention for it, and it beats a generic undo arrow that
  *                     could equally mean refund, void or reversal.
- *      Unlink         unmatched — a broken association, literally
+ *      Unlink2        unmatched — a broken association, literally. The 2
+ *                     variant reads at 16px where plain Unlink is a squiggle.
  *      ClipboardList  chargeback ops — a work QUEUE. The old wrench read as a
  *                     settings screen, which is the one thing ops is not.
  *      ChartColumnBig chargeback analytics — aggregate, not per-case
@@ -44,7 +46,9 @@ import {
  *                     old corner arrow said only "something went backwards".
  *
  *    Exactly ONE shield survives (3DS Stats), so the shield silhouette now
- *    uniquely identifies a single destination.
+ *    uniquely identifies a single destination. It is the Tabler outline shield
+ *    rather than lucide's, so the rail icon and the mark on the 3DS page are
+ *    the same shape in outline and in fill.
  */
 
 export interface NavItem {
@@ -88,7 +92,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: 'Disputes & risk',
     items: [
       { label: 'Chargebacks', to: '/chargebacks', glyph: 'disputes', icon: Gavel, badge: 12, placeholder: true },
-      { label: 'Unmatched', to: '/unmatched', glyph: 'unmatched', icon: Unlink, badge: 3, placeholder: true },
+      { label: 'Unmatched', to: '/unmatched', glyph: 'unmatched', icon: Unlink2, badge: 3, placeholder: true },
       { label: 'Chargeback Ops', to: '/chargeback-ops', glyph: 'queue', icon: ClipboardList, placeholder: true },
       { label: 'Chargeback Analytics', to: '/chargeback-analytics', glyph: 'analytics', icon: ChartColumnBig, placeholder: true },
       { label: 'Exposure', to: '/exposure', glyph: 'exposure', icon: Gauge, placeholder: true },
@@ -98,7 +102,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: 'Compliance',
     items: [
       { label: 'Compliance Center', to: '/compliance', glyph: 'rulebook', icon: BookCheck, placeholder: true },
-      { label: '3DS Stats', to: '/3ds', glyph: 'authentication', icon: ShieldCheck, placeholder: true },
+      { label: '3DS Stats', to: '/3ds', glyph: 'authentication', icon: ShieldCheckOutline, placeholder: true },
       { label: 'ACH Refund Review', to: '/ach-refunds', glyph: 'review', icon: FileSearch, badge: 5, placeholder: true },
       { label: 'ACH Returns', to: '/ach-returns', glyph: 'returns', icon: BanknoteX, placeholder: true },
     ],
