@@ -155,7 +155,7 @@ export function DataTable<T>({
                     scope="col"
                     style={{ width: header.getSize() }}
                     className={cn(
-                      'group/th relative h-8 border-b border-border bg-canvas px-3 text-left align-middle first:pl-4 last:pr-4',
+                      'group/th relative h-8 border-b border-border bg-surface-sunk px-3 text-left align-middle first:pl-4 last:pr-4',
                       'text-xs font-semibold uppercase tracking-[0.04em] text-ink-faint',
                       // Headers never wrap. A two-line header makes its row
                       // taller than the 36px the header is sized for, so the

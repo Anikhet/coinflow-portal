@@ -55,7 +55,7 @@ export function Pagination({ total, loading = false }: {
   return (
     <nav
       aria-label="Pagination"
-      className="flex h-10 shrink-0 items-center justify-between gap-4 border-t border-border bg-canvas px-4"
+      className="flex h-10 shrink-0 items-center justify-between gap-4 border-t border-border bg-surface px-4"
     >
       <div className="flex shrink-0 items-center gap-3">
         {/* The size control sits beside the range it governs — "25 rows" next

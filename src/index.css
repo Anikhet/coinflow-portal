@@ -65,6 +65,16 @@
   --radius-control: 8px;
   --radius-surface: 12px;
 
+  /* Card elevation. Two layers, because the card and the ground it floats on
+     are the SAME white — there is no fill difference to lean on, so the shadow
+     has to do the whole job of saying "this is above the plane".
+       · 0 1px 2px  — the contact shadow. Tight and slightly stronger; it is
+                      what makes the bottom edge sit ON something.
+       · 0 6px 16px — the ambient shadow. Wide and very faint; it is what gives
+                      the card height rather than just a dark underline.
+     A single flat shadow with the same total ink reads as a smudge. */
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.06), 0 6px 16px oklch(0 0 0 / 0.05);
+
   /* Row heights drive the density toggle. Fixed values, never content-derived,
      so switching density cannot cause layout shift within a row. */
   --row-compact: 40px;
@@ -73,13 +83,30 @@
 
 :root {
   /* -- structure ---------------------------------------------------------- */
-  /* The page ground sits meaningfully below the card fill. It was 0.985
-     against a white surface — 1.04:1, which is no separation at all, so a card
-     was defined only by a 1.23:1 hairline and read as floating rather than as
-     a panel. Dropping the ground does the work the border was failing to do,
-     and it is the reason white cards read as raised at all. */
+  /* NOT the shell ground — the shell is white, edge to edge. `canvas` survives
+     as the app's off-white: the ink tooltip's text colour and the ring the
+     scrollbar thumb is inset by. Both need "the light that is not pure white",
+     and in dark mode both need it to invert, which a literal white could not.
+
+     Nothing structural may use it. The table toolbar, column header and
+     paginator once did, back when it was the ground, which painted three
+     full-width bands of the content panel in the exact colour of the surface
+     behind it — the panel read as a white sheet with holes punched through it.
+     Table chrome uses `surface-sunk`, which is recessed relative to the
+     surface it sits on rather than identical to what is behind it. */
   --canvas:        oklch(0.966 0.004 285);
   --surface:       oklch(1 0 0);
+  /* Recessed-within-a-surface: the segmented control track, and the table's
+     sticky column header. The header is the ONLY band of table chrome that
+     takes it — the toolbar and paginator are white like the rows. It earns the
+     tone because it is the one band that must stay opaque and distinct while
+     rows scroll underneath it; the other two never overlap anything, so tinting
+     them was decoration, and it made the table read as three stacked slabs
+     instead of one surface. Deliberately
+     DARKER than the surface rather than lighter — there is nothing above white
+     to move toward, and the only step below it that is not `surface-hover`
+     (0.976, the row hover) is this one. Anything nearer would make a hovered
+     row and the column header the same colour. */
   --surface-sunk:  oklch(0.940 0.005 285);
   --surface-hover: oklch(0.976 0.004 285);
 
@@ -238,6 +265,12 @@
     --border:        oklch(0.278 0.011 285);
     --border-strong: oklch(0.348 0.013 285);
 
+    /* Shadow is nearly inert on a dark ground — black on near-black moves
+       almost nothing — so the card's edge does the separating here. The
+       contact layer is kept (it still darkens the seam a little) and the
+       ambient layer dropped, since a wide invisible blur is only cost. */
+    --shadow-card: 0 1px 2px oklch(0 0 0 / 0.35);
+
     --ink:           oklch(0.965 0.004 285);  /* 15.1:1 */
     --ink-muted:     oklch(0.740 0.012 285);  /*  8.0:1 */
     --ink-faint:     oklch(0.620 0.012 285);  /*  5.1:1 */
@@ -328,6 +361,10 @@
 
   --border:        oklch(0.278 0.011 285);
   --border-strong: oklch(0.348 0.013 285);
+
+  /* Same reasoning as the media-query block above: on a dark ground the
+     ambient layer is invisible, so only the contact shadow is kept. */
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.35);
 
   --ink:           oklch(0.965 0.004 285);  /* 15.1:1 */
   --ink-muted:     oklch(0.740 0.012 285);  /*  8.0:1 */
@@ -421,7 +458,9 @@
   * { border-color: var(--border); }
 
   body {
-    background: var(--canvas);
+    /* Matches the shell ground. Overscroll past either end of a page must not
+       reveal a colour the app never shows. */
+    background: var(--surface);
     color: var(--ink);
     font-family: var(--font-sans);
     /* cv11 = single-storey g, ss01 = disambiguated I/l. Both improve legibility

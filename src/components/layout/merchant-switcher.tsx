@@ -30,7 +30,7 @@ export function MerchantSwitcher({ collapsed }: { collapsed: boolean }) {
           // second chip. The hover fill still carries the affordance, and the
           // focus ring is untouched for keyboard users.
           'flex w-full items-center gap-2 rounded-[var(--radius-control)] p-1.5 text-left',
-          'transition-colors hover:bg-surface',
+          'transition-colors hover:bg-surface-sunk',
           collapsed && 'justify-center',
         )}
       >
