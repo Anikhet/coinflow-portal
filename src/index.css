@@ -521,9 +521,46 @@
   ::-webkit-scrollbar-thumb {
     background: var(--border-strong);
     border-radius: 99px;
-    border: 3px solid var(--canvas);
+    /* The inset border fakes the thumb's padding by painting the track
+       colour, so a scrollport on a lighter surface (a menu panel) overrides
+       --scroll-track rather than showing a canvas-coloured ring. */
+    border: 3px solid var(--scroll-track, var(--canvas));
   }
   ::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
+
+  /* Scroll containers marked .scroll-fade show their bar only while the
+     content is actually moving (see use-scroll-fade). The gutter is reserved
+     in both states, so fading the thumb in and out shifts no layout — only its
+     colour changes, which is a paint, not a reflow. */
+  .scroll-fade::-webkit-scrollbar-thumb {
+    background: transparent;
+    transition: background 200ms ease-out;
+  }
+  .scroll-fade[data-scrolling='true']::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+  }
+  .scroll-fade[data-scrolling='true']::-webkit-scrollbar-thumb:hover {
+    background: var(--ink-faint);
+  }
+
+  /* Firefox has no thumb pseudo-element: colour the pair directly. */
+  @supports (scrollbar-color: auto) {
+    .scroll-fade { scrollbar-color: transparent transparent; }
+    .scroll-fade[data-scrolling='true'] {
+      scrollbar-color: var(--border-strong) transparent;
+    }
+  }
+
+  /* A pointer resting over the container keeps the bar up, so it can be
+     grabbed without scrolling first. */
+  .scroll-fade:hover::-webkit-scrollbar-thumb { background: var(--border-strong); }
+  @supports (scrollbar-color: auto) {
+    .scroll-fade:hover { scrollbar-color: var(--border-strong) transparent; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-fade::-webkit-scrollbar-thumb { transition: none; }
+  }
 }
 
 @layer utilities {

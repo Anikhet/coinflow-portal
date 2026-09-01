@@ -3,6 +3,7 @@ import {
 } from '@tanstack/react-table'
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react'
 import { useState } from 'react'
+import { useScrollFade } from '@/hooks/use-scroll-fade'
 import { useUiStore, ROW_HEIGHT } from '@/stores/ui-store'
 import { useTableView } from '@/stores/table-view-context'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -100,6 +101,7 @@ export function DataTable<T>({
   // carries no gratuitous seam. Tracked in state (not CSS) because there is no
   // scroll-position selector.
   const [isScrolled, setIsScrolled] = useState(false)
+  const scrollFade = useScrollFade<HTMLDivElement>()
 
   const visibleColumns = table.getVisibleLeafColumns()
   const showEmpty = !loading && data.length === 0
@@ -115,8 +117,11 @@ export function DataTable<T>({
       // height as a flex item. As a plain block it could only be sized by a
       // fixed min-height, which is why the empty state used to sit as a small
       // card marooned in the middle of a tall white void.
-      className="relative flex flex-1 flex-col overflow-auto"
+      className="scroll-fade relative flex flex-1 flex-col overflow-auto"
+      ref={scrollFade.ref}
       onScroll={(event) => {
+        // The scrollbar itself fades out shortly after the gesture ends.
+        scrollFade.onScroll()
         const scrolled = event.currentTarget.scrollLeft > 0
         // Guard the write so a vertical scroll does not re-render every row.
         if (scrolled !== isScrolled) setIsScrolled(scrolled)
