@@ -34,9 +34,11 @@ import type { Timezone } from '@/stores/ui-store'
  * land now.
  *
  * The extra columns this redesign adds (lifetime volume, payment count,
- * distinct IPs, KYC) are defined but hidden by default, available from the
- * column menu. They are genuinely useful for triage, but they are additions —
- * so they should be opt-in rather than silently changing the default view.
+ * distinct IPs, KYC) are visible by default alongside the production set. They
+ * carry the triage context — how much a customer is worth and how verified they
+ * are — that the original view made you open a drawer to find, so the table
+ * answers the question in place. All of them remain toggleable from the column
+ * menu for anyone who wants the narrower view back.
  */
 
 export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, unknown>[] {
@@ -199,15 +201,4 @@ export function buildCustomerColumns(timezone: Timezone): ColumnDef<Customer, un
       },
     },
   ]
-}
-
-/**
- * The redesign's additional columns start hidden, so the default view is the
- * production column set exactly. They remain one click away in the column menu.
- */
-export const DEFAULT_HIDDEN_CUSTOMER_COLUMNS = {
-  kyc: false,
-  totalVolume: false,
-  paymentCount: false,
-  ipLocations: false,
 }

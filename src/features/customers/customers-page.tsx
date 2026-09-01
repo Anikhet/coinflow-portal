@@ -15,7 +15,7 @@ import { usePublishedRecordIds } from '@/hooks/use-published-record-ids'
 import { useUiStore } from '@/stores/ui-store'
 import { useDrawerStore } from '@/stores/drawer-store'
 import { TableViewProvider, useTableView } from '@/stores/table-view-context'
-import { buildCustomerColumns, DEFAULT_HIDDEN_CUSTOMER_COLUMNS } from './columns'
+import { buildCustomerColumns } from './columns'
 import { CustomerDrawer } from './customer-drawer'
 
 /** Store key for the "Exceptions only" switch, shared by the toggle and the query. */
@@ -25,11 +25,8 @@ const RISK_TOGGLE = 'riskOnly'
 export function CustomersPage() {
   return (
     <TableViewProvider
-      init={{
-        sortBy: 'createdAt',
-        sortDir: 'desc',
-        columnVisibility: DEFAULT_HIDDEN_CUSTOMER_COLUMNS,
-      }}
+      // No columnVisibility seed: every customer column starts active.
+      init={{ sortBy: 'createdAt', sortDir: 'desc' }}
     >
       <CustomersView />
     </TableViewProvider>
