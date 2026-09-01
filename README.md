@@ -60,8 +60,3 @@ and none of them is a parent of the others.
 
 Fixtures are generated from a seed, so the data is the same on every reload.
 
-## Known gaps
-
-- Filter state isn't in the URL, so a filtered view can't be shared as a link.
-- Export buttons are not wired up.
-- Built for desktop; not tested below 1280px.
