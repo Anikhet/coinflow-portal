@@ -2,6 +2,7 @@ import * as DropdownPrimitive from '@radix-ui/react-dropdown-menu'
 import { Check } from 'lucide-react'
 import type { ComponentProps } from 'react'
 import { cn } from '@/lib/cn'
+import { useScrollFade } from '@/hooks/use-scroll-fade'
 import { TONE_GLYPH } from '@/lib/tone-classes'
 import type { Tone } from '@/types'
 
@@ -15,12 +16,21 @@ export const DropdownTrigger = DropdownPrimitive.Trigger
  * object. Callers can still override for a menu whose trigger sits at the right
  * of the viewport.
  */
-export function DropdownContent({ className, align = 'start', ...props }: ComponentProps<typeof DropdownPrimitive.Content>) {
+export function DropdownContent({ className, align = 'start', onScroll, ...props }: ComponentProps<typeof DropdownPrimitive.Content>) {
+  // A menu long enough to scroll shows its bar only while it is moving, so a
+  // resting panel is not framed by a permanent grey rail. See use-scroll-fade.
+  const scrollFade = useScrollFade<HTMLDivElement>()
+
   return (
     <DropdownPrimitive.Portal>
       <DropdownPrimitive.Content
         align={align}
         sideOffset={6}
+        ref={scrollFade.ref}
+        onScroll={(event) => {
+          scrollFade.onScroll()
+          onScroll?.(event)
+        }}
         className={cn(
           // ONE size for every menu in the app. Width was previously decided
           // per call site — 200px here, 232px there, 240px somewhere else — so
@@ -36,6 +46,9 @@ export function DropdownContent({ className, align = 'start', ...props }: Compon
           // 344px = 8 + ten full rows + half of the eleventh. Ending on a half
           // row is the cue that there is more below — a menu cut exactly at a
           // row boundary looks complete, and people stop scrolling.
+          // --scroll-track matches the thumb's inset border to the panel, not
+          // to the canvas behind it.
+          'scroll-fade [--scroll-track:var(--surface)]',
           'z-[60] max-h-[344px] w-60 overflow-y-auto overscroll-contain',
           'rounded-[var(--radius-surface)] border border-border',
           'bg-surface p-1 shadow-xl animate-in-up',
@@ -121,6 +134,23 @@ export function DropdownCheckboxItem({ className, children, ...props }: Componen
       {children}
     </DropdownPrimitive.CheckboxItem>
   )
+}
+
+/**
+ * Footer band for a menu's ACTIONS, below its options.
+ *
+ * A rule, not a gap, separates them. In a multi-select menu every row above is
+ * a thing you toggle; "Reset to total" is an operation on the whole set, and
+ * without the rule it reads as an eleventh series you could check.
+ *
+ * Every row inside this band carries a leading icon — see DropdownItem. The
+ * options above are identified by their own marks (a brand logo, an avatar, a
+ * colour swatch), so an action rendered as bare text is the one row in the menu
+ * with an empty leading slot, and reads as an unfinished list item rather than
+ * as a command.
+ */
+export function DropdownFooter({ className, ...props }: ComponentProps<'div'>) {
+  return <div className={cn('mt-1 border-t border-border pt-1', className)} {...props} />
 }
 
 export function DropdownLabel({ className, ...props }: ComponentProps<typeof DropdownPrimitive.Label>) {

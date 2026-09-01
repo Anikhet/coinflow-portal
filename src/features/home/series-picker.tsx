@@ -1,9 +1,9 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, ListChecks, Sigma } from 'lucide-react'
 import type { MethodSeries } from '@/types/analytics'
 import { Button } from '@/components/ui/button'
 import {
-  Dropdown, DropdownCheckboxItem, DropdownContent, DropdownItem,
-  DropdownLabel, DropdownTrigger,
+  Dropdown, DropdownCheckboxItem, DropdownContent, DropdownFooter,
+  DropdownItem, DropdownLabel, DropdownTrigger,
 } from '@/components/ui/dropdown'
 import { TOTAL_KEY, SERIES_SWATCH } from '@/components/charts/series'
 import { SeriesGlyph } from '@/components/charts/series-glyph'
@@ -82,12 +82,24 @@ export function SeriesPicker({ series, selected, onChange, formatValue }: {
           </DropdownCheckboxItem>
         ))}
 
-        <div className="mt-1 border-t border-border pt-1">
-          <DropdownItem onSelect={() => onChange([TOTAL_KEY])}>Reset to total</DropdownItem>
+        {/* Icons for the same reason every option above carries a mark: these
+            were the only two rows in the menu with an empty leading slot. They
+            sit on the checkbox column, so the band has its own clean left edge
+            rather than starting at a third indent.
+
+            Sigma is the total's mark in the legend and on the chart, so "reset
+            to total" points at the thing it restores rather than at a generic
+            undo arrow. */}
+        <DropdownFooter>
+          <DropdownItem onSelect={() => onChange([TOTAL_KEY])}>
+            <Sigma />
+            Reset to total
+          </DropdownItem>
           <DropdownItem onSelect={() => onChange(series.map((entry) => entry.key))}>
+            <ListChecks />
             Select all methods
           </DropdownItem>
-        </div>
+        </DropdownFooter>
       </DropdownContent>
     </Dropdown>
   )
