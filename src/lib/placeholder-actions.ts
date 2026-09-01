@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { NAV_GROUPS } from '@/lib/nav'
+import { findNavGroupLabel, NAV_GROUPS } from '@/lib/nav'
 
 /**
  * PLACEHOLDER EXITS
@@ -123,21 +123,13 @@ const GROUP_EXITS: Record<string, PlaceholderExits> = {
   },
 }
 
-/** Group heading for a route, or null when the route is not in the nav (404s). */
-function findGroupLabel(pathname: string): string | null {
-  const group = NAV_GROUPS.find((candidate) =>
-    candidate.items.some((item) => item.to === pathname),
-  )
-  return group?.label ?? null
-}
-
 /**
  * Resolve the pair of exits shown on an unbuilt route: explicit route entry
  * first, then the route's nav group, then the generic pair for anything that
  * is not in the nav at all (an unknown URL).
  */
 export function resolvePlaceholderExits(pathname: string): ResolvedExits {
-  const groupLabel = findGroupLabel(pathname)
+  const groupLabel = findNavGroupLabel(pathname)
   const exits =
     ROUTE_EXITS[pathname] ??
     (groupLabel ? GROUP_EXITS[groupLabel] : undefined) ??

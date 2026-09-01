@@ -108,3 +108,16 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 ]
+
+/**
+ * Group heading for a route, or null when the route is not in the nav at all
+ * (an unknown URL). Placeholder routes fall back to their group for both their
+ * header line and their exits, so both resolvers read the grouping from here
+ * rather than each walking NAV_GROUPS themselves.
+ */
+export function findNavGroupLabel(pathname: string): string | null {
+  const group = NAV_GROUPS.find((candidate) =>
+    candidate.items.some((item) => item.to === pathname),
+  )
+  return group?.label ?? null
+}

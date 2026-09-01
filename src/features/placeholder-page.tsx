@@ -4,6 +4,7 @@ import { AppShell, PageHeader } from '@/components/layout/app-shell'
 import { EmptyState } from '@/components/table/empty-state'
 import { Button } from '@/components/ui/button'
 import { resolvePlaceholderExits } from '@/lib/placeholder-actions'
+import { resolvePlaceholderSummary } from '@/lib/placeholder-summaries'
 
 /**
  * Routes present in the navigation but out of scope for this prototype resolve
@@ -17,10 +18,13 @@ import { resolvePlaceholderExits } from '@/lib/placeholder-actions'
 export function PlaceholderPage({ title, glyph }: { title: string; glyph: EmptyGlyphName }) {
   const { pathname } = useLocation()
   const { description, primary, secondary } = resolvePlaceholderExits(pathname)
+  // The header says what this screen WOULD show; the empty state below says
+  // where to go instead. Two different jobs, so two different lines.
+  const summary = resolvePlaceholderSummary(pathname)
 
   return (
     <AppShell>
-      <PageHeader title={title} />
+      <PageHeader title={title} description={summary} />
       {/* The empty state IS this page, so it occupies the whole content
           region inset by a thin gutter, rather than sitting as
           a small card marooned in the middle of an empty canvas. */}
