@@ -222,61 +222,98 @@ export function TableToolbar({
 
         {extra}
 
-        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+        {/*
+          The right cluster, grouped by KIND rather than run together as one
+          row of six things.
+
+          A count is a statement about the data; the buttons are controls that
+          act on it. They were separated by the same 6px that separated the
+          buttons from each other, so the reader had no cue that "260" was not
+          a third label belonging to the icons beside it. A hairline rule with
+          equal air either side says where reading stops and operating starts —
+          the same device the applied-filter row already uses to divide its
+          chips from "Clear all".
+
+          The three buttons stay tight against each other, because they ARE one
+          set: everything here changes how this table is presented.
+        */}
+        <div className="ml-auto flex shrink-0 items-center gap-4">
           {resultCount != null && (
-            <span className="text-sm tabular-nums text-ink-muted">
-              {resultCount === totalCount
-                ? `${resultCount.toLocaleString()} records`
-                : `${resultCount.toLocaleString()} of ${(totalCount ?? 0).toLocaleString()}`}
-            </span>
+            <p className="text-sm tabular-nums text-ink-muted">
+              {/* The figure is the message, so it carries the weight and the
+                  noun stays quiet — reversing that made the row read as prose
+                  and the number had to be hunted for. */}
+              <span className="font-medium text-ink">{resultCount.toLocaleString()}</span>
+              {totalCount != null && totalCount !== resultCount
+                ? ` of ${totalCount.toLocaleString()}`
+                : ' records'}
+            </p>
           )}
 
-          <Tooltip content={density === 'compact' ? 'Comfortable rows' : 'Compact rows'}>
-            <Button
-              variant="secondary"
-              size="icon"
-              aria-label="Toggle row density"
-              onClick={() => setDensity(density === 'compact' ? 'cozy' : 'compact')}
-            >
-              <Rows3 />
-            </Button>
-          </Tooltip>
+          {resultCount != null && <span aria-hidden className="h-4 w-px bg-border" />}
 
-          {columns.length > 0 && (
-            <Dropdown>
-              <DropdownTrigger asChild>
+          <div className="flex items-center gap-1.5">
+            {columns.length > 0 && (
+              <Dropdown>
+                {/* Tooltip OUTSIDE the trigger, not inside it.
+                    `DropdownTrigger asChild` hands its props and ref to its
+                    child; with Tooltip in that slot they landed on a plain
+                    function component that accepts only {content, children,
+                    side} and drops the rest, so the open handler never reached
+                    the button and this menu could not be opened at all. Nested
+                    this way both Radix triggers compose down onto the Button. */}
                 <Tooltip content="Columns">
-                  <Button variant="secondary" size="icon" aria-label="Choose columns">
-                    <Columns3 />
-                  </Button>
+                  <DropdownTrigger asChild>
+                    <Button variant="secondary" size="icon" aria-label="Choose columns">
+                      <Columns3 />
+                    </Button>
+                  </DropdownTrigger>
                 </Tooltip>
-              </DropdownTrigger>
-              <DropdownContent>
-                <DropdownLabel>Visible columns</DropdownLabel>
-                {columns.map((column) => {
-                  const visible = columnVisibility[column.id] !== false
-                  return (
-                    <DropdownCheckboxItem
-                      key={column.id}
-                      checked={visible}
-                      onCheckedChange={(next) =>
-                        setColumnVisibility({ ...columnVisibility, [column.id]: Boolean(next) })
-                      }
-                      onSelect={(event) => event.preventDefault()}
-                    >
-                      <span className="truncate">{column.label}</span>
-                    </DropdownCheckboxItem>
-                  )
-                })}
-              </DropdownContent>
-            </Dropdown>
-          )}
+                {/* Aligned to the trigger's RIGHT edge. The default aligns
+                    from the left, which for a control this close to the window
+                    edge overflowed — so Radix's collision handling shoved the
+                    panel flush against the viewport, 0px from the edge, and it
+                    read as jammed into the corner. Ending it on the button's
+                    own right edge leaves the page margin intact and gives the
+                    menu a shared edge with the control it belongs to. */}
+                <DropdownContent align="end">
+                  <DropdownLabel>Visible columns</DropdownLabel>
+                  {columns.map((column) => {
+                    const visible = columnVisibility[column.id] !== false
+                    return (
+                      <DropdownCheckboxItem
+                        key={column.id}
+                        checked={visible}
+                        onCheckedChange={(next) =>
+                          setColumnVisibility({ ...columnVisibility, [column.id]: Boolean(next) })
+                        }
+                        onSelect={(event) => event.preventDefault()}
+                      >
+                        <span className="truncate">{column.label}</span>
+                      </DropdownCheckboxItem>
+                    )
+                  })}
+                </DropdownContent>
+              </Dropdown>
+            )}
 
-          <Tooltip content="Export CSV">
-            <Button variant="secondary" size="icon" aria-label="Export CSV">
-              <Download />
-            </Button>
-          </Tooltip>
+            <Tooltip content={density === 'compact' ? 'Comfortable rows' : 'Compact rows'}>
+              <Button
+                variant="secondary"
+                size="icon"
+                aria-label="Toggle row density"
+                onClick={() => setDensity(density === 'compact' ? 'cozy' : 'compact')}
+              >
+                <Rows3 />
+              </Button>
+            </Tooltip>
+
+            <Tooltip content="Export CSV">
+              <Button variant="secondary" size="icon" aria-label="Export CSV">
+                <Download />
+              </Button>
+            </Tooltip>
+          </div>
         </div>
       </div>
 
