@@ -234,7 +234,7 @@ export function StatCard({ label, term, value, hint, glyph }: {
   glyph?: EmptyGlyphName
 }) {
   return (
-    <div className="flex min-h-[104px] flex-col border-t-2 border-border-strong pt-2.5">
+    <div className="flex min-h-[76px] flex-col border-t-2 border-border-strong pt-2.5">
       <span className="flex items-center gap-1.5">
         {/* The mark is optically centred on the cap height of the label, not on
             its line box, so glyph and letterforms share one midline. */}
