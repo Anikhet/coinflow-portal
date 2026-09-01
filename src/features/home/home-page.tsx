@@ -93,7 +93,7 @@ export function HomePage() {
             dropping the sparklines — which redrew the chart below at a
             twentieth the size — freed the height to add the two numbers a
             payments dashboard is actually opened for. */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <KpiCard
             loading={overview.loading}
             label="Settled volume"
@@ -176,6 +176,7 @@ export function HomePage() {
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <BreakdownCard
+            dimensions={2}
             title="Card payments breakdown"
             term="cardBreakdown"
             description="All card-backed volume, including Apple Pay and Google Pay"
@@ -210,6 +211,7 @@ export function HomePage() {
           />
 
           <BreakdownCard
+            defaultView="bars"
             title="Merchant Payouts"
             term="merchantPayouts"
             description="Net settlement owed to each merchant, after fees"

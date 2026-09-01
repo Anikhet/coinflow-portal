@@ -242,6 +242,27 @@
   --chart-8: oklch(0.50 0.160 330);
   --chart-9: oklch(0.72 0.100 175);
   --chart-grid: oklch(0.92 0.004 285);
+
+  /* -- breakdown slices ---------------------------------------------------
+     A SEQUENTIAL ramp, not the categorical one above, and the difference is
+     the data: line series are unordered, so they need maximum hue separation.
+     Donut and ranked-bar slices are sorted largest-first, so a single hue
+     stepping from deep to pale encodes that ordering in the colour itself —
+     the ring reads as one quantity split up rather than nine unrelated things.
+
+     The hue is the brand's 276, so a breakdown looks like part of this product
+     instead of a stock chart palette dropped into it. Only lightness and
+     chroma move; ~0.07 L between steps keeps neighbours separable while the
+     family stays obvious. */
+  --slice-1: oklch(0.34 0.115 276);
+  --slice-2: oklch(0.42 0.110 276);
+  --slice-3: oklch(0.50 0.100 276);
+  --slice-4: oklch(0.57 0.088 276);
+  --slice-5: oklch(0.64 0.074 276);
+  --slice-6: oklch(0.71 0.060 276);
+  --slice-7: oklch(0.77 0.046 276);
+  --slice-8: oklch(0.83 0.033 276);
+  --slice-9: oklch(0.885 0.022 276);
   /* -- identity avatars ----------------------------------------------------
      A merchant chip's HUE comes from its name (see lib/avatar.ts); the
      lightness and chroma come from here, so one hue reads as a soft tint on
@@ -345,6 +366,21 @@
     --chart-8: oklch(0.58 0.150 330);
     --chart-9: oklch(0.83 0.090 175);
     --chart-grid: oklch(0.278 0.011 285);
+
+    /* The ramp RUNS THE OTHER WAY on midnight: prominence is contrast against
+       the card, so the largest slice is the brightest here and the darkest on
+       white. Inverting the light values directly would bottom out in a
+       near-black indistinguishable from the surface, so the tail stops at
+       0.35 L — still clearly a filled slice, not a hole in the ring. */
+    --slice-1: oklch(0.74 0.145 276);
+    --slice-2: oklch(0.69 0.130 276);
+    --slice-3: oklch(0.635 0.118 276);
+    --slice-4: oklch(0.585 0.105 276);
+    --slice-5: oklch(0.535 0.092 276);
+    --slice-6: oklch(0.485 0.078 276);
+    --slice-7: oklch(0.435 0.064 276);
+    --slice-8: oklch(0.390 0.050 276);
+    --slice-9: oklch(0.350 0.038 276);
     /* Inverted for midnight: deep tint carrying light text. */
     --avatar-bg-l: 0.315;
     --avatar-bg-c: 0.055;
@@ -426,6 +462,21 @@
   --chart-8: oklch(0.58 0.150 330);
   --chart-9: oklch(0.83 0.090 175);
   --chart-grid: oklch(0.278 0.011 285);
+
+  /* The ramp RUNS THE OTHER WAY on midnight: prominence is contrast against
+     the card, so the largest slice is the brightest here and the darkest on
+     white. Inverting the light values directly would bottom out in a
+     near-black indistinguishable from the surface, so the tail stops at
+     0.35 L — still clearly a filled slice, not a hole in the ring. */
+  --slice-1: oklch(0.74 0.145 276);
+  --slice-2: oklch(0.69 0.130 276);
+  --slice-3: oklch(0.635 0.118 276);
+  --slice-4: oklch(0.585 0.105 276);
+  --slice-5: oklch(0.535 0.092 276);
+  --slice-6: oklch(0.485 0.078 276);
+  --slice-7: oklch(0.435 0.064 276);
+  --slice-8: oklch(0.390 0.050 276);
+  --slice-9: oklch(0.350 0.038 276);
   /* Inverted for midnight: deep tint carrying light text. */
   --avatar-bg-l: 0.315;
   --avatar-bg-c: 0.055;

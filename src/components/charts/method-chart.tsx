@@ -134,6 +134,7 @@ export function MethodChart({ points, series, metric = 'amount', selected }: {
             <Tooltip
               content={<ChartTooltip formatValue={formatValue} drawn={drawn} showTotal={drawn.length > 1} />}
               cursor={{ stroke: 'var(--border-strong)', strokeWidth: 1 }}
+              wrapperStyle={{ zIndex: 10 }}
             />
 
             {/* Drawn in reverse so the largest series sits at the BASE of the
@@ -218,11 +219,17 @@ function ChartTooltip({ active, payload, label, formatValue, drawn, showTotal }:
       <div className="space-y-1">
         {[...drawn].reverse().map((entry) => (
           <div key={entry.key} className="flex items-center gap-2 text-sm">
+            {/* Swatch AND mark, matching the legend below the plot and the
+                picker above it. The tooltip was the one place in this chart
+                that named a method without showing it, so a reader tracking
+                Apple Pay had to switch from recognising a logo to reading a
+                word and back on every hover. */}
             <span
               aria-hidden
               className="size-2 shrink-0 rounded-[2px]"
               style={{ background: entry.swatch }}
             />
+            <SeriesGlyph seriesKey={entry.key} />
             <span className="flex-1 text-ink-muted">{entry.label}</span>
             <span className="tabular-nums text-ink">{formatValue(Number(point[entry.key] ?? 0))}</span>
           </div>

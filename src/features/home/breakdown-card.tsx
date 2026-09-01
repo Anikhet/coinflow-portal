@@ -1,69 +1,72 @@
-import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { InfoHint } from '@/components/ui/info-hint'
+import { Segmented } from '@/components/ui/segmented'
 import type { GlossaryTerm } from '@/lib/glossary'
-import { formatCompactCurrency, formatCount, formatTotal } from '@/lib/format'
-import { cn } from '@/lib/cn'
-import { Truncated } from '@/components/ui/truncated'
+import { formatTotal } from '@/lib/format'
+import { BreakdownDimension, BreakdownDonutView } from './breakdown-views'
+import {
+  DonutChartFallback, RankedBarChartFallback, StackedDonutFallback,
+} from '@/components/charts/breakdown-chart-lazy'
+import type { BreakdownGroup, BreakdownView } from '@/types/breakdown'
 
 /**
  * BREAKDOWN CARD
  * =============================================================================
  * The "Card payments breakdown" and "Merchant Payouts" sections.
  *
- * Both answer a part-to-whole question — which brands, which merchants — so
- * they render as a ranked list with a proportional bar rather than as a pie.
- * A ranked bar list is directly readable (rows are sorted, lengths compare on a
- * shared baseline) where a pie forces angle comparison, and it degrades
- * gracefully as the number of slices grows.
+ * Both answer a part-to-whole question — which brands, which funding types,
+ * which merchants — and there is no single best drawing of one. Shape, ranking
+ * and exact figures are three different questions, and a dashboard read by
+ * both an analyst and an operator gets asked all three. So the drawing is a
+ * VIEW, switched by a tab control, over one dataset: see breakdown-views.tsx
+ * for what each is good at.
  *
- * Bars use the brand violet at varying opacity rather than a categorical
- * palette: these slices are one quantity split up, not independent series, so
- * giving each its own hue would imply a distinction that is not there — and
- * would spend colour that the tone system reserves for status.
+ * The view is deliberately local to each card rather than shared. The two cards
+ * hold different-shaped data — three card brands versus a long merchant list —
+ * and the right drawing for three slices is not the right one for twelve.
  */
 
-export interface BreakdownRow {
-  key: string
-  label: string
-  amount: number
-  count: number
-  /** 0–1 share of the total. */
-  share: number
-  /**
-   * Leading mark — a card logo, a merchant avatar, a rail glyph. Supplied by
-   * the caller rather than derived here: this card renders part-to-whole rows
-   * for anything, and teaching it about brands and merchants would tie a
-   * generic chart to two specific datasets.
-   */
-  media?: ReactNode
-}
+const VIEW_OPTIONS = [
+  { value: 'donut' as const, label: 'Donut' },
+  { value: 'bars' as const, label: 'Bars' },
+  { value: 'list' as const, label: 'List' },
+]
 
 interface BreakdownCardProps {
   title: string
   term: GlossaryTerm
+  description: string
+  total: number
   /**
    * How this card's total relates to settled volume, e.g. "70% of settled
    * volume". Both breakdowns are derived from the same headline figure, and
-   * without saying so they read as a fourth and fifth unrelated number.
+   * without saying so they read as two unrelated numbers.
    */
   relation?: string
-  description: string
-  total: number
-  /** Optional grouping label above a set of rows, e.g. "By brand". */
-  groups: Array<{ label: string; rows: BreakdownRow[]; term?: GlossaryTerm }>
+  groups: BreakdownGroup[]
   loading?: boolean
-  /** Rendered beside each row's amount — e.g. a payment count. */
+  /** Rendered beside each row's count — e.g. "payments". */
   unit?: string
-  action?: ReactNode
+  /** The drawing to open on. See the note above on why this is per-card. */
+  defaultView?: BreakdownView
+  /**
+   * How many dimensions this card will draw once loaded. Known to the caller
+   * but not derivable while `groups` is still empty, and the skeleton has to
+   * reserve the right box or the row below jumps when the data lands.
+   */
+  dimensions?: number
 }
 
 export function BreakdownCard({
-  title, term, description, total, relation, groups, loading = false, unit = 'payments', action,
+  title, term, description, total, relation, groups,
+  loading = false, unit = 'payments', defaultView = 'donut', dimensions = 1,
 }: BreakdownCardProps) {
+  const [view, setView] = useState<BreakdownView>(defaultView)
+
   return (
     <section className="flex flex-col rounded-[var(--radius-surface)] border border-border bg-surface p-5">
-      <div className="mb-5 flex items-start justify-between gap-4">
+      <div className="mb-4 flex items-start justify-between gap-4">
         <div className="min-w-0">
           <span className="flex items-center gap-1.5">
             <h2 className="text-lg font-semibold tracking-tight text-ink">{title}</h2>
@@ -81,72 +84,80 @@ export function BreakdownCard({
         )}
       </div>
 
+      {/* Switching redraws the same numbers, so it must feel instantaneous —
+          every view reads from data already in memory and none refetches. */}
+      <div className="mb-4">
+        <Segmented value={view} onChange={setView} options={VIEW_OPTIONS} ariaLabel={`${title} chart type`} />
+      </div>
+
       {loading ? (
-        <div className="space-y-5">
-          {[0, 1].map((group) => (
-            <div key={group} className="space-y-2">
-              <Skeleton className="h-3 w-16" />
+        <BreakdownSkeleton dimensions={dimensions} view={view} />
+      ) : (
+        /* Donut is one mark for the whole card — two dimensions become
+           concentric rings — so it owns the layout itself. Bars and List stay
+           per dimension, stacked down the card under their own headings. */
+        view === 'donut' ? (
+          <BreakdownDonutView groups={groups} />
+        ) : (
+          <div className="flex flex-1 flex-col gap-5">
+            {/* The dimension heading is the view's business, not the card's:
+                bars want it standing above the chart, the list wants it as the
+                first column head. See BreakdownDimension. */}
+            {groups.map((group) => (
+              <BreakdownDimension
+                key={group.label}
+                group={group}
+                view={view}
+                unit={unit}
+                labelled={groups.length > 1}
+              />
+            ))}
+          </div>
+        )
+      )}
+    </section>
+  )
+}
+
+/**
+ * Holds the box the loaded card will occupy for the CURRENT view, so nothing
+ * below moves when the request resolves — a donut skeleton standing in for a
+ * bar chart would shift the page by the difference.
+ */
+function BreakdownSkeleton({ dimensions, view }: { dimensions: number; view: BreakdownView }) {
+  // Donut is a single mark for the card whatever the dimension count, so its
+  // skeleton mirrors that layout rather than repeating per dimension.
+  if (view === 'donut') {
+    return (
+      <div className="flex flex-1 flex-col items-center gap-4 md:flex-row">
+        <div className="flex w-full justify-center md:w-[40%] md:shrink-0">
+          {dimensions > 1 ? <StackedDonutFallback /> : <DonutChartFallback />}
+        </div>
+        <div className="w-full flex-1 space-y-2">
+          {Array.from({ length: dimensions * 3 }, (_, row) => (
+            <Skeleton key={row} className="h-5 w-full" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {Array.from({ length: dimensions }, (_, index) => index).map((group) => (
+        <div key={group}>
+          {dimensions > 1 && <Skeleton className="mb-2 h-3 w-16" />}
+          {view === 'bars' ? (
+            <RankedBarChartFallback rows={3} />
+          ) : (
+            <div className="space-y-2.5">
               {[0, 1, 2].map((row) => (
                 <Skeleton key={row} className="h-[38px] w-full" />
               ))}
             </div>
-          ))}
+          )}
         </div>
-      ) : (
-        <div className="space-y-5">
-          {groups.map((group) => (
-            <div key={group.label}>
-              {groups.length > 1 && (
-                <div className="mb-2 flex items-center gap-1.5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.05em] text-ink-faint">
-                    {group.label}
-                  </p>
-                  {group.term && <InfoHint term={group.term} label={group.label} />}
-                </div>
-              )}
-              <ul className="space-y-2.5">
-                {group.rows.map((row) => (
-                  <li key={row.key}>
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span className="flex min-w-0 items-center gap-2">
-                        {/* Fixed 20px slot, so labels start on one vertical
-                            line whether or not a row has a mark — a ragged
-                            left edge would undo the shared baseline the bars
-                            below are built on. */}
-                        {row.media && (
-                          <span className="grid size-5 shrink-0 translate-y-px place-items-center">
-                            {row.media}
-                          </span>
-                        )}
-                        <Truncated className="text-base text-ink">{row.label}</Truncated>
-                      </span>
-                      <span className="flex shrink-0 items-baseline gap-2">
-                        <span className="text-xs tabular-nums text-ink-faint">
-                          {formatCount(row.count)} {unit}
-                        </span>
-                        <span className="text-base font-medium tabular-nums text-ink">
-                          {formatCompactCurrency(row.amount)}
-                        </span>
-                      </span>
-                    </div>
-                    {/* Track is always full width so every bar shares a baseline
-                        and lengths are directly comparable down the column. */}
-                    <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-sunk">
-                      <div
-                        className={cn('h-full rounded-full bg-brand transition-[width] duration-300')}
-                        style={{ width: `${Math.max(row.share * 100, 1.5)}%`, opacity: 0.35 + row.share * 0.65 }}
-                        role="presentation"
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {action && <div className="mt-3">{action}</div>}
-    </section>
+      ))}
+    </div>
   )
 }
